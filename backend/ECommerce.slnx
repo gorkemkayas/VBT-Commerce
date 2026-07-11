@@ -1,0 +1,72 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ECommerce.API/ECommerce.API.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/Cart/">
+    <Project Path="src/Modules/Cart/Cart.Application/Cart.Application.csproj" />
+    <Project Path="src/Modules/Cart/Cart.Contracts/Cart.Contracts.csproj" />
+    <Project Path="src/Modules/Cart/Cart.Domain/Cart.Domain.csproj" />
+    <Project Path="src/Modules/Cart/Cart.Infrastructure/Cart.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Catalog/">
+    <Project Path="src/Modules/Catalog/Catalog.Application/Catalog.Application.csproj" />
+    <Project Path="src/Modules/Catalog/Catalog.Contracts/Catalog.Contracts.csproj" />
+    <Project Path="src/Modules/Catalog/Catalog.Domain/Catalog.Domain.csproj" />
+    <Project Path="src/Modules/Catalog/Catalog.Infrastructure/Catalog.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Customer/">
+    <Project Path="src/Modules/Customer/Customer.Application/Customer.Application.csproj" />
+    <Project Path="src/Modules/Customer/Customer.Contracts/Customer.Contracts.csproj" />
+    <Project Path="src/Modules/Customer/Customer.Domain/Customer.Domain.csproj" />
+    <Project Path="src/Modules/Customer/Customer.Infrastructure/Customer.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Identity/">
+    <Project Path="src/Modules/Identity/Identity.Application/Identity.Application.csproj" />
+    <Project Path="src/Modules/Identity/Identity.Contracts/Identity.Contracts.csproj" />
+    <Project Path="src/Modules/Identity/Identity.Domain/Identity.Domain.csproj" />
+    <Project Path="src/Modules/Identity/Identity.Infrastructure/Identity.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Inventory/">
+    <Project Path="src/Modules/Inventory/Inventory.Application/Inventory.Application.csproj" />
+    <Project Path="src/Modules/Inventory/Inventory.Contracts/Inventory.Contracts.csproj" />
+    <Project Path="src/Modules/Inventory/Inventory.Domain/Inventory.Domain.csproj" />
+    <Project Path="src/Modules/Inventory/Inventory.Infrastructure/Inventory.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Notification/">
+    <Project Path="src/Modules/Notification/Notification.Application/Notification.Application.csproj" />
+    <Project Path="src/Modules/Notification/Notification.Contracts/Notification.Contracts.csproj" />
+    <Project Path="src/Modules/Notification/Notification.Domain/Notification.Domain.csproj" />
+    <Project Path="src/Modules/Notification/Notification.Infrastructure/Notification.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Order/">
+    <Project Path="src/Modules/Order/Order.Application/Order.Application.csproj" />
+    <Project Path="src/Modules/Order/Order.Contracts/Order.Contracts.csproj" />
+    <Project Path="src/Modules/Order/Order.Domain/Order.Domain.csproj" />
+    <Project Path="src/Modules/Order/Order.Infrastructure/Order.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Payment/">
+    <Project Path="src/Modules/Payment/Payment.Application/Payment.Application.csproj" />
+    <Project Path="src/Modules/Payment/Payment.Contracts/Payment.Contracts.csproj" />
+    <Project Path="src/Modules/Payment/Payment.Domain/Payment.Domain.csproj" />
+    <Project Path="src/Modules/Payment/Payment.Infrastructure/Payment.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Pricing/">
+    <Project Path="src/Modules/Pricing/Pricing.Application/Pricing.Application.csproj" />
+    <Project Path="src/Modules/Pricing/Pricing.Contracts/Pricing.Contracts.csproj" />
+    <Project Path="src/Modules/Pricing/Pricing.Domain/Pricing.Domain.csproj" />
+    <Project Path="src/Modules/Pricing/Pricing.Infrastructure/Pricing.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Review/">
+    <Project Path="src/Modules/Review/Review.Application/Review.Application.csproj" />
+    <Project Path="src/Modules/Review/Review.Contracts/Review.Contracts.csproj" />
+    <Project Path="src/Modules/Review/Review.Domain/Review.Domain.csproj" />
+    <Project Path="src/Modules/Review/Review.Infrastructure/Review.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Shipping/">
+    <Project Path="src/Modules/Shipping/Shipping.Application/Shipping.Application.csproj" />
+    <Project Path="src/Modules/Shipping/Shipping.Contracts/Shipping.Contracts.csproj" />
+    <Project Path="src/Modules/Shipping/Shipping.Domain/Shipping.Domain.csproj" />
+    <Project Path="src/Modules/Shipping/Shipping.Infrastructure/Shipping.Infrastructure.csproj" />
+  </Folder>
+</Solution>
