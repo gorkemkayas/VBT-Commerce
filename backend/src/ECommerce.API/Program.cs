@@ -4,8 +4,11 @@ using BuildingBlocks.Application.Security;
 using ECommerce.API.Middleware;
 using ECommerce.API.Security;
 using FluentValidation;
+using Identity.Application.Commands.RefreshTokens;
 using Identity.Application.Commands.Register;
+using Identity.Application.Common;
 using Identity.Infrastructure;
+using MediatR;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -32,6 +35,12 @@ builder.Services.AddIdentityModule(builder.Configuration);
 
 // CQRS: MediatR + FluentValidation + Pipeline Behaviors (module assemblies register their own handlers/validators)
 var moduleAssemblies = new[] { typeof(RegisterCommand).Assembly };
+
+// Registered before the open behaviors below so it becomes the outermost wrapper — its lock
+// must stay held until TransactionBehavior's commit finishes, not just until the handler returns.
+builder.Services.AddScoped<
+    IPipelineBehavior<RefreshTokenCommand, AuthResult>,
+    Identity.Application.Behaviors.RefreshTokenConcurrencyBehavior>();
 
 builder.Services.AddMediatR(cfg =>
 {
