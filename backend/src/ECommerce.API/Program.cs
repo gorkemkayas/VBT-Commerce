@@ -1,6 +1,8 @@
 using System.Reflection;
 using BuildingBlocks.Application.Behaviors;
 using BuildingBlocks.Application.Security;
+using Catalog.Application.Commands.Categories.CreateCategory;
+using Catalog.Infrastructure;
 using ECommerce.API.Middleware;
 using ECommerce.API.Security;
 using FluentValidation;
@@ -32,9 +34,10 @@ builder.Services.AddProblemDetails();
 
 // Modules
 builder.Services.AddIdentityModule(builder.Configuration);
+builder.Services.AddCatalogModule(builder.Configuration);
 
 // CQRS: MediatR + FluentValidation + Pipeline Behaviors (module assemblies register their own handlers/validators)
-var moduleAssemblies = new[] { typeof(RegisterCommand).Assembly };
+var moduleAssemblies = new[] { typeof(RegisterCommand).Assembly, typeof(CreateCategoryCommand).Assembly };
 
 // Registered before the open behaviors below so it becomes the outermost wrapper — its lock
 // must stay held until TransactionBehavior's commit finishes, not just until the handler returns.
@@ -50,6 +53,7 @@ builder.Services.AddMediatR(cfg =>
     cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
     cfg.AddOpenBehavior(typeof(AuthorizationBehavior<,>));
     cfg.AddOpenBehavior(typeof(Identity.Application.Behaviors.TransactionBehavior<,>));
+    cfg.AddOpenBehavior(typeof(Catalog.Application.Behaviors.TransactionBehavior<,>));
 });
 
 builder.Services.AddValidatorsFromAssemblies(moduleAssemblies);
