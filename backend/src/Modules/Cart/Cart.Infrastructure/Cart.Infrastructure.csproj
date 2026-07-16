@@ -4,6 +4,16 @@
     <ProjectReference Include="..\Cart.Domain\Cart.Domain.csproj" />
     <ProjectReference Include="..\Cart.Contracts\Cart.Contracts.csproj" />
     <ProjectReference Include="..\Cart.Application\Cart.Application.csproj" />
+    <ProjectReference Include="..\..\Catalog\Catalog.Contracts\Catalog.Contracts.csproj" />
+    <ProjectReference Include="..\..\Inventory\Inventory.Contracts\Inventory.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.9" />
   </ItemGroup>
 
   <PropertyGroup>
