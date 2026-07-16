@@ -1,5 +1,6 @@
 using BuildingBlocks.Application.Exceptions;
 using BuildingBlocks.Domain;
+using Catalog.Domain.Exceptions;
 using FluentValidation;
 using Identity.Domain.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
@@ -21,6 +22,12 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
             InvalidRefreshTokenException refreshTokenException => (StatusCodes.Status401Unauthorized, "Unauthorized", refreshTokenException.Message),
             UnauthorizedException unauthorizedException => (StatusCodes.Status401Unauthorized, "Unauthorized", unauthorizedException.Message),
             ForbiddenException forbiddenException => (StatusCodes.Status403Forbidden, "Forbidden", forbiddenException.Message),
+            CategoryNotFoundException categoryNotFoundException => (StatusCodes.Status404NotFound, "Not Found", categoryNotFoundException.Message),
+            ProductNotFoundException productNotFoundException => (StatusCodes.Status404NotFound, "Not Found", productNotFoundException.Message),
+            ProductVariantNotFoundException variantNotFoundException => (StatusCodes.Status404NotFound, "Not Found", variantNotFoundException.Message),
+            ProductAttributeNotFoundException attributeNotFoundException => (StatusCodes.Status404NotFound, "Not Found", attributeNotFoundException.Message),
+            ProductVariantAttributeNotFoundException variantAttributeNotFoundException => (StatusCodes.Status404NotFound, "Not Found", variantAttributeNotFoundException.Message),
+            ProductImageNotFoundException imageNotFoundException => (StatusCodes.Status404NotFound, "Not Found", imageNotFoundException.Message),
             DomainException domainException => (StatusCodes.Status400BadRequest, "Bad Request", domainException.Message),
             _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred", "Please try again later.")
         };
