@@ -3,6 +3,8 @@ using BuildingBlocks.Application.Behaviors;
 using BuildingBlocks.Application.Security;
 using Catalog.Application.Commands.Categories.CreateCategory;
 using Catalog.Infrastructure;
+using Customer.Application.Commands.GuestCustomers.CreateGuestCustomer;
+using Customer.Infrastructure;
 using ECommerce.API.Middleware;
 using ECommerce.API.Security;
 using FluentValidation;
@@ -38,13 +40,15 @@ builder.Services.AddProblemDetails();
 builder.Services.AddIdentityModule(builder.Configuration);
 builder.Services.AddCatalogModule(builder.Configuration);
 builder.Services.AddInventoryModule(builder.Configuration);
+builder.Services.AddCustomerModule(builder.Configuration);
 
 // CQRS: MediatR + FluentValidation + Pipeline Behaviors (module assemblies register their own handlers/validators)
 var moduleAssemblies = new[]
 {
     typeof(RegisterCommand).Assembly,
     typeof(CreateCategoryCommand).Assembly,
-    typeof(CreateStockItemCommand).Assembly
+    typeof(CreateStockItemCommand).Assembly,
+    typeof(CreateGuestCustomerCommand).Assembly
 };
 
 // Registered before the open behaviors below so it becomes the outermost wrapper — its lock
@@ -63,6 +67,7 @@ builder.Services.AddMediatR(cfg =>
     cfg.AddOpenBehavior(typeof(Identity.Application.Behaviors.TransactionBehavior<,>));
     cfg.AddOpenBehavior(typeof(Catalog.Application.Behaviors.TransactionBehavior<,>));
     cfg.AddOpenBehavior(typeof(Inventory.Application.Behaviors.TransactionBehavior<,>));
+    cfg.AddOpenBehavior(typeof(Customer.Application.Behaviors.TransactionBehavior<,>));
 });
 
 builder.Services.AddValidatorsFromAssemblies(moduleAssemblies);

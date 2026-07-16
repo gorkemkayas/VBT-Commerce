@@ -1,6 +1,7 @@
 using BuildingBlocks.Application.Exceptions;
 using BuildingBlocks.Domain;
 using Catalog.Domain.Exceptions;
+using Customer.Domain.Exceptions;
 using FluentValidation;
 using Identity.Domain.Exceptions;
 using Inventory.Domain.Exceptions;
@@ -32,6 +33,9 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
             StockItemNotFoundException stockItemNotFoundException => (StatusCodes.Status404NotFound, "Not Found", stockItemNotFoundException.Message),
             StockReservationNotFoundException reservationNotFoundException => (StatusCodes.Status404NotFound, "Not Found", reservationNotFoundException.Message),
             SellableItemNotFoundException sellableItemNotFoundException => (StatusCodes.Status404NotFound, "Not Found", sellableItemNotFoundException.Message),
+            CustomerNotFoundException customerNotFoundException => (StatusCodes.Status404NotFound, "Not Found", customerNotFoundException.Message),
+            CustomerAddressNotFoundException addressNotFoundException => (StatusCodes.Status404NotFound, "Not Found", addressNotFoundException.Message),
+            GuestCustomerNotFoundException guestCustomerNotFoundException => (StatusCodes.Status404NotFound, "Not Found", guestCustomerNotFoundException.Message),
             DomainException domainException => (StatusCodes.Status400BadRequest, "Bad Request", domainException.Message),
             _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred", "Please try again later.")
         };
