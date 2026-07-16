@@ -1,5 +1,6 @@
 using BuildingBlocks.Application.Exceptions;
 using BuildingBlocks.Domain;
+using Cart.Domain.Exceptions;
 using Catalog.Domain.Exceptions;
 using Customer.Domain.Exceptions;
 using FluentValidation;
@@ -36,6 +37,11 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
             CustomerNotFoundException customerNotFoundException => (StatusCodes.Status404NotFound, "Not Found", customerNotFoundException.Message),
             CustomerAddressNotFoundException addressNotFoundException => (StatusCodes.Status404NotFound, "Not Found", addressNotFoundException.Message),
             GuestCustomerNotFoundException guestCustomerNotFoundException => (StatusCodes.Status404NotFound, "Not Found", guestCustomerNotFoundException.Message),
+            CartNotFoundException cartNotFoundException => (StatusCodes.Status404NotFound, "Not Found", cartNotFoundException.Message),
+            CartItemNotFoundException cartItemNotFoundException => (StatusCodes.Status404NotFound, "Not Found", cartItemNotFoundException.Message),
+            CartSellableItemNotFoundException cartSellableItemNotFoundException => (StatusCodes.Status404NotFound, "Not Found", cartSellableItemNotFoundException.Message),
+            InsufficientStockException insufficientStockException => (StatusCodes.Status400BadRequest, "Bad Request", insufficientStockException.Message),
+            CartInsufficientStockException cartInsufficientStockException => (StatusCodes.Status400BadRequest, "Bad Request", cartInsufficientStockException.Message),
             DomainException domainException => (StatusCodes.Status400BadRequest, "Bad Request", domainException.Message),
             _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred", "Please try again later.")
         };
