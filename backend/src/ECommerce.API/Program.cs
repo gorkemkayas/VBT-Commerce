@@ -10,6 +10,8 @@ using Identity.Application.Commands.RefreshTokens;
 using Identity.Application.Commands.Register;
 using Identity.Application.Common;
 using Identity.Infrastructure;
+using Inventory.Application.Commands.StockItems.CreateStockItem;
+using Inventory.Infrastructure;
 using MediatR;
 using Scalar.AspNetCore;
 
@@ -35,9 +37,15 @@ builder.Services.AddProblemDetails();
 // Modules
 builder.Services.AddIdentityModule(builder.Configuration);
 builder.Services.AddCatalogModule(builder.Configuration);
+builder.Services.AddInventoryModule(builder.Configuration);
 
 // CQRS: MediatR + FluentValidation + Pipeline Behaviors (module assemblies register their own handlers/validators)
-var moduleAssemblies = new[] { typeof(RegisterCommand).Assembly, typeof(CreateCategoryCommand).Assembly };
+var moduleAssemblies = new[]
+{
+    typeof(RegisterCommand).Assembly,
+    typeof(CreateCategoryCommand).Assembly,
+    typeof(CreateStockItemCommand).Assembly
+};
 
 // Registered before the open behaviors below so it becomes the outermost wrapper — its lock
 // must stay held until TransactionBehavior's commit finishes, not just until the handler returns.
@@ -54,6 +62,7 @@ builder.Services.AddMediatR(cfg =>
     cfg.AddOpenBehavior(typeof(AuthorizationBehavior<,>));
     cfg.AddOpenBehavior(typeof(Identity.Application.Behaviors.TransactionBehavior<,>));
     cfg.AddOpenBehavior(typeof(Catalog.Application.Behaviors.TransactionBehavior<,>));
+    cfg.AddOpenBehavior(typeof(Inventory.Application.Behaviors.TransactionBehavior<,>));
 });
 
 builder.Services.AddValidatorsFromAssemblies(moduleAssemblies);

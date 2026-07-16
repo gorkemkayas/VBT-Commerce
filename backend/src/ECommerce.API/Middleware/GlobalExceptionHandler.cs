@@ -3,6 +3,7 @@ using BuildingBlocks.Domain;
 using Catalog.Domain.Exceptions;
 using FluentValidation;
 using Identity.Domain.Exceptions;
+using Inventory.Domain.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
@@ -28,6 +29,9 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
             ProductAttributeNotFoundException attributeNotFoundException => (StatusCodes.Status404NotFound, "Not Found", attributeNotFoundException.Message),
             ProductVariantAttributeNotFoundException variantAttributeNotFoundException => (StatusCodes.Status404NotFound, "Not Found", variantAttributeNotFoundException.Message),
             ProductImageNotFoundException imageNotFoundException => (StatusCodes.Status404NotFound, "Not Found", imageNotFoundException.Message),
+            StockItemNotFoundException stockItemNotFoundException => (StatusCodes.Status404NotFound, "Not Found", stockItemNotFoundException.Message),
+            StockReservationNotFoundException reservationNotFoundException => (StatusCodes.Status404NotFound, "Not Found", reservationNotFoundException.Message),
+            SellableItemNotFoundException sellableItemNotFoundException => (StatusCodes.Status404NotFound, "Not Found", sellableItemNotFoundException.Message),
             DomainException domainException => (StatusCodes.Status400BadRequest, "Bad Request", domainException.Message),
             _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred", "Please try again later.")
         };
