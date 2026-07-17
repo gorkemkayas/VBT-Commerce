@@ -23,6 +23,8 @@ using Payment.Application.Commands.Charges.ChargeOrderPayment;
 using Payment.Infrastructure;
 using Pricing.Application.Commands.Prices.CreatePrice;
 using Pricing.Infrastructure;
+using Review.Application.Commands.Me.CreateMyReview;
+using Review.Infrastructure;
 using Scalar.AspNetCore;
 using Shipping.Application.Commands.ShippingCompanies.CreateShippingCompany;
 using Shipping.Infrastructure;
@@ -56,6 +58,7 @@ builder.Services.AddPricingModule(builder.Configuration);
 builder.Services.AddShippingModule(builder.Configuration);
 builder.Services.AddPaymentModule(builder.Configuration);
 builder.Services.AddOrderModule(builder.Configuration);
+builder.Services.AddReviewModule(builder.Configuration);
 
 // CQRS: MediatR + FluentValidation + Pipeline Behaviors (module assemblies register their own handlers/validators)
 var moduleAssemblies = new[]
@@ -68,7 +71,8 @@ var moduleAssemblies = new[]
     typeof(CreatePriceCommand).Assembly,
     typeof(CreateShippingCompanyCommand).Assembly,
     typeof(ChargeOrderPaymentCommand).Assembly,
-    typeof(PlaceMyOrderCommand).Assembly
+    typeof(PlaceMyOrderCommand).Assembly,
+    typeof(CreateMyReviewCommand).Assembly
 };
 
 // Registered before the open behaviors below so it becomes the outermost wrapper — its lock
@@ -93,6 +97,7 @@ builder.Services.AddMediatR(cfg =>
     cfg.AddOpenBehavior(typeof(Shipping.Application.Behaviors.TransactionBehavior<,>));
     cfg.AddOpenBehavior(typeof(Payment.Application.Behaviors.TransactionBehavior<,>));
     cfg.AddOpenBehavior(typeof(Order.Application.Behaviors.TransactionBehavior<,>));
+    cfg.AddOpenBehavior(typeof(Review.Application.Behaviors.TransactionBehavior<,>));
 });
 
 builder.Services.AddValidatorsFromAssemblies(moduleAssemblies);

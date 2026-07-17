@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Order.Domain.Exceptions;
 using Payment.Domain.Exceptions;
 using Pricing.Domain.Exceptions;
+using Review.Domain.Exceptions;
 using Shipping.Domain.Exceptions;
 
 namespace ECommerce.API.Middleware;
@@ -57,6 +58,8 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
             PaymentDeclinedException paymentDeclinedException => (StatusCodes.Status402PaymentRequired, "Payment Required", paymentDeclinedException.Message),
             PaymentAlreadyRefundedException paymentAlreadyRefundedException => (StatusCodes.Status400BadRequest, "Bad Request", paymentAlreadyRefundedException.Message),
             PaymentGatewayException paymentGatewayException => (StatusCodes.Status502BadGateway, "Bad Gateway", paymentGatewayException.Message),
+            ReviewNotFoundException reviewNotFoundException => (StatusCodes.Status404NotFound, "Not Found", reviewNotFoundException.Message),
+            ReviewSellableItemNotFoundException reviewSellableItemNotFoundException => (StatusCodes.Status404NotFound, "Not Found", reviewSellableItemNotFoundException.Message),
             DomainException domainException => (StatusCodes.Status400BadRequest, "Bad Request", domainException.Message),
             _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred", "Please try again later.")
         };
