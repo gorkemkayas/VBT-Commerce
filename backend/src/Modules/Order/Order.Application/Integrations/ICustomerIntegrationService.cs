@@ -9,4 +9,6 @@ public interface ICustomerIntegrationService
     Task<CustomerAddressSummaryDto?> GetCustomerAddressAsync(Guid customerId, Guid addressId, CancellationToken cancellationToken);
 
     Task<bool> GuestCustomerExistsAsync(Guid guestCustomerId, CancellationToken cancellationToken);
+
+    Task<GuestCustomerSummaryDto?> GetGuestCustomerAsync(Guid guestCustomerId, CancellationToken cancellationToken);
 }

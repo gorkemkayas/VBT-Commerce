@@ -26,7 +26,13 @@ public class GuestOrdersController(ISender sender) : ControllerBase
                 request.District,
                 request.PostalCode,
                 request.AddressLine1,
-                request.AddressLine2),
+                request.AddressLine2,
+                request.CardHolderName,
+                request.CardNumber,
+                request.CardExpireMonth,
+                request.CardExpireYear,
+                request.CardCvc,
+                request.BuyerIdentityNumber),
             cancellationToken);
 
         return CreatedAtAction(nameof(GetOrderById), new { guestCustomerId = request.GuestCustomerId, orderId }, orderId);

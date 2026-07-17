@@ -11,6 +11,7 @@
     <ProjectReference Include="..\..\Inventory\Inventory.Application\Inventory.Application.csproj" />
     <ProjectReference Include="..\..\Pricing\Pricing.Application\Pricing.Application.csproj" />
     <ProjectReference Include="..\..\Shipping\Shipping.Application\Shipping.Application.csproj" />
+    <ProjectReference Include="..\..\Payment\Payment.Application\Payment.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>

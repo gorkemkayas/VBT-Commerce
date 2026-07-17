@@ -14,4 +14,10 @@ public record PlaceGuestOrderCommand(
     string District,
     string PostalCode,
     string AddressLine1,
-    string? AddressLine2) : ICommand<Guid>;
+    string? AddressLine2,
+    string CardHolderName,
+    string CardNumber,
+    string CardExpireMonth,
+    string CardExpireYear,
+    string CardCvc,
+    string BuyerIdentityNumber) : ICommand<Guid>;

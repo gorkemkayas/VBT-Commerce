@@ -21,4 +21,6 @@ public class CurrentUserService(IHttpContextAccessor httpContextAccessor) : ICur
     public string? Email => User?.FindFirstValue(ClaimTypes.Email);
 
     public string? Role => User?.FindFirstValue(ClaimTypes.Role);
+
+    public string? IpAddress => httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
 }
