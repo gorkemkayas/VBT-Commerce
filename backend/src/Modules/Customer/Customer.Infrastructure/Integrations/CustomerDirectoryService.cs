@@ -34,4 +34,14 @@ public class CustomerDirectoryService(CustomerDbContext dbContext) : ICustomerDi
 
     public Task<bool> GuestCustomerExistsAsync(Guid guestCustomerId, CancellationToken cancellationToken)
         => dbContext.GuestCustomers.AsNoTracking().AnyAsync(g => g.Id == guestCustomerId, cancellationToken);
+
+    public async Task<CustomerAddressSummaryDto?> GetCustomerAddressAsync(Guid customerId, Guid addressId, CancellationToken cancellationToken)
+    {
+        return await dbContext.CustomerAddresses
+            .AsNoTracking()
+            .Where(a => a.CustomerId == customerId && a.Id == addressId)
+            .Select(a => new CustomerAddressSummaryDto(
+                a.Id, a.RecipientName, a.PhoneNumber, a.Country, a.City, a.District, a.PostalCode, a.AddressLine1, a.AddressLine2))
+            .FirstOrDefaultAsync(cancellationToken);
+    }
 }

@@ -1,6 +1,7 @@
 using Cart.Application.Abstractions;
 using Cart.Application.Integrations;
 using Cart.Application.Services;
+using Cart.Contracts;
 using Cart.Infrastructure.Integrations;
 using Cart.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +22,7 @@ public static class DependencyInjection
         services.AddScoped<ICatalogIntegrationService, CatalogIntegrationService>();
         services.AddScoped<IInventoryIntegrationService, InventoryIntegrationService>();
         services.AddScoped<CartOperations>();
+        services.AddScoped<ICartReader, CartContractService>();
 
         return services;
     }
