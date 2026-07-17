@@ -8,6 +8,7 @@ using Identity.Domain.Exceptions;
 using Inventory.Domain.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Order.Domain.Exceptions;
 using Pricing.Domain.Exceptions;
 using Shipping.Domain.Exceptions;
 
@@ -50,6 +51,7 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
             PricingSellableItemNotFoundException pricingSellableItemNotFoundException => (StatusCodes.Status404NotFound, "Not Found", pricingSellableItemNotFoundException.Message),
             ShippingCompanyNotFoundException shippingCompanyNotFoundException => (StatusCodes.Status404NotFound, "Not Found", shippingCompanyNotFoundException.Message),
             ShipmentNotFoundException shipmentNotFoundException => (StatusCodes.Status404NotFound, "Not Found", shipmentNotFoundException.Message),
+            OrderNotFoundException orderNotFoundException => (StatusCodes.Status404NotFound, "Not Found", orderNotFoundException.Message),
             DomainException domainException => (StatusCodes.Status400BadRequest, "Bad Request", domainException.Message),
             _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred", "Please try again later.")
         };
