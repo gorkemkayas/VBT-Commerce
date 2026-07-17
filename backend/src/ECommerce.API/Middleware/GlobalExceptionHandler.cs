@@ -8,6 +8,7 @@ using Identity.Domain.Exceptions;
 using Inventory.Domain.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Pricing.Domain.Exceptions;
 
 namespace ECommerce.API.Middleware;
 
@@ -42,6 +43,10 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
             CartSellableItemNotFoundException cartSellableItemNotFoundException => (StatusCodes.Status404NotFound, "Not Found", cartSellableItemNotFoundException.Message),
             InsufficientStockException insufficientStockException => (StatusCodes.Status400BadRequest, "Bad Request", insufficientStockException.Message),
             CartInsufficientStockException cartInsufficientStockException => (StatusCodes.Status400BadRequest, "Bad Request", cartInsufficientStockException.Message),
+            PriceNotFoundException priceNotFoundException => (StatusCodes.Status404NotFound, "Not Found", priceNotFoundException.Message),
+            CouponNotFoundException couponNotFoundException => (StatusCodes.Status404NotFound, "Not Found", couponNotFoundException.Message),
+            PricingGuestCustomerNotFoundException pricingGuestCustomerNotFoundException => (StatusCodes.Status404NotFound, "Not Found", pricingGuestCustomerNotFoundException.Message),
+            PricingSellableItemNotFoundException pricingSellableItemNotFoundException => (StatusCodes.Status404NotFound, "Not Found", pricingSellableItemNotFoundException.Message),
             DomainException domainException => (StatusCodes.Status400BadRequest, "Bad Request", domainException.Message),
             _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred", "Please try again later.")
         };
