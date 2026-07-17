@@ -20,6 +20,8 @@ using MediatR;
 using Pricing.Application.Commands.Prices.CreatePrice;
 using Pricing.Infrastructure;
 using Scalar.AspNetCore;
+using Shipping.Application.Commands.ShippingCompanies.CreateShippingCompany;
+using Shipping.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,6 +49,7 @@ builder.Services.AddInventoryModule(builder.Configuration);
 builder.Services.AddCustomerModule(builder.Configuration);
 builder.Services.AddCartModule(builder.Configuration);
 builder.Services.AddPricingModule(builder.Configuration);
+builder.Services.AddShippingModule(builder.Configuration);
 
 // CQRS: MediatR + FluentValidation + Pipeline Behaviors (module assemblies register their own handlers/validators)
 var moduleAssemblies = new[]
@@ -56,7 +59,8 @@ var moduleAssemblies = new[]
     typeof(CreateStockItemCommand).Assembly,
     typeof(CreateGuestCustomerCommand).Assembly,
     typeof(AddItemToAnonymousCartCommand).Assembly,
-    typeof(CreatePriceCommand).Assembly
+    typeof(CreatePriceCommand).Assembly,
+    typeof(CreateShippingCompanyCommand).Assembly
 };
 
 // Registered before the open behaviors below so it becomes the outermost wrapper — its lock
@@ -78,6 +82,7 @@ builder.Services.AddMediatR(cfg =>
     cfg.AddOpenBehavior(typeof(Customer.Application.Behaviors.TransactionBehavior<,>));
     cfg.AddOpenBehavior(typeof(Cart.Application.Behaviors.TransactionBehavior<,>));
     cfg.AddOpenBehavior(typeof(Pricing.Application.Behaviors.TransactionBehavior<,>));
+    cfg.AddOpenBehavior(typeof(Shipping.Application.Behaviors.TransactionBehavior<,>));
 });
 
 builder.Services.AddValidatorsFromAssemblies(moduleAssemblies);

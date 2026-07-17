@@ -9,6 +9,7 @@ using Inventory.Domain.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Pricing.Domain.Exceptions;
+using Shipping.Domain.Exceptions;
 
 namespace ECommerce.API.Middleware;
 
@@ -47,6 +48,8 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
             CouponNotFoundException couponNotFoundException => (StatusCodes.Status404NotFound, "Not Found", couponNotFoundException.Message),
             PricingGuestCustomerNotFoundException pricingGuestCustomerNotFoundException => (StatusCodes.Status404NotFound, "Not Found", pricingGuestCustomerNotFoundException.Message),
             PricingSellableItemNotFoundException pricingSellableItemNotFoundException => (StatusCodes.Status404NotFound, "Not Found", pricingSellableItemNotFoundException.Message),
+            ShippingCompanyNotFoundException shippingCompanyNotFoundException => (StatusCodes.Status404NotFound, "Not Found", shippingCompanyNotFoundException.Message),
+            ShipmentNotFoundException shipmentNotFoundException => (StatusCodes.Status404NotFound, "Not Found", shipmentNotFoundException.Message),
             DomainException domainException => (StatusCodes.Status400BadRequest, "Bad Request", domainException.Message),
             _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred", "Please try again later.")
         };

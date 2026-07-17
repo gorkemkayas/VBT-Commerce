@@ -30,6 +30,8 @@
     <ProjectReference Include="..\Modules\Cart\Cart.Infrastructure\Cart.Infrastructure.csproj" />
     <ProjectReference Include="..\Modules\Pricing\Pricing.Application\Pricing.Application.csproj" />
     <ProjectReference Include="..\Modules\Pricing\Pricing.Infrastructure\Pricing.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Shipping\Shipping.Application\Shipping.Application.csproj" />
+    <ProjectReference Include="..\Modules\Shipping\Shipping.Infrastructure\Shipping.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
