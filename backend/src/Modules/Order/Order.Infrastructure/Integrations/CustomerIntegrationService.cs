@@ -13,4 +13,7 @@ public class CustomerIntegrationService(ICustomerDirectoryService customerDirect
 
     public Task<bool> GuestCustomerExistsAsync(Guid guestCustomerId, CancellationToken cancellationToken)
         => customerDirectoryService.GuestCustomerExistsAsync(guestCustomerId, cancellationToken);
+
+    public Task<GuestCustomerSummaryDto?> GetGuestCustomerAsync(Guid guestCustomerId, CancellationToken cancellationToken)
+        => customerDirectoryService.GetGuestCustomerAsync(guestCustomerId, cancellationToken);
 }

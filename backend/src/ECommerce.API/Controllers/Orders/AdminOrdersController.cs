@@ -1,7 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Order.Application.Commands.Admin.CancelOrder;
-using Order.Application.Commands.Admin.ConfirmOrder;
 using Order.Application.Common;
 using Order.Application.Queries.Admin.GetOrderById;
 using Order.Application.Queries.Admin.GetOrdersList;
@@ -27,13 +26,6 @@ public class AdminOrdersController(ISender sender) : ControllerBase
         var query = new GetOrdersListQuery(status, pageNumber == 0 ? 1 : pageNumber, pageSize == 0 ? 20 : pageSize);
         var result = await sender.Send(query, cancellationToken);
         return Ok(result);
-    }
-
-    [HttpPost("{orderId:guid}/confirm")]
-    public async Task<IActionResult> ConfirmOrder(Guid orderId, CancellationToken cancellationToken)
-    {
-        await sender.Send(new ConfirmOrderCommand(orderId), cancellationToken);
-        return NoContent();
     }
 
     [HttpPost("{orderId:guid}/cancel")]

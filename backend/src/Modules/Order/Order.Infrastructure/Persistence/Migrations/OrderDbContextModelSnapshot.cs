@@ -69,6 +69,9 @@ namespace Order.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("GuestCustomerId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("PaymentId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
                         .HasMaxLength(30)

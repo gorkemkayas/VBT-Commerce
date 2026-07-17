@@ -16,7 +16,17 @@ public class MyOrdersController(ISender sender) : ControllerBase
     public async Task<ActionResult<Guid>> PlaceOrder(PlaceMyOrderRequest request, CancellationToken cancellationToken)
     {
         var orderId = await sender.Send(
-            new PlaceMyOrderCommand(request.AddressId, request.ShippingCompanyId, request.CouponCodes), cancellationToken);
+            new PlaceMyOrderCommand(
+                request.AddressId,
+                request.ShippingCompanyId,
+                request.CouponCodes,
+                request.CardHolderName,
+                request.CardNumber,
+                request.CardExpireMonth,
+                request.CardExpireYear,
+                request.CardCvc,
+                request.BuyerIdentityNumber),
+            cancellationToken);
 
         return CreatedAtAction(nameof(GetOrderById), new { orderId }, orderId);
     }

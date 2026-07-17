@@ -6,6 +6,7 @@ using Order.Application.Common;
 using Order.Application.Integrations;
 using Order.Application.Services;
 using Order.Domain.Exceptions;
+using Payment.Application.Gateway;
 using Pricing.Application.Common;
 using Pricing.Application.Queries.Calculate.CalculateMyOrderPrice;
 using Pricing.Domain.Enums;
@@ -43,12 +44,27 @@ public class PlaceMyOrderCommandHandler(
             address.RecipientName, address.PhoneNumber, address.Country, address.City,
             address.District, address.PostalCode, address.AddressLine1, address.AddressLine2);
 
+        // Customer has no first/last name field of its own (only Identity does, at registration) —
+        // splitting the delivery address's recipient name avoids introducing an Identity.Contracts
+        // project just for this; iyzico only uses Name/Surname for fraud scoring, not verification.
+        var nameParts = address.RecipientName.Split(' ', 2);
+        var card = new IyzicoCardInfo(request.CardHolderName, request.CardNumber, request.CardExpireMonth, request.CardExpireYear, request.CardCvc);
+        var buyer = new IyzicoBuyerInfo(
+            nameParts[0],
+            nameParts.Length > 1 ? nameParts[1] : nameParts[0],
+            currentUserService.Email!,
+            request.BuyerIdentityNumber,
+            address.PhoneNumber,
+            currentUserService.IpAddress ?? "0.0.0.0");
+
         return await orderOperations.PlaceOrderAsync(
             OrderOwnerKey.ForUser(userId),
             cart.Items,
             addressSnapshot,
             request.ShippingCompanyId,
             priceResult,
+            card,
+            buyer,
             ct => sender.Send(new ClearMyCartCommand(), ct),
             cancellationToken);
     }

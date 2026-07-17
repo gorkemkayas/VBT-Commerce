@@ -18,7 +18,7 @@ public class CancelMyOrderCommandHandler(
         var order = await dbContext.Orders.FirstOrDefaultAsync(o => o.Id == request.OrderId && o.UserId == userId, cancellationToken)
             ?? throw new OrderNotFoundException(request.OrderId);
 
-        await orderOperations.CancelAsync(order, "Cancelled by customer", cancellationToken);
+        await orderOperations.CancelAsync(order, "Cancelled by customer", currentUserService.IpAddress ?? "0.0.0.0", cancellationToken);
 
         return Unit.Value;
     }

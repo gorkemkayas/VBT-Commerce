@@ -9,6 +9,7 @@ using Inventory.Domain.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Order.Domain.Exceptions;
+using Payment.Domain.Exceptions;
 using Pricing.Domain.Exceptions;
 using Shipping.Domain.Exceptions;
 
@@ -52,6 +53,10 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
             ShippingCompanyNotFoundException shippingCompanyNotFoundException => (StatusCodes.Status404NotFound, "Not Found", shippingCompanyNotFoundException.Message),
             ShipmentNotFoundException shipmentNotFoundException => (StatusCodes.Status404NotFound, "Not Found", shipmentNotFoundException.Message),
             OrderNotFoundException orderNotFoundException => (StatusCodes.Status404NotFound, "Not Found", orderNotFoundException.Message),
+            PaymentNotFoundException paymentNotFoundException => (StatusCodes.Status404NotFound, "Not Found", paymentNotFoundException.Message),
+            PaymentDeclinedException paymentDeclinedException => (StatusCodes.Status402PaymentRequired, "Payment Required", paymentDeclinedException.Message),
+            PaymentAlreadyRefundedException paymentAlreadyRefundedException => (StatusCodes.Status400BadRequest, "Bad Request", paymentAlreadyRefundedException.Message),
+            PaymentGatewayException paymentGatewayException => (StatusCodes.Status502BadGateway, "Bad Gateway", paymentGatewayException.Message),
             DomainException domainException => (StatusCodes.Status400BadRequest, "Bad Request", domainException.Message),
             _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred", "Please try again later.")
         };

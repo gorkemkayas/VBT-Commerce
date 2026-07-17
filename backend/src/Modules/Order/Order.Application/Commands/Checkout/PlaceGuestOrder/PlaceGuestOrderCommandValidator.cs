@@ -16,5 +16,11 @@ public class PlaceGuestOrderCommandValidator : AbstractValidator<PlaceGuestOrder
         RuleFor(x => x.District).NotEmpty();
         RuleFor(x => x.PostalCode).NotEmpty();
         RuleFor(x => x.AddressLine1).NotEmpty();
+        RuleFor(x => x.CardHolderName).NotEmpty();
+        RuleFor(x => x.CardNumber).NotEmpty();
+        RuleFor(x => x.CardExpireMonth).Matches(@"^(0[1-9]|1[0-2])$");
+        RuleFor(x => x.CardExpireYear).Matches(@"^\d{4}$");
+        RuleFor(x => x.CardCvc).Matches(@"^\d{3,4}$");
+        RuleFor(x => x.BuyerIdentityNumber).Matches(@"^\d{11}$");
     }
 }

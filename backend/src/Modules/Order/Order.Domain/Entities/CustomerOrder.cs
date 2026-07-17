@@ -35,6 +35,7 @@ public class CustomerOrder
     public Guid ShippingCompanyId { get; private set; }
     public Guid ShipmentId { get; private set; }
     public decimal ShippingFee { get; private set; }
+    public Guid PaymentId { get; private set; }
 
     public decimal Subtotal { get; private set; }
     public decimal DiscountAmount { get; private set; }
@@ -54,8 +55,9 @@ public class CustomerOrder
 
     /// <summary>
     /// Takes a caller-supplied <paramref name="id"/> rather than generating its own — the same id
-    /// must already have been used as the Inventory reservation ReferenceId and the Shipping
-    /// CreateShipmentCommand's OrderId before this aggregate is persisted (see OrderOperations).
+    /// must already have been used as the Inventory reservation ReferenceId, the Shipping
+    /// CreateShipmentCommand's OrderId, and the Payment ChargeOrderPaymentCommand's OrderId before
+    /// this aggregate is persisted (see OrderOperations).
     /// </summary>
     public static CustomerOrder Create(
         Guid id,
@@ -72,6 +74,7 @@ public class CustomerOrder
         Guid shippingCompanyId,
         Guid shipmentId,
         decimal shippingFee,
+        Guid paymentId,
         IReadOnlyCollection<(Guid SellableItemId, OrderItemType SellableItemType, int Quantity, decimal UnitPrice)> items,
         IReadOnlyCollection<(string Code, decimal DiscountAmount)> coupons,
         decimal subtotal,
@@ -99,6 +102,7 @@ public class CustomerOrder
             ShippingCompanyId = shippingCompanyId,
             ShipmentId = shipmentId,
             ShippingFee = shippingFee,
+            PaymentId = paymentId,
             Subtotal = subtotal,
             DiscountAmount = discountAmount,
             TaxRate = taxRate,
@@ -127,7 +131,7 @@ public class CustomerOrder
 
     public void Cancel(string? reason)
     {
-        if (Status != OrderStatus.Pending)
+        if (Status is not (OrderStatus.Pending or OrderStatus.Confirmed))
             throw new OrderInvalidStatusTransitionException(Id, Status);
 
         Status = OrderStatus.Cancelled;
