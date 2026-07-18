@@ -1,6 +1,7 @@
 using System.Reflection;
 using BuildingBlocks.Application.Behaviors;
 using BuildingBlocks.Application.Security;
+using Microsoft.AspNetCore.HttpOverrides;
 using Cart.Application.Commands.Anonymous.AddItemToAnonymousCart;
 using Cart.Infrastructure;
 using Catalog.Application.Commands.Categories.CreateCategory;
@@ -49,6 +50,31 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
+
+// Team dev/staging server sits behind a reverse proxy that terminates TLS — without this, Kestrel
+// sees every request as plain HTTP, so Request.IsHttps (used for the refresh-token cookie's Secure
+// flag below) would always read false even when the client connected over HTTPS.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
+// Frontend/mobile teammates call this API from their own origin(s) — configured, not hardcoded, so
+// a new origin (e.g. once the frontend is actually deployed) can be added via config without a
+// redeploy. AllowCredentials is required because the Web refresh-token flow relies on a cookie.
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("TeamDev", policy =>
+    {
+        policy.WithOrigins(allowedOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
 
 // Modules
 builder.Services.AddIdentityModule(builder.Configuration);
@@ -108,6 +134,8 @@ builder.Services.AddValidatorsFromAssemblies(moduleAssemblies);
 
 var app = builder.Build();
 
+app.UseForwardedHeaders();
+
 app.UseExceptionHandler();
 
 // Configure the HTTP request pipeline.
@@ -115,12 +143,15 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.MapScalarApiReference();
+    await ECommerce.API.Seed.DevelopmentDataSeeder.SeedAsync(app.Services);
 }
 if(!app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
     app.UseHsts();
 }
+
+app.UseCors("TeamDev");
 
 app.UseAuthentication();
 app.UseAuthorization();

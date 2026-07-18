@@ -106,11 +106,15 @@ public class AuthController(ISender sender, ILogger<AuthController> logger) : Co
     {
         if (platform == ClientPlatform.Web)
         {
+            // SameSite=None (not Strict) because the web frontend is expected to live on a different
+            // origin/subdomain than this API — browsers require Secure=true whenever SameSite=None,
+            // which Request.IsHttps already reflects correctly once behind the reverse proxy (see
+            // UseForwardedHeaders in Program.cs).
             Response.Cookies.Append(RefreshTokenCookieName, result.RefreshToken, new CookieOptions
             {
                 HttpOnly = true,
                 Secure = Request.IsHttps,
-                SameSite = SameSiteMode.Strict,
+                SameSite = SameSiteMode.None,
                 Expires = DateTimeOffset.UtcNow.AddDays(7)
             });
 

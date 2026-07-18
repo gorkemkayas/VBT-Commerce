@@ -31,4 +31,7 @@ public class User
             CreatedAt = DateTime.UtcNow
         };
     }
+
+    /// <summary>Used only by the Development seeder — there is no admin-facing "promote user" flow.</summary>
+    public void PromoteToAdmin() => Role = UserRole.Admin;
 }
