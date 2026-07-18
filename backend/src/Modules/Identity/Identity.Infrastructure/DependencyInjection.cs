@@ -1,5 +1,7 @@
 using System.Text;
 using Identity.Application.Abstractions;
+using Identity.Contracts;
+using Identity.Infrastructure.Integrations;
 using Identity.Infrastructure.Options;
 using Identity.Infrastructure.Persistence;
 using Identity.Infrastructure.Services;
@@ -26,6 +28,7 @@ public static class DependencyInjection
         services.AddSingleton<IRefreshTokenLockProvider, RefreshTokenLockProvider>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<IIdentityDirectoryService, IdentityDirectoryService>();
 
         var jwtSection = configuration.GetSection(JwtOptions.SectionName);
         var jwtOptions = jwtSection.Get<JwtOptions>() ?? new JwtOptions();

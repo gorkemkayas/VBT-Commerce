@@ -19,6 +19,8 @@ using Inventory.Infrastructure;
 using MediatR;
 using Order.Application.Commands.Checkout.PlaceMyOrder;
 using Order.Infrastructure;
+using Notification.Application.Queries.GetNotificationLogsList;
+using Notification.Infrastructure;
 using Payment.Application.Commands.Charges.ChargeOrderPayment;
 using Payment.Infrastructure;
 using Pricing.Application.Commands.Prices.CreatePrice;
@@ -59,6 +61,7 @@ builder.Services.AddShippingModule(builder.Configuration);
 builder.Services.AddPaymentModule(builder.Configuration);
 builder.Services.AddOrderModule(builder.Configuration);
 builder.Services.AddReviewModule(builder.Configuration);
+builder.Services.AddNotificationModule(builder.Configuration);
 
 // CQRS: MediatR + FluentValidation + Pipeline Behaviors (module assemblies register their own handlers/validators)
 var moduleAssemblies = new[]
@@ -72,7 +75,8 @@ var moduleAssemblies = new[]
     typeof(CreateShippingCompanyCommand).Assembly,
     typeof(ChargeOrderPaymentCommand).Assembly,
     typeof(PlaceMyOrderCommand).Assembly,
-    typeof(CreateMyReviewCommand).Assembly
+    typeof(CreateMyReviewCommand).Assembly,
+    typeof(GetNotificationLogsListQuery).Assembly
 };
 
 // Registered before the open behaviors below so it becomes the outermost wrapper — its lock

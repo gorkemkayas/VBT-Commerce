@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Cart.Contracts;
 using Cart.Domain.Enums;
 using Inventory.Application.Commands.Reservations.ConfirmReservationsByReference;
@@ -9,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Order.Application.Abstractions;
 using Order.Application.Common;
 using Order.Application.Integrations;
+using Order.Contracts.Events;
 using Order.Domain.Entities;
 using Order.Domain.Enums;
 using Order.Domain.Exceptions;
@@ -181,6 +183,10 @@ public class OrderOperations(
         }
 
         order.Confirm();
+
+        var confirmedEvent = new OrderConfirmedEvent(order.Id, order.UserId, order.GuestCustomerId);
+        dbContext.OutboxMessages.Add(OutboxMessage.Create(OrderConfirmedEvent.EventType, JsonSerializer.Serialize(confirmedEvent)));
+
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 

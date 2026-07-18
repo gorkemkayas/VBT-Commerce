@@ -6,6 +6,7 @@ using Order.Application.Integrations;
 using Order.Application.Services;
 using Order.Contracts;
 using Order.Infrastructure.Integrations;
+using Order.Infrastructure.Outbox;
 using Order.Infrastructure.Persistence;
 
 namespace Order.Infrastructure;
@@ -24,6 +25,7 @@ public static class DependencyInjection
         services.AddScoped<IShippingIntegrationService, ShippingIntegrationService>();
         services.AddScoped<IOrderPurchaseVerifier, OrderPurchaseVerifierService>();
         services.AddScoped<OrderOperations>();
+        services.AddHostedService<OrderOutboxProcessor>();
 
         return services;
     }
