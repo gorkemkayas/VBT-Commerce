@@ -1,7 +1,6 @@
 using System.Text.Json;
 using Cart.Contracts;
 using Cart.Domain.Enums;
-using MediatR;
 using Microsoft.Extensions.Logging;
 using Order.Application.Abstractions;
 using Order.Application.Common;
@@ -10,9 +9,7 @@ using Order.Contracts.Events;
 using Order.Domain.Entities;
 using Order.Domain.Enums;
 using Order.Domain.Exceptions;
-using Payment.Application.Commands.Charges.ChargeOrderPayment;
-using Payment.Application.Commands.Refunds.RefundOrderPayment;
-using Payment.Application.Gateway;
+using Payment.Contracts;
 using Pricing.Contracts;
 using Pricing.Domain.Enums;
 
@@ -21,8 +18,8 @@ namespace Order.Application.Services;
 /// <summary>
 /// Shared checkout/confirm/cancel logic used by both the self-service ("me") and guest order
 /// handlers — mirrors Cart's CartOperations and Pricing's PriceCalculationService. Orchestrates
-/// Inventory/Shipping/Payment/Pricing/Cart via the shared MediatR ISender (see the plan's
-/// "cross-module orchestration" note): this is a saga, not a single distributed transaction — each
+/// Inventory/Shipping/Payment/Pricing/Cart purely through each module's own Contracts-backed
+/// integration service (never their Application layers): this is a saga, not a single distributed transaction — each
 /// step below that has already produced a side effect is explicitly compensated if a later step
 /// fails. Checkout is fully synchronous end-to-end: a declined card means the order is never
 /// persisted at all (no Pending row left behind), and a successful charge is immediately followed,
@@ -31,10 +28,10 @@ namespace Order.Application.Services;
 /// </summary>
 public class OrderOperations(
     IOrderDbContext dbContext,
-    ISender sender,
     IShippingIntegrationService shippingIntegrationService,
     IInventoryIntegrationService inventoryIntegrationService,
     IPricingIntegrationService pricingIntegrationService,
+    IPaymentIntegrationService paymentIntegrationService,
     ILogger<OrderOperations> logger)
 {
     public async Task<Guid> PlaceOrderAsync(
@@ -43,8 +40,8 @@ public class OrderOperations(
         OrderAddressSnapshot address,
         Guid shippingCompanyId,
         PriceCalculationResultDto priceResult,
-        IyzicoCardInfo card,
-        IyzicoBuyerInfo buyer,
+        PaymentCardInfo card,
+        PaymentBuyerInfo buyer,
         Func<CancellationToken, Task> clearCartAsync,
         CancellationToken cancellationToken)
     {
@@ -80,26 +77,18 @@ public class OrderOperations(
         var grandTotal = priceResult.Subtotal - priceResult.TotalDiscount + priceResult.TaxAmount + shippingCompany.Fee;
 
         var basketItems = orderItems
-            .Select(i => new IyzicoBasketItem($"{i.Item2} {i.SellableItemId}", "General", i.UnitPrice * i.Quantity))
-            .Append(new IyzicoBasketItem("Shipping", "Shipping", shippingCompany.Fee))
+            .Select(i => new PaymentBasketItem($"{i.Item2} {i.SellableItemId}", "General", i.UnitPrice * i.Quantity))
+            .Append(new PaymentBasketItem("Shipping", "Shipping", shippingCompany.Fee))
             .ToList();
 
-        var addressInfo = new IyzicoAddressInfo(
+        var addressInfo = new PaymentAddressInfo(
             $"{address.AddressLine1} {address.AddressLine2}".Trim(), address.City, address.Country, address.PostalCode);
-
-        var chargeRequest = new ChargeOrderPaymentCommand(
-            orderId,
-            priceResult.Subtotal + shippingCompany.Fee,
-            grandTotal,
-            card,
-            buyer,
-            addressInfo,
-            basketItems);
 
         Guid paymentId;
         try
         {
-            paymentId = await sender.Send(chargeRequest, cancellationToken);
+            paymentId = await paymentIntegrationService.ChargeAsync(
+                orderId, priceResult.Subtotal + shippingCompany.Fee, grandTotal, card, buyer, addressInfo, basketItems, cancellationToken);
         }
         catch
         {
@@ -202,7 +191,7 @@ public class OrderOperations(
                 await inventoryIntegrationService.ReleaseReservationsAsync(order.Id, cancellationToken);
                 break;
             case OrderStatus.Confirmed:
-                await sender.Send(new RefundOrderPaymentCommand(order.Id, ip), cancellationToken);
+                await paymentIntegrationService.RefundAsync(order.Id, ip, cancellationToken);
                 break;
             default:
                 throw new OrderInvalidStatusTransitionException(order.Id, order.Status);
@@ -216,7 +205,7 @@ public class OrderOperations(
     {
         try
         {
-            await sender.Send(new RefundOrderPaymentCommand(orderId, ip), CancellationToken.None);
+            await paymentIntegrationService.RefundAsync(orderId, ip, CancellationToken.None);
         }
         catch (Exception exception)
         {

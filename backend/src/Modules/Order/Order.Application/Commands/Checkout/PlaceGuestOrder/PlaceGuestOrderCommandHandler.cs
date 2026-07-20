@@ -5,7 +5,7 @@ using Order.Application.Common;
 using Order.Application.Integrations;
 using Order.Application.Services;
 using Order.Domain.Exceptions;
-using Payment.Application.Gateway;
+using Payment.Contracts;
 using Pricing.Contracts;
 using Pricing.Domain.Enums;
 
@@ -38,8 +38,8 @@ public class PlaceGuestOrderCommandHandler(
             request.RecipientName, request.PhoneNumber, request.Country, request.City,
             request.District, request.PostalCode, request.AddressLine1, request.AddressLine2);
 
-        var card = new IyzicoCardInfo(request.CardHolderName, request.CardNumber, request.CardExpireMonth, request.CardExpireYear, request.CardCvc);
-        var buyer = new IyzicoBuyerInfo(
+        var card = new PaymentCardInfo(request.CardHolderName, request.CardNumber, request.CardExpireMonth, request.CardExpireYear, request.CardCvc);
+        var buyer = new PaymentBuyerInfo(
             guest.FirstName,
             guest.LastName,
             guest.Email,
