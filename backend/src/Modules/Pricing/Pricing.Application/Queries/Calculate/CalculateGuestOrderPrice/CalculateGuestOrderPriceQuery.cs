@@ -1,5 +1,5 @@
 using BuildingBlocks.Application.Messaging;
-using Pricing.Application.Common;
+using Pricing.Contracts;
 
 namespace Pricing.Application.Queries.Calculate.CalculateGuestOrderPrice;
 

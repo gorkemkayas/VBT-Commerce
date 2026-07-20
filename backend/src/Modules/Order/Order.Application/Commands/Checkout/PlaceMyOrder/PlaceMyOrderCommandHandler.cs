@@ -6,8 +6,7 @@ using Order.Application.Integrations;
 using Order.Application.Services;
 using Order.Domain.Exceptions;
 using Payment.Application.Gateway;
-using Pricing.Application.Common;
-using Pricing.Application.Queries.Calculate.CalculateMyOrderPrice;
+using Pricing.Contracts;
 using Pricing.Domain.Enums;
 
 namespace Order.Application.Commands.Checkout.PlaceMyOrder;
@@ -16,7 +15,7 @@ public class PlaceMyOrderCommandHandler(
     ICurrentUserService currentUserService,
     ICustomerIntegrationService customerIntegrationService,
     ICartIntegrationService cartIntegrationService,
-    ISender sender,
+    IPricingIntegrationService pricingIntegrationService,
     OrderOperations orderOperations) : IRequestHandler<PlaceMyOrderCommand, Guid>
 {
     public async Task<Guid> Handle(PlaceMyOrderCommand request, CancellationToken cancellationToken)
@@ -37,7 +36,7 @@ public class PlaceMyOrderCommandHandler(
             .Select(i => new PriceCalculationItem(i.SellableItemId, MapToPriceItemType(i.SellableItemType), i.Quantity))
             .ToList();
 
-        var priceResult = await sender.Send(new CalculateMyOrderPriceQuery(priceItems, request.CouponCodes), cancellationToken);
+        var priceResult = await pricingIntegrationService.CalculateForCustomerAsync(userId, priceItems, request.CouponCodes, cancellationToken);
 
         var addressSnapshot = new OrderAddressSnapshot(
             address.RecipientName, address.PhoneNumber, address.Country, address.City,

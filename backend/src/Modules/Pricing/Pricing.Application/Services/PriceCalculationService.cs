@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Pricing.Application.Abstractions;
-using Pricing.Application.Common;
 using Pricing.Application.Integrations;
+using Pricing.Contracts;
 using Pricing.Domain.Entities;
 using Pricing.Domain.Enums;
 using Pricing.Domain.Exceptions;

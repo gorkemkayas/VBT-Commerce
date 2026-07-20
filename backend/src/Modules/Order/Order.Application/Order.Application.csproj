@@ -8,7 +8,7 @@
     <ProjectReference Include="..\..\Customer\Customer.Contracts\Customer.Contracts.csproj" />
     <ProjectReference Include="..\..\Shipping\Shipping.Contracts\Shipping.Contracts.csproj" />
     <ProjectReference Include="..\..\Inventory\Inventory.Contracts\Inventory.Contracts.csproj" />
-    <ProjectReference Include="..\..\Pricing\Pricing.Application\Pricing.Application.csproj" />
+    <ProjectReference Include="..\..\Pricing\Pricing.Contracts\Pricing.Contracts.csproj" />
     <ProjectReference Include="..\..\Payment\Payment.Application\Payment.Application.csproj" />
   </ItemGroup>
 

@@ -13,8 +13,7 @@ using Order.Domain.Exceptions;
 using Payment.Application.Commands.Charges.ChargeOrderPayment;
 using Payment.Application.Commands.Refunds.RefundOrderPayment;
 using Payment.Application.Gateway;
-using Pricing.Application.Commands.CouponUsage.CommitCouponUsage;
-using Pricing.Application.Common;
+using Pricing.Contracts;
 using Pricing.Domain.Enums;
 
 namespace Order.Application.Services;
@@ -35,6 +34,7 @@ public class OrderOperations(
     ISender sender,
     IShippingIntegrationService shippingIntegrationService,
     IInventoryIntegrationService inventoryIntegrationService,
+    IPricingIntegrationService pricingIntegrationService,
     ILogger<OrderOperations> logger)
 {
     public async Task<Guid> PlaceOrderAsync(
@@ -175,7 +175,7 @@ public class OrderOperations(
         if (order.Coupons.Count > 0)
         {
             var appliedCoupons = order.Coupons.Select(c => new AppliedCouponDto(c.Code, c.DiscountAmount)).ToList();
-            await sender.Send(new CommitCouponUsageCommand(appliedCoupons, order.UserId, order.GuestCustomerId, order.Id), cancellationToken);
+            await pricingIntegrationService.CommitCouponUsageAsync(appliedCoupons, order.UserId, order.GuestCustomerId, order.Id, cancellationToken);
         }
 
         order.Confirm();

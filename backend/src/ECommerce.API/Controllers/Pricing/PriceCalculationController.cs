@@ -1,8 +1,8 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Pricing.Application.Common;
 using Pricing.Application.Queries.Calculate.CalculateGuestOrderPrice;
 using Pricing.Application.Queries.Calculate.CalculateMyOrderPrice;
+using Pricing.Contracts;
 
 namespace ECommerce.API.Controllers.Pricing;
 

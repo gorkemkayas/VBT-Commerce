@@ -1,6 +1,6 @@
 using Pricing.Domain.Enums;
 
-namespace Pricing.Application.Common;
+namespace Pricing.Contracts;
 
 public record PriceCalculationLineDto(Guid SellableItemId, PriceItemType SellableItemType, int Quantity, decimal UnitPrice, decimal LineSubtotal);
 
