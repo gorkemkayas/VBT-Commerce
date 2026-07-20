@@ -1,4 +1,6 @@
+using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Shipping.Application.Commands.Shipments.CreateShipment;
 using Shipping.Contracts;
 using Shipping.Infrastructure.Persistence;
 
@@ -6,10 +8,10 @@ namespace Shipping.Infrastructure.Integrations;
 
 /// <summary>
 /// Implementation of the Shipping module's outbound contract (see architecture.md §3 —
-/// contracts/integrations). Read-only: other modules consume this instead of touching
-/// <see cref="ShippingDbContext"/> directly.
+/// contracts/integrations). Other modules consume this instead of touching
+/// <see cref="ShippingDbContext"/> or Shipping.Application directly.
 /// </summary>
-public class ShippingContractService(ShippingDbContext dbContext) : IShippingCatalogService
+public class ShippingContractService(ShippingDbContext dbContext, ISender sender) : IShippingCatalogService
 {
     public async Task<ShippingCompanySummaryDto?> GetShippingCompanyAsync(Guid shippingCompanyId, CancellationToken cancellationToken)
     {
@@ -28,4 +30,7 @@ public class ShippingContractService(ShippingDbContext dbContext) : IShippingCat
             .Select(c => new ShippingCompanySummaryDto(c.Id, c.Name, c.Fee))
             .ToListAsync(cancellationToken);
     }
+
+    public Task<Guid> CreateShipmentAsync(Guid orderId, Guid shippingCompanyId, CancellationToken cancellationToken)
+        => sender.Send(new CreateShipmentCommand(orderId, shippingCompanyId), cancellationToken);
 }

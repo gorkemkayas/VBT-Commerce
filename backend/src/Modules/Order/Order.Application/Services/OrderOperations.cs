@@ -16,7 +16,6 @@ using Payment.Application.Gateway;
 using Pricing.Application.Commands.CouponUsage.CommitCouponUsage;
 using Pricing.Application.Common;
 using Pricing.Domain.Enums;
-using Shipping.Application.Commands.Shipments.CreateShipment;
 
 namespace Order.Application.Services;
 
@@ -63,7 +62,7 @@ public class OrderOperations(
         Guid shipmentId;
         try
         {
-            shipmentId = await sender.Send(new CreateShipmentCommand(orderId, shippingCompanyId), cancellationToken);
+            shipmentId = await shippingIntegrationService.CreateShipmentAsync(orderId, shippingCompanyId, cancellationToken);
         }
         catch
         {

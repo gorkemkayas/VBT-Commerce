@@ -10,4 +10,7 @@ public class ShippingIntegrationService(IShippingCatalogService shippingCatalogS
         var activeCompanies = await shippingCatalogService.GetActiveShippingCompaniesAsync(cancellationToken);
         return activeCompanies.FirstOrDefault(c => c.Id == shippingCompanyId);
     }
+
+    public Task<Guid> CreateShipmentAsync(Guid orderId, Guid shippingCompanyId, CancellationToken cancellationToken)
+        => shippingCatalogService.CreateShipmentAsync(orderId, shippingCompanyId, cancellationToken);
 }
