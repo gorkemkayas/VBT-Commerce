@@ -23,6 +23,7 @@ public static class DependencyInjection
         services.AddScoped<ICartIntegrationService, CartIntegrationService>();
         services.AddScoped<ICustomerIntegrationService, CustomerIntegrationService>();
         services.AddScoped<IShippingIntegrationService, ShippingIntegrationService>();
+        services.AddScoped<IInventoryIntegrationService, InventoryIntegrationService>();
         services.AddScoped<IOrderPurchaseVerifier, OrderPurchaseVerifierService>();
         services.AddScoped<OrderOperations>();
         services.AddHostedService<OrderOutboxProcessor>();

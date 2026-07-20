@@ -1,10 +1,6 @@
 using System.Text.Json;
 using Cart.Contracts;
 using Cart.Domain.Enums;
-using Inventory.Application.Commands.Reservations.ConfirmReservationsByReference;
-using Inventory.Application.Commands.Reservations.ReleaseReservationsByReference;
-using Inventory.Application.Commands.Reservations.ReserveStock;
-using Inventory.Domain.Enums;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Order.Application.Abstractions;
@@ -39,6 +35,7 @@ public class OrderOperations(
     IOrderDbContext dbContext,
     ISender sender,
     IShippingIntegrationService shippingIntegrationService,
+    IInventoryIntegrationService inventoryIntegrationService,
     ILogger<OrderOperations> logger)
 {
     public async Task<Guid> PlaceOrderAsync(
@@ -58,10 +55,10 @@ public class OrderOperations(
         var orderId = Guid.NewGuid();
 
         var reserveItems = cartItems
-            .Select(i => new ReserveStockLineItem(i.SellableItemId, MapToInventoryItemType(i.SellableItemType), i.Quantity))
+            .Select(i => new ReserveStockLineItem(i.SellableItemId, MapToOrderItemType(i.SellableItemType), i.Quantity))
             .ToList();
 
-        await sender.Send(new ReserveStockCommand(orderId, reserveItems), cancellationToken);
+        await inventoryIntegrationService.ReserveStockAsync(orderId, reserveItems, cancellationToken);
 
         Guid shipmentId;
         try
@@ -70,7 +67,7 @@ public class OrderOperations(
         }
         catch
         {
-            await sender.Send(new ReleaseReservationsByReferenceCommand(orderId), CancellationToken.None);
+            await inventoryIntegrationService.ReleaseReservationsAsync(orderId, CancellationToken.None);
             throw;
         }
 
@@ -107,7 +104,7 @@ public class OrderOperations(
         }
         catch
         {
-            await sender.Send(new ReleaseReservationsByReferenceCommand(orderId), CancellationToken.None);
+            await inventoryIntegrationService.ReleaseReservationsAsync(orderId, CancellationToken.None);
             throw;
         }
 
@@ -142,7 +139,7 @@ public class OrderOperations(
         catch
         {
             await TryRefundAsync(orderId, buyer.Ip, "order persistence failed after a successful charge");
-            await sender.Send(new ReleaseReservationsByReferenceCommand(orderId), CancellationToken.None);
+            await inventoryIntegrationService.ReleaseReservationsAsync(orderId, CancellationToken.None);
             throw;
         }
 
@@ -174,7 +171,7 @@ public class OrderOperations(
         if (order.Status != OrderStatus.Pending)
             throw new OrderInvalidStatusTransitionException(order.Id, order.Status);
 
-        await sender.Send(new ConfirmReservationsByReferenceCommand(order.Id), cancellationToken);
+        await inventoryIntegrationService.ConfirmReservationsAsync(order.Id, cancellationToken);
 
         if (order.Coupons.Count > 0)
         {
@@ -203,7 +200,7 @@ public class OrderOperations(
         switch (order.Status)
         {
             case OrderStatus.Pending:
-                await sender.Send(new ReleaseReservationsByReferenceCommand(order.Id), cancellationToken);
+                await inventoryIntegrationService.ReleaseReservationsAsync(order.Id, cancellationToken);
                 break;
             case OrderStatus.Confirmed:
                 await sender.Send(new RefundOrderPaymentCommand(order.Id, ip), cancellationToken);
@@ -228,10 +225,10 @@ public class OrderOperations(
         }
     }
 
-    private static InventoryItemType MapToInventoryItemType(CartItemType type) => type switch
+    private static OrderItemType MapToOrderItemType(CartItemType type) => type switch
     {
-        CartItemType.Product => InventoryItemType.Product,
-        CartItemType.Variant => InventoryItemType.Variant,
+        CartItemType.Product => OrderItemType.Product,
+        CartItemType.Variant => OrderItemType.Variant,
         _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
     };
 
