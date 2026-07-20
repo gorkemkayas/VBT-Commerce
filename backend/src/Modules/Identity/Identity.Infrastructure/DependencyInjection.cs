@@ -23,6 +23,7 @@ public static class DependencyInjection
         services.AddScoped<IIdentityDbContext>(sp => sp.GetRequiredService<IdentityDbContext>());
 
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
+        services.Configure<PasswordResetOptions>(configuration.GetSection(PasswordResetOptions.SectionName));
 
         services.AddMemoryCache();
         services.AddSingleton<IRefreshTokenLockProvider, RefreshTokenLockProvider>();

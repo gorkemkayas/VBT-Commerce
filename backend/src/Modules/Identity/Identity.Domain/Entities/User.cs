@@ -34,4 +34,6 @@ public class User
 
     /// <summary>Used only by the Development seeder — there is no admin-facing "promote user" flow.</summary>
     public void PromoteToAdmin() => Role = UserRole.Admin;
+
+    public void SetPasswordHash(string passwordHash) => PasswordHash = passwordHash;
 }

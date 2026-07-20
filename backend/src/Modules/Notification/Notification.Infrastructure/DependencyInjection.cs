@@ -4,8 +4,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Notification.Application.Abstractions;
 using Notification.Application.Email;
 using Notification.Application.Integrations;
+using Notification.Application.Links;
 using Notification.Infrastructure.Email;
 using Notification.Infrastructure.Integrations;
+using Notification.Infrastructure.Links;
 using Notification.Infrastructure.Options;
 using Notification.Infrastructure.Persistence;
 
@@ -22,6 +24,9 @@ public static class DependencyInjection
 
         services.Configure<SmtpOptions>(configuration.GetSection(SmtpOptions.SectionName));
         services.AddScoped<IEmailSender, MailKitEmailSender>();
+
+        services.Configure<FrontendOptions>(configuration.GetSection(FrontendOptions.SectionName));
+        services.AddScoped<IPasswordResetLinkBuilder, PasswordResetLinkBuilder>();
 
         services.AddScoped<ICustomerIntegrationService, CustomerIntegrationService>();
         services.AddScoped<IIdentityIntegrationService, IdentityIntegrationService>();

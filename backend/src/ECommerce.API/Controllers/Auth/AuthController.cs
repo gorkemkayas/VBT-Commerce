@@ -1,10 +1,12 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Cart.Application.Commands.MergeAnonymousCart;
+using Identity.Application.Commands.ForgotPassword;
 using Identity.Application.Commands.Login;
 using Identity.Application.Commands.Logout;
 using Identity.Application.Commands.RefreshTokens;
 using Identity.Application.Commands.Register;
+using Identity.Application.Commands.ResetPassword;
 using Identity.Application.Common;
 using Identity.Domain.Enums;
 using MediatR;
@@ -75,6 +77,20 @@ public class AuthController(ISender sender, ILogger<AuthController> logger) : Co
         var result = await sender.Send(new RefreshTokenCommand(rawRefreshToken, platform), cancellationToken);
 
         return Ok(BuildResponse(result, platform));
+    }
+
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest request, CancellationToken cancellationToken)
+    {
+        await sender.Send(new ForgotPasswordCommand(request.Email), cancellationToken);
+        return NoContent();
+    }
+
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword(ResetPasswordRequest request, CancellationToken cancellationToken)
+    {
+        await sender.Send(new ResetPasswordCommand(request.Token, request.NewPassword), cancellationToken);
+        return NoContent();
     }
 
     [HttpPost("logout")]
