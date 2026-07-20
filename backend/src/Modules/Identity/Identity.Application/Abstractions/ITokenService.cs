@@ -9,5 +9,7 @@ public interface ITokenService
 
     (string RawToken, string TokenHash, DateTime ExpiresAt) GenerateRefreshToken(ClientPlatform platform);
 
+    (string RawToken, string TokenHash, DateTime ExpiresAt) GeneratePasswordResetToken();
+
     string HashToken(string rawToken);
 }

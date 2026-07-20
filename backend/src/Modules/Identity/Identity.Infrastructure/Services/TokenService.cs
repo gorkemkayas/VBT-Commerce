@@ -11,9 +11,10 @@ using System.IdentityModel.Tokens.Jwt;
 
 namespace Identity.Infrastructure.Services;
 
-public class TokenService(IOptions<JwtOptions> jwtOptions) : ITokenService
+public class TokenService(IOptions<JwtOptions> jwtOptions, IOptions<PasswordResetOptions> passwordResetOptions) : ITokenService
 {
     private readonly JwtOptions _options = jwtOptions.Value;
+    private readonly PasswordResetOptions _passwordResetOptions = passwordResetOptions.Value;
 
     public (string Token, DateTime ExpiresAt) GenerateAccessToken(User user)
     {
@@ -50,6 +51,14 @@ public class TokenService(IOptions<JwtOptions> jwtOptions) : ITokenService
             : _options.RefreshTokenDaysWeb;
 
         var expiresAt = DateTime.UtcNow.AddDays(refreshTokenDays);
+
+        return (rawToken, HashToken(rawToken), expiresAt);
+    }
+
+    public (string RawToken, string TokenHash, DateTime ExpiresAt) GeneratePasswordResetToken()
+    {
+        var rawToken = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
+        var expiresAt = DateTime.UtcNow.AddMinutes(_passwordResetOptions.TokenExpiryMinutes);
 
         return (rawToken, HashToken(rawToken), expiresAt);
     }

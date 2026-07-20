@@ -28,6 +28,7 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
                 string.Join(" ", validationException.Errors.Select(e => e.ErrorMessage))),
             InvalidCredentialsException credentialsException => (StatusCodes.Status401Unauthorized, "Unauthorized", credentialsException.Message),
             InvalidRefreshTokenException refreshTokenException => (StatusCodes.Status401Unauthorized, "Unauthorized", refreshTokenException.Message),
+            InvalidOrExpiredResetTokenException resetTokenException => (StatusCodes.Status400BadRequest, "Bad Request", resetTokenException.Message),
             UnauthorizedException unauthorizedException => (StatusCodes.Status401Unauthorized, "Unauthorized", unauthorizedException.Message),
             ForbiddenException forbiddenException => (StatusCodes.Status403Forbidden, "Forbidden", forbiddenException.Message),
             CategoryNotFoundException categoryNotFoundException => (StatusCodes.Status404NotFound, "Not Found", categoryNotFoundException.Message),
