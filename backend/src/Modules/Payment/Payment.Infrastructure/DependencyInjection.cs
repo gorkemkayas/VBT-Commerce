@@ -4,7 +4,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Payment.Application.Abstractions;
 using Payment.Application.Gateway;
 using Payment.Application.Services;
+using Payment.Contracts;
 using Payment.Infrastructure.Gateway;
+using Payment.Infrastructure.Integrations;
 using Payment.Infrastructure.Options;
 using Payment.Infrastructure.Persistence;
 
@@ -23,6 +25,7 @@ public static class DependencyInjection
         services.AddScoped<IIyzicoGateway, IyzicoGateway>();
 
         services.AddScoped<PaymentOperations>();
+        services.AddScoped<IPaymentGateway, PaymentGatewayContractService>();
 
         return services;
     }

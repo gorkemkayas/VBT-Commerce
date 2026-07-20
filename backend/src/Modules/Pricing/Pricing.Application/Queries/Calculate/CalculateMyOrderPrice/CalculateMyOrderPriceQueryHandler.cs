@@ -1,7 +1,7 @@
 using BuildingBlocks.Application.Security;
 using MediatR;
-using Pricing.Application.Common;
 using Pricing.Application.Services;
+using Pricing.Contracts;
 
 namespace Pricing.Application.Queries.Calculate.CalculateMyOrderPrice;
 

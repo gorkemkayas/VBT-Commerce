@@ -1,11 +1,6 @@
 using System.Text.Json;
 using Cart.Contracts;
 using Cart.Domain.Enums;
-using Inventory.Application.Commands.Reservations.ConfirmReservationsByReference;
-using Inventory.Application.Commands.Reservations.ReleaseReservationsByReference;
-using Inventory.Application.Commands.Reservations.ReserveStock;
-using Inventory.Domain.Enums;
-using MediatR;
 using Microsoft.Extensions.Logging;
 using Order.Application.Abstractions;
 using Order.Application.Common;
@@ -14,21 +9,17 @@ using Order.Contracts.Events;
 using Order.Domain.Entities;
 using Order.Domain.Enums;
 using Order.Domain.Exceptions;
-using Payment.Application.Commands.Charges.ChargeOrderPayment;
-using Payment.Application.Commands.Refunds.RefundOrderPayment;
-using Payment.Application.Gateway;
-using Pricing.Application.Commands.CouponUsage.CommitCouponUsage;
-using Pricing.Application.Common;
+using Payment.Contracts;
+using Pricing.Contracts;
 using Pricing.Domain.Enums;
-using Shipping.Application.Commands.Shipments.CreateShipment;
 
 namespace Order.Application.Services;
 
 /// <summary>
 /// Shared checkout/confirm/cancel logic used by both the self-service ("me") and guest order
 /// handlers — mirrors Cart's CartOperations and Pricing's PriceCalculationService. Orchestrates
-/// Inventory/Shipping/Payment/Pricing/Cart via the shared MediatR ISender (see the plan's
-/// "cross-module orchestration" note): this is a saga, not a single distributed transaction — each
+/// Inventory/Shipping/Payment/Pricing/Cart purely through each module's own Contracts-backed
+/// integration service (never their Application layers): this is a saga, not a single distributed transaction — each
 /// step below that has already produced a side effect is explicitly compensated if a later step
 /// fails. Checkout is fully synchronous end-to-end: a declined card means the order is never
 /// persisted at all (no Pending row left behind), and a successful charge is immediately followed,
@@ -37,8 +28,10 @@ namespace Order.Application.Services;
 /// </summary>
 public class OrderOperations(
     IOrderDbContext dbContext,
-    ISender sender,
     IShippingIntegrationService shippingIntegrationService,
+    IInventoryIntegrationService inventoryIntegrationService,
+    IPricingIntegrationService pricingIntegrationService,
+    IPaymentIntegrationService paymentIntegrationService,
     ILogger<OrderOperations> logger)
 {
     public async Task<Guid> PlaceOrderAsync(
@@ -47,8 +40,8 @@ public class OrderOperations(
         OrderAddressSnapshot address,
         Guid shippingCompanyId,
         PriceCalculationResultDto priceResult,
-        IyzicoCardInfo card,
-        IyzicoBuyerInfo buyer,
+        PaymentCardInfo card,
+        PaymentBuyerInfo buyer,
         Func<CancellationToken, Task> clearCartAsync,
         CancellationToken cancellationToken)
     {
@@ -58,19 +51,19 @@ public class OrderOperations(
         var orderId = Guid.NewGuid();
 
         var reserveItems = cartItems
-            .Select(i => new ReserveStockLineItem(i.SellableItemId, MapToInventoryItemType(i.SellableItemType), i.Quantity))
+            .Select(i => new ReserveStockLineItem(i.SellableItemId, MapToOrderItemType(i.SellableItemType), i.Quantity))
             .ToList();
 
-        await sender.Send(new ReserveStockCommand(orderId, reserveItems), cancellationToken);
+        await inventoryIntegrationService.ReserveStockAsync(orderId, reserveItems, cancellationToken);
 
         Guid shipmentId;
         try
         {
-            shipmentId = await sender.Send(new CreateShipmentCommand(orderId, shippingCompanyId), cancellationToken);
+            shipmentId = await shippingIntegrationService.CreateShipmentAsync(orderId, shippingCompanyId, cancellationToken);
         }
         catch
         {
-            await sender.Send(new ReleaseReservationsByReferenceCommand(orderId), CancellationToken.None);
+            await inventoryIntegrationService.ReleaseReservationsAsync(orderId, CancellationToken.None);
             throw;
         }
 
@@ -84,30 +77,22 @@ public class OrderOperations(
         var grandTotal = priceResult.Subtotal - priceResult.TotalDiscount + priceResult.TaxAmount + shippingCompany.Fee;
 
         var basketItems = orderItems
-            .Select(i => new IyzicoBasketItem($"{i.Item2} {i.SellableItemId}", "General", i.UnitPrice * i.Quantity))
-            .Append(new IyzicoBasketItem("Shipping", "Shipping", shippingCompany.Fee))
+            .Select(i => new PaymentBasketItem($"{i.Item2} {i.SellableItemId}", "General", i.UnitPrice * i.Quantity))
+            .Append(new PaymentBasketItem("Shipping", "Shipping", shippingCompany.Fee))
             .ToList();
 
-        var addressInfo = new IyzicoAddressInfo(
+        var addressInfo = new PaymentAddressInfo(
             $"{address.AddressLine1} {address.AddressLine2}".Trim(), address.City, address.Country, address.PostalCode);
-
-        var chargeRequest = new ChargeOrderPaymentCommand(
-            orderId,
-            priceResult.Subtotal + shippingCompany.Fee,
-            grandTotal,
-            card,
-            buyer,
-            addressInfo,
-            basketItems);
 
         Guid paymentId;
         try
         {
-            paymentId = await sender.Send(chargeRequest, cancellationToken);
+            paymentId = await paymentIntegrationService.ChargeAsync(
+                orderId, priceResult.Subtotal + shippingCompany.Fee, grandTotal, card, buyer, addressInfo, basketItems, cancellationToken);
         }
         catch
         {
-            await sender.Send(new ReleaseReservationsByReferenceCommand(orderId), CancellationToken.None);
+            await inventoryIntegrationService.ReleaseReservationsAsync(orderId, CancellationToken.None);
             throw;
         }
 
@@ -142,7 +127,7 @@ public class OrderOperations(
         catch
         {
             await TryRefundAsync(orderId, buyer.Ip, "order persistence failed after a successful charge");
-            await sender.Send(new ReleaseReservationsByReferenceCommand(orderId), CancellationToken.None);
+            await inventoryIntegrationService.ReleaseReservationsAsync(orderId, CancellationToken.None);
             throw;
         }
 
@@ -174,12 +159,12 @@ public class OrderOperations(
         if (order.Status != OrderStatus.Pending)
             throw new OrderInvalidStatusTransitionException(order.Id, order.Status);
 
-        await sender.Send(new ConfirmReservationsByReferenceCommand(order.Id), cancellationToken);
+        await inventoryIntegrationService.ConfirmReservationsAsync(order.Id, cancellationToken);
 
         if (order.Coupons.Count > 0)
         {
             var appliedCoupons = order.Coupons.Select(c => new AppliedCouponDto(c.Code, c.DiscountAmount)).ToList();
-            await sender.Send(new CommitCouponUsageCommand(appliedCoupons, order.UserId, order.GuestCustomerId, order.Id), cancellationToken);
+            await pricingIntegrationService.CommitCouponUsageAsync(appliedCoupons, order.UserId, order.GuestCustomerId, order.Id, cancellationToken);
         }
 
         order.Confirm();
@@ -203,10 +188,10 @@ public class OrderOperations(
         switch (order.Status)
         {
             case OrderStatus.Pending:
-                await sender.Send(new ReleaseReservationsByReferenceCommand(order.Id), cancellationToken);
+                await inventoryIntegrationService.ReleaseReservationsAsync(order.Id, cancellationToken);
                 break;
             case OrderStatus.Confirmed:
-                await sender.Send(new RefundOrderPaymentCommand(order.Id, ip), cancellationToken);
+                await paymentIntegrationService.RefundAsync(order.Id, ip, cancellationToken);
                 break;
             default:
                 throw new OrderInvalidStatusTransitionException(order.Id, order.Status);
@@ -220,7 +205,7 @@ public class OrderOperations(
     {
         try
         {
-            await sender.Send(new RefundOrderPaymentCommand(orderId, ip), CancellationToken.None);
+            await paymentIntegrationService.RefundAsync(orderId, ip, CancellationToken.None);
         }
         catch (Exception exception)
         {
@@ -228,10 +213,10 @@ public class OrderOperations(
         }
     }
 
-    private static InventoryItemType MapToInventoryItemType(CartItemType type) => type switch
+    private static OrderItemType MapToOrderItemType(CartItemType type) => type switch
     {
-        CartItemType.Product => InventoryItemType.Product,
-        CartItemType.Variant => InventoryItemType.Variant,
+        CartItemType.Product => OrderItemType.Product,
+        CartItemType.Variant => OrderItemType.Variant,
         _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
     };
 

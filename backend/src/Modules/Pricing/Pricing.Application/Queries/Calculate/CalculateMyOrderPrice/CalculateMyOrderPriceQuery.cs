@@ -1,6 +1,6 @@
 using BuildingBlocks.Application.Messaging;
 using BuildingBlocks.Application.Security;
-using Pricing.Application.Common;
+using Pricing.Contracts;
 
 namespace Pricing.Application.Queries.Calculate.CalculateMyOrderPrice;
 

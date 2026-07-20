@@ -1,4 +1,4 @@
-using Pricing.Application.Common;
+using Pricing.Contracts;
 
 namespace ECommerce.API.Controllers.Pricing;
 

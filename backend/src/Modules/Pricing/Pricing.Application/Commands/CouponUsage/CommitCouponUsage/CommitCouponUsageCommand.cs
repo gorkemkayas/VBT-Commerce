@@ -1,6 +1,6 @@
 using BuildingBlocks.Application.Messaging;
 using MediatR;
-using Pricing.Application.Common;
+using Pricing.Contracts;
 
 namespace Pricing.Application.Commands.CouponUsage.CommitCouponUsage;
 

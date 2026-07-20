@@ -9,4 +9,6 @@ public interface IShippingIntegrationService
     /// itself carries no IsActive flag, so this checks membership in the active list.
     /// </summary>
     Task<ShippingCompanySummaryDto?> GetActiveShippingCompanyAsync(Guid shippingCompanyId, CancellationToken cancellationToken);
+
+    Task<Guid> CreateShipmentAsync(Guid orderId, Guid shippingCompanyId, CancellationToken cancellationToken);
 }

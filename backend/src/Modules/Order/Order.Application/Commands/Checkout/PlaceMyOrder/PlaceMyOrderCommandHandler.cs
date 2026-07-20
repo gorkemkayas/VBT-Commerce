@@ -1,14 +1,12 @@
 using BuildingBlocks.Application.Security;
-using Cart.Application.Commands.Me.ClearMyCart;
 using Cart.Domain.Enums;
 using MediatR;
 using Order.Application.Common;
 using Order.Application.Integrations;
 using Order.Application.Services;
 using Order.Domain.Exceptions;
-using Payment.Application.Gateway;
-using Pricing.Application.Common;
-using Pricing.Application.Queries.Calculate.CalculateMyOrderPrice;
+using Payment.Contracts;
+using Pricing.Contracts;
 using Pricing.Domain.Enums;
 
 namespace Order.Application.Commands.Checkout.PlaceMyOrder;
@@ -17,7 +15,7 @@ public class PlaceMyOrderCommandHandler(
     ICurrentUserService currentUserService,
     ICustomerIntegrationService customerIntegrationService,
     ICartIntegrationService cartIntegrationService,
-    ISender sender,
+    IPricingIntegrationService pricingIntegrationService,
     OrderOperations orderOperations) : IRequestHandler<PlaceMyOrderCommand, Guid>
 {
     public async Task<Guid> Handle(PlaceMyOrderCommand request, CancellationToken cancellationToken)
@@ -38,7 +36,7 @@ public class PlaceMyOrderCommandHandler(
             .Select(i => new PriceCalculationItem(i.SellableItemId, MapToPriceItemType(i.SellableItemType), i.Quantity))
             .ToList();
 
-        var priceResult = await sender.Send(new CalculateMyOrderPriceQuery(priceItems, request.CouponCodes), cancellationToken);
+        var priceResult = await pricingIntegrationService.CalculateForCustomerAsync(userId, priceItems, request.CouponCodes, cancellationToken);
 
         var addressSnapshot = new OrderAddressSnapshot(
             address.RecipientName, address.PhoneNumber, address.Country, address.City,
@@ -46,10 +44,10 @@ public class PlaceMyOrderCommandHandler(
 
         // Customer has no first/last name field of its own (only Identity does, at registration) —
         // splitting the delivery address's recipient name avoids introducing an Identity.Contracts
-        // project just for this; iyzico only uses Name/Surname for fraud scoring, not verification.
+        // project just for this; Payment only uses Name/Surname for fraud scoring, not verification.
         var nameParts = address.RecipientName.Split(' ', 2);
-        var card = new IyzicoCardInfo(request.CardHolderName, request.CardNumber, request.CardExpireMonth, request.CardExpireYear, request.CardCvc);
-        var buyer = new IyzicoBuyerInfo(
+        var card = new PaymentCardInfo(request.CardHolderName, request.CardNumber, request.CardExpireMonth, request.CardExpireYear, request.CardCvc);
+        var buyer = new PaymentBuyerInfo(
             nameParts[0],
             nameParts.Length > 1 ? nameParts[1] : nameParts[0],
             currentUserService.Email!,
@@ -65,7 +63,7 @@ public class PlaceMyOrderCommandHandler(
             priceResult,
             card,
             buyer,
-            ct => sender.Send(new ClearMyCartCommand(), ct),
+            ct => cartIntegrationService.ClearByUserIdAsync(userId, ct),
             cancellationToken);
     }
 

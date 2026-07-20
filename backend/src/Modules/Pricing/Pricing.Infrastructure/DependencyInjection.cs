@@ -22,6 +22,7 @@ public static class DependencyInjection
         services.AddScoped<ICatalogIntegrationService, CatalogIntegrationService>();
         services.AddScoped<ICustomerIntegrationService, CustomerIntegrationService>();
         services.AddScoped<IPriceCatalogService, PriceContractService>();
+        services.AddScoped<IOrderPriceCalculator, OrderPriceCalculatorService>();
         services.AddScoped<PriceCalculationService>();
 
         return services;
