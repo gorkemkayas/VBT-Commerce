@@ -1,5 +1,4 @@
 using BuildingBlocks.Application.Security;
-using Cart.Application.Commands.Anonymous.ClearAnonymousCart;
 using Cart.Domain.Enums;
 using MediatR;
 using Order.Application.Common;
@@ -57,7 +56,7 @@ public class PlaceGuestOrderCommandHandler(
             priceResult,
             card,
             buyer,
-            ct => sender.Send(new ClearAnonymousCartCommand(request.AnonymousId), ct),
+            ct => cartIntegrationService.ClearByAnonymousIdAsync(request.AnonymousId, ct),
             cancellationToken);
     }
 

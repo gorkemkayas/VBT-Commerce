@@ -1,5 +1,4 @@
 using BuildingBlocks.Application.Security;
-using Cart.Application.Commands.Me.ClearMyCart;
 using Cart.Domain.Enums;
 using MediatR;
 using Order.Application.Common;
@@ -65,7 +64,7 @@ public class PlaceMyOrderCommandHandler(
             priceResult,
             card,
             buyer,
-            ct => sender.Send(new ClearMyCartCommand(), ct),
+            ct => cartIntegrationService.ClearByUserIdAsync(userId, ct),
             cancellationToken);
     }
 

@@ -23,6 +23,7 @@ public static class DependencyInjection
         services.AddScoped<IInventoryIntegrationService, InventoryIntegrationService>();
         services.AddScoped<CartOperations>();
         services.AddScoped<ICartReader, CartContractService>();
+        services.AddScoped<ICartMutator, CartMutatorService>();
 
         return services;
     }
