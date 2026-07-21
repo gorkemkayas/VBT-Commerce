@@ -5,15 +5,17 @@ import '../../../../core/services/anonymous_id_service.dart';
 import '../../../../core/services/secure_storage_service.dart';
 import '../models/remote_cart_item.dart';
 
-/// Backend'de sepetin gerçek kaynağı `"Variant"` tipindeki satılabilir
-/// varyantlar üzerinden çalışır — Product feature bugün yalnızca bunu
-/// destekliyor.
-const cartSellableItemType = 'Variant';
+/// Backend'in `sellableItemType` enum'ı: `0` = "Product" (varyantsız ürünün
+/// kendi id'si), `1` = "Variant" (seçilen varyantın id'si). Canlı backend'de
+/// doğrulandı.
+const sellableItemTypeProduct = 0;
+const sellableItemTypeVariant = 1;
 
 abstract interface class CartRemoteDataSource {
   Future<List<RemoteCartItem>> getCartItems();
   Future<String> addItem({
     required String sellableItemId,
+    required int sellableItemType,
     required int quantity,
   });
   Future<void> updateItemQuantity({
@@ -65,6 +67,7 @@ class CartRemoteDataSourceImpl implements CartRemoteDataSource {
   @override
   Future<String> addItem({
     required String sellableItemId,
+    required int sellableItemType,
     required int quantity,
   }) async {
     final basePath = await _cartBasePath();
@@ -72,7 +75,7 @@ class CartRemoteDataSourceImpl implements CartRemoteDataSource {
       '$basePath/items',
       data: {
         'sellableItemId': sellableItemId,
-        'sellableItemType': cartSellableItemType,
+        'sellableItemType': sellableItemType,
         'quantity': quantity,
       },
     );

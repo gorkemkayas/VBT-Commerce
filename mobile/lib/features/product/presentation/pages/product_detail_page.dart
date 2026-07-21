@@ -49,20 +49,28 @@ class _ProductDetail extends ConsumerStatefulWidget {
 
 class _ProductDetailState extends ConsumerState<_ProductDetail> {
   bool _isAddingToCart = false;
+  String? _selectedVariantId;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.product.variants.length == 1) {
+      _selectedVariantId = widget.product.variants.first.id;
+    }
+  }
+
+  bool get _hasVariants => widget.product.variants.isNotEmpty;
+
+  bool get _canAddToCart => !_hasVariants || _selectedVariantId != null;
 
   Future<void> _addToCart() async {
-    final variantId = widget.product.variantId;
-    if (variantId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Bu ürün şu anda satın alınamıyor.')),
-      );
-      return;
-    }
+    final hasVariants = _hasVariants;
     setState(() => _isAddingToCart = true);
     await ref
         .read(cartControllerProvider.notifier)
         .add(
-          sellableItemId: variantId,
+          sellableItemId: hasVariants ? _selectedVariantId! : widget.product.id,
+          isVariant: hasVariants,
           title: widget.product.title,
           imageUrl: widget.product.imageUrl,
         );
@@ -102,9 +110,27 @@ class _ProductDetailState extends ConsumerState<_ProductDetail> {
             product.description,
             style: Theme.of(context).textTheme.bodyLarge,
           ),
+          if (_hasVariants) ...[
+            const SizedBox(height: 20),
+            Text('Beden', style: Theme.of(context).textTheme.titleSmall),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final variant in product.variants)
+                  _SizeBox(
+                    label: variant.size,
+                    selected: _selectedVariantId == variant.id,
+                    onTap: () =>
+                        setState(() => _selectedVariantId = variant.id),
+                  ),
+              ],
+            ),
+          ],
           const SizedBox(height: 32),
           FilledButton.icon(
-            onPressed: _isAddingToCart ? null : _addToCart,
+            onPressed: (_isAddingToCart || !_canAddToCart) ? null : _addToCart,
             icon: _isAddingToCart
                 ? const SizedBox(
                     height: 18,
@@ -115,6 +141,51 @@ class _ProductDetailState extends ConsumerState<_ProductDetail> {
             label: const Text('Sepete Ekle'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SizeBox extends StatelessWidget {
+  const _SizeBox({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(4),
+      child: Container(
+        width: 48,
+        height: 48,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: selected ? theme.colorScheme.primaryContainer : null,
+          border: Border.all(
+            color: selected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.outline,
+            width: selected ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+            color: selected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurface,
+          ),
+        ),
       ),
     );
   }

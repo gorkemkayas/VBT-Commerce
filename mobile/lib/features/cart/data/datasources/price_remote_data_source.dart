@@ -1,21 +1,26 @@
 import 'package:dio/dio.dart';
 
-import 'cart_remote_data_source.dart' show cartSellableItemType;
-
 abstract interface class PriceRemoteDataSource {
-  Future<double> getPrice(String sellableItemId);
+  Future<double> getPrice({
+    required String sellableItemId,
+    required String sellableItemType,
+  });
 }
 
 /// `GET /api/prices/{sellableItemType}/{sellableItemId}` üzerinden anlık
-/// fiyatı çeker — bu fiyat, "Sepete Ekle" anında snapshot olarak saklanır.
+/// fiyatı çeker. Fiyat kaydı bulunamazsa (`404`) çağıran taraf bunu ele alır —
+/// bu data source doğrudan hata fırlatır, "fiyat yok" yorumunu yapmaz.
 class PriceRemoteDataSourceImpl implements PriceRemoteDataSource {
   PriceRemoteDataSourceImpl(this._dio);
   final Dio _dio;
 
   @override
-  Future<double> getPrice(String sellableItemId) async {
+  Future<double> getPrice({
+    required String sellableItemId,
+    required String sellableItemType,
+  }) async {
     final response = await _dio.get<Map<String, dynamic>>(
-      '/api/prices/$cartSellableItemType/$sellableItemId',
+      '/api/prices/$sellableItemType/$sellableItemId',
     );
     final amount = response.data?['amount'];
     if (amount is! num) {

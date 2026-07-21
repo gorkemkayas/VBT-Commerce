@@ -9,6 +9,7 @@ class AddToCartUseCase {
 
   Future<Result<List<CartItem>>> call({
     required String sellableItemId,
+    required bool isVariant,
     required String title,
     required String imageUrl,
     int quantity = 1,
@@ -20,6 +21,7 @@ class AddToCartUseCase {
     }
     return _repository.addToCart(
       sellableItemId: sellableItemId,
+      isVariant: isVariant,
       title: title,
       imageUrl: imageUrl,
       quantity: quantity,
