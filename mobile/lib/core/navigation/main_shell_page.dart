@@ -5,7 +5,7 @@ import '../../features/account/presentation/pages/account_page.dart';
 import '../../features/cart/presentation/pages/cart_page.dart';
 import '../../features/cart/presentation/providers/cart_providers.dart';
 import '../../features/favorites/presentation/pages/favorites_page.dart';
-import '../../features/product/presentation/pages/product_list_page.dart';
+import '../../features/home/presentation/pages/home_page.dart';
 
 class MainShellPage extends ConsumerStatefulWidget {
   const MainShellPage({super.key});
@@ -18,7 +18,7 @@ class _MainShellPageState extends ConsumerState<MainShellPage> {
   int _index = 0;
 
   static const _pages = [
-    ProductListPage(),
+    HomePage(),
     FavoritesPage(),
     CartPage(),
     AccountPage(),
