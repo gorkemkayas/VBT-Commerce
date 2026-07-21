@@ -1,3 +1,5 @@
+import 'product_variant.dart';
+
 class Product {
   const Product({
     required this.id,
@@ -6,7 +8,7 @@ class Product {
     required this.category,
     required this.imageUrl,
     this.price,
-    this.variantId,
+    this.variants = const [],
   });
 
   final String id;
@@ -19,9 +21,9 @@ class Product {
   /// her zaman null döner. Fiyat entegrasyonu ayrı bir aşamada eklenecek.
   final double? price;
 
-  /// Sepete eklenebilecek satılabilir varyantın kimliği. Yalnızca ürün
+  /// Ürünün satılabilir varyantları (ör. beden seçenekleri). Yalnızca ürün
   /// detayında (`GET /api/products/{id}`) doldurulur; ürün listesinde bu
-  /// bilgi yoktur, bu yüzden liste öğelerinde her zaman null'dur. Ürünün
-  /// aktif bir varyantı yoksa da null kalır — bu durumda sepete eklenemez.
-  final String? variantId;
+  /// bilgi yoktur, bu yüzden liste öğelerinde her zaman boştur. Boşsa ürünün
+  /// varyantı yok demektir — sepete kendi id'siyle eklenir.
+  final List<ProductVariant> variants;
 }

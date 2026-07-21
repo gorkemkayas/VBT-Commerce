@@ -77,12 +77,14 @@ class CartController extends Notifier<CartState> {
   Future<void> loadCart() => _apply(ref.read(getCartItemsUseCaseProvider)());
   Future<void> add({
     required String sellableItemId,
+    required bool isVariant,
     required String title,
     required String imageUrl,
     int quantity = 1,
   }) => _apply(
     ref.read(addToCartUseCaseProvider)(
       sellableItemId: sellableItemId,
+      isVariant: isVariant,
       title: title,
       imageUrl: imageUrl,
       quantity: quantity,

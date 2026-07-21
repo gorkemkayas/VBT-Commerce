@@ -12,17 +12,20 @@ class CartItem {
   /// Backend'in sepet kalemi kimliği — miktar güncelleme/silme bu id ile yapılır.
   final String id;
 
-  /// Sepete eklenen ürün varyantının kimliği (`Product.variantId`).
+  /// Sepete eklenen ürünün kimliği (`Product.id`).
   final String sellableItemId;
 
-  /// Backend'in beklediği sabit değer: `"Variant"`.
+  /// Backend'in sepet yanıtında döndürdüğü tip adı (ör. `"Product"`).
   final String sellableItemType;
   final int quantity;
 
-  /// Ürün adı, görsel ve fiyat backend'in sepet yanıtında yer almadığı için
+  /// Ürün adı ve görsel backend'in sepet yanıtında yer almadığı için
   /// "Sepete Ekle" anında yerelde saklanan bir anlık görüntüdür (snapshot).
   final String title;
   final String imageUrl;
+
+  /// Fiyat entegrasyonu ayrı bir görevde yapılacak; şimdilik her zaman `0`
+  /// ("bilinmiyor" anlamında) — ekranlarda "Fiyat yakında" gösterilir.
   final double unitPrice;
 
   double get lineTotal => unitPrice * quantity;

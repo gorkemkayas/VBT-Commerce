@@ -38,15 +38,22 @@ class CartRepositoryImpl implements CartRepository {
   @override
   Future<Result<List<CartItem>>> addToCart({
     required String sellableItemId,
+    required bool isVariant,
     required String title,
     required String imageUrl,
     int quantity = 1,
   }) async {
     try {
-      final unitPrice = await _priceDataSource.getPrice(sellableItemId);
       final itemId = await _remoteDataSource.addItem(
         sellableItemId: sellableItemId,
+        sellableItemType: isVariant
+            ? sellableItemTypeVariant
+            : sellableItemTypeProduct,
         quantity: quantity,
+      );
+      final unitPrice = await _resolvePrice(
+        sellableItemId: sellableItemId,
+        isVariant: isVariant,
       );
       await _localDataSource.saveSnapshot(
         itemId,
@@ -58,13 +65,31 @@ class CartRepositoryImpl implements CartRepository {
       );
       return Result.success(await _buildCartItems());
     } on DioException catch (error) {
-      return Result.failure(mapDioException(error));
+      return Result.failure(_mapCartError(error));
     } on FormatException catch (error) {
       return Result.failure(ServerFailure(error.message));
     } catch (_) {
       return const Result.failure(
         UnknownFailure('Ürün sepete eklenirken beklenmeyen bir hata oluştu.'),
       );
+    }
+  }
+
+  /// Sepete eklerken kullanılan kimlikle (`sellableItemId`/`isVariant`) aynı
+  /// çift üzerinden fiyat sorgulanır. Fiyat endpoint'i başarısız olursa
+  /// (`404` dahil) sepete ekleme akışı kırılmaz; `0` döner ve ekranda "Fiyat
+  /// yakında" gösterilmeye devam eder.
+  Future<double> _resolvePrice({
+    required String sellableItemId,
+    required bool isVariant,
+  }) async {
+    try {
+      return await _priceDataSource.getPrice(
+        sellableItemId: sellableItemId,
+        sellableItemType: isVariant ? 'Variant' : 'Product',
+      );
+    } catch (_) {
+      return 0;
     }
   }
 
@@ -102,7 +127,7 @@ class CartRepositoryImpl implements CartRepository {
       }
       return Result.success(await _buildCartItems());
     } on DioException catch (error) {
-      return Result.failure(mapDioException(error));
+      return Result.failure(_mapCartError(error));
     } catch (_) {
       return const Result.failure(
         UnknownFailure('Sepet güncellenirken beklenmeyen bir hata oluştu.'),
@@ -123,6 +148,24 @@ class CartRepositoryImpl implements CartRepository {
         UnknownFailure('Sepet temizlenirken beklenmeyen bir hata oluştu.'),
       );
     }
+  }
+
+  /// Backend, stok yetersizliğini `400` ("exceeds available stock") veya
+  /// `404` ("No stock item was found") ile, gövdede `detail` alanında
+  /// açıklayarak döndürüyor. Bu durumda kullanıcıya genel bir sunucu hatası
+  /// yerine anlamlı bir mesaj gösteriyoruz.
+  Failure _mapCartError(DioException error) {
+    final data = error.response?.data;
+    final detail = data is Map ? data['detail'] : null;
+    final statusCode = error.response?.statusCode;
+    final isStockIssue =
+        (statusCode == 400 || statusCode == 404) &&
+        detail is String &&
+        detail.toLowerCase().contains('stock');
+    if (isStockIssue) {
+      return const ServerFailure('Bu ürün şu an stokta yok.');
+    }
+    return mapDioException(error);
   }
 
   Future<List<CartItem>> _buildCartItems() async {

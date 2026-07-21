@@ -87,7 +87,11 @@ class _CartItemTile extends ConsumerWidget {
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                   const SizedBox(height: 6),
-                  Text('\$${item.unitPrice.toStringAsFixed(2)}'),
+                  Text(
+                    item.unitPrice > 0
+                        ? '\$${item.unitPrice.toStringAsFixed(2)}'
+                        : 'Fiyat yakında',
+                  ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
@@ -122,7 +126,9 @@ class _CartItemTile extends ConsumerWidget {
                   icon: const Icon(Icons.delete_outline),
                 ),
                 Text(
-                  '\$${item.lineTotal.toStringAsFixed(2)}',
+                  item.unitPrice > 0
+                      ? '\$${item.lineTotal.toStringAsFixed(2)}'
+                      : 'Fiyat yakında',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ],
@@ -152,12 +158,16 @@ class _CartSummary extends StatelessWidget {
             const SizedBox(height: 8),
             _SummaryRow(
               label: 'Ara Toplam',
-              value: '\$${subtotal.toStringAsFixed(2)}',
+              value: subtotal > 0
+                  ? '\$${subtotal.toStringAsFixed(2)}'
+                  : 'Fiyat yakında',
             ),
             const Divider(height: 24),
             _SummaryRow(
               label: 'Toplam Tutar',
-              value: '\$${subtotal.toStringAsFixed(2)}',
+              value: subtotal > 0
+                  ? '\$${subtotal.toStringAsFixed(2)}'
+                  : 'Fiyat yakında',
               emphasized: true,
             ),
             const SizedBox(height: 16),

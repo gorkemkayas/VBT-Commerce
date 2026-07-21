@@ -35,6 +35,7 @@ class _FakeCartRepository implements CartRepository {
   @override
   Future<Result<List<CartItem>>> addToCart({
     required String sellableItemId,
+    required bool isVariant,
     required String title,
     required String imageUrl,
     int quantity = 1,
