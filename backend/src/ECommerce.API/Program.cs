@@ -1,37 +1,5 @@
-using System.Reflection;
-using BuildingBlocks.Application.Behaviors;
-using BuildingBlocks.Application.Security;
-using Microsoft.AspNetCore.HttpOverrides;
-using Cart.Application.Commands.Anonymous.AddItemToAnonymousCart;
-using Cart.Infrastructure;
-using Catalog.Application.Commands.Categories.CreateCategory;
-using Catalog.Infrastructure;
-using Customer.Application.Commands.GuestCustomers.CreateGuestCustomer;
-using Customer.Infrastructure;
-using ECommerce.API.Middleware;
-using ECommerce.API.Security;
-using FluentValidation;
-using Identity.Application.Commands.RefreshTokens;
-using Identity.Application.Commands.Register;
-using Identity.Application.Common;
-using Identity.Infrastructure;
-using Inventory.Application.Commands.StockItems.CreateStockItem;
-using Inventory.Infrastructure;
-using MediatR;
-using Order.Application.Commands.Checkout.PlaceMyOrder;
-using Order.Infrastructure;
-using Notification.Application.Queries.GetNotificationLogsList;
-using Notification.Infrastructure;
-using Payment.Application.Commands.Charges.ChargeOrderPayment;
-using Payment.Infrastructure;
-using Pricing.Application.Commands.Prices.CreatePrice;
-using Pricing.Infrastructure;
-using Review.Application.Commands.Me.CreateMyReview;
-using Review.Infrastructure;
-using Scalar.AspNetCore;
+using ECommerce.API.Extensions;
 using Serilog;
-using Shipping.Application.Commands.ShippingCompanies.CreateShippingCompany;
-using Shipping.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,125 +16,13 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
     .ReadFrom.Services(services)
     .Enrich.FromLogContext());
 
-// Add services to the container.
-
-builder.Services.AddControllers()
-    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
-
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
-builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-builder.Services.AddProblemDetails();
-
-// Team dev/staging server sits behind a reverse proxy that terminates TLS — without this, Kestrel
-// sees every request as plain HTTP, so Request.IsHttps (used for the refresh-token cookie's Secure
-// flag below) would always read false even when the client connected over HTTPS.
-builder.Services.Configure<ForwardedHeadersOptions>(options =>
-{
-    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-    options.KnownIPNetworks.Clear();
-    options.KnownProxies.Clear();
-});
-
-// Frontend/mobile teammates call this API from their own origin(s) — configured, not hardcoded, so
-// a new origin (e.g. once the frontend is actually deployed) can be added via config without a
-// redeploy. AllowCredentials is required because the Web refresh-token flow relies on a cookie.
-var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("TeamDev", policy =>
-    {
-        policy.WithOrigins(allowedOrigins)
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
-    });
-});
-
-// Modules
-builder.Services.AddIdentityModule(builder.Configuration);
-builder.Services.AddCatalogModule(builder.Configuration);
-builder.Services.AddInventoryModule(builder.Configuration);
-builder.Services.AddCustomerModule(builder.Configuration);
-builder.Services.AddCartModule(builder.Configuration);
-builder.Services.AddPricingModule(builder.Configuration);
-builder.Services.AddShippingModule(builder.Configuration);
-builder.Services.AddPaymentModule(builder.Configuration);
-builder.Services.AddOrderModule(builder.Configuration);
-builder.Services.AddReviewModule(builder.Configuration);
-builder.Services.AddNotificationModule(builder.Configuration);
-
-// CQRS: MediatR + FluentValidation + Pipeline Behaviors (module assemblies register their own handlers/validators)
-var moduleAssemblies = new[]
-{
-    typeof(RegisterCommand).Assembly,
-    typeof(CreateCategoryCommand).Assembly,
-    typeof(CreateStockItemCommand).Assembly,
-    typeof(CreateGuestCustomerCommand).Assembly,
-    typeof(AddItemToAnonymousCartCommand).Assembly,
-    typeof(CreatePriceCommand).Assembly,
-    typeof(CreateShippingCompanyCommand).Assembly,
-    typeof(ChargeOrderPaymentCommand).Assembly,
-    typeof(PlaceMyOrderCommand).Assembly,
-    typeof(CreateMyReviewCommand).Assembly,
-    typeof(GetNotificationLogsListQuery).Assembly
-};
-
-// Registered before the open behaviors below so it becomes the outermost wrapper — its lock
-// must stay held until TransactionBehavior's commit finishes, not just until the handler returns.
-builder.Services.AddScoped<
-    IPipelineBehavior<RefreshTokenCommand, AuthResult>,
-    Identity.Application.Behaviors.RefreshTokenConcurrencyBehavior>();
-
-builder.Services.AddMediatR(cfg =>
-{
-    cfg.RegisterServicesFromAssemblies(moduleAssemblies);
-    cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
-    cfg.AddOpenBehavior(typeof(ExceptionHandlingBehavior<,>));
-    cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
-    cfg.AddOpenBehavior(typeof(AuthorizationBehavior<,>));
-    cfg.AddOpenBehavior(typeof(Identity.Application.Behaviors.TransactionBehavior<,>));
-    cfg.AddOpenBehavior(typeof(Catalog.Application.Behaviors.TransactionBehavior<,>));
-    cfg.AddOpenBehavior(typeof(Inventory.Application.Behaviors.TransactionBehavior<,>));
-    cfg.AddOpenBehavior(typeof(Customer.Application.Behaviors.TransactionBehavior<,>));
-    cfg.AddOpenBehavior(typeof(Cart.Application.Behaviors.TransactionBehavior<,>));
-    cfg.AddOpenBehavior(typeof(Pricing.Application.Behaviors.TransactionBehavior<,>));
-    cfg.AddOpenBehavior(typeof(Shipping.Application.Behaviors.TransactionBehavior<,>));
-    cfg.AddOpenBehavior(typeof(Payment.Application.Behaviors.TransactionBehavior<,>));
-    cfg.AddOpenBehavior(typeof(Order.Application.Behaviors.TransactionBehavior<,>));
-    cfg.AddOpenBehavior(typeof(Review.Application.Behaviors.TransactionBehavior<,>));
-});
-
-builder.Services.AddValidatorsFromAssemblies(moduleAssemblies);
+builder.Services
+    .AddApiServices(builder.Configuration)
+    .AddModules(builder.Configuration)
+    .AddCqrs();
 
 var app = builder.Build();
 
-app.UseForwardedHeaders();
-
-app.UseSerilogRequestLogging();
-
-app.UseExceptionHandler();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-    app.MapScalarApiReference();
-    await ECommerce.API.Seed.DevelopmentDataSeeder.SeedAsync(app.Services);
-}
-if(!app.Environment.IsDevelopment())
-{
-    app.UseHttpsRedirection();
-    app.UseHsts();
-}
-
-app.UseCors("TeamDev");
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.MapControllers();
+await app.UseApiPipelineAsync();
 
 app.Run();
