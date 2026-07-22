@@ -67,10 +67,14 @@ class ProductListState {
   const ProductListState({
     this.isLoading = false,
     this.products = const [],
+    this.selectedCategory,
     this.failure,
   });
   final bool isLoading;
   final List<Product> products;
+
+  /// Seçili kategori id'si; `null` "Tümü" demektir.
+  final String? selectedCategory;
   final Failure? failure;
 }
 
@@ -78,15 +82,40 @@ class ProductListController extends Notifier<ProductListState> {
   @override
   ProductListState build() => const ProductListState();
 
+  /// Seçili kategoriye göre listeyi (yeniden) yükler. Kategori yoksa tüm
+  /// ürünler getirilir.
   Future<void> loadProducts() async {
-    state = ProductListState(isLoading: true, products: state.products);
-    final result = await ref.read(getProductsUseCaseProvider)();
+    final selected = state.selectedCategory;
+    state = ProductListState(
+      isLoading: true,
+      products: state.products,
+      selectedCategory: selected,
+    );
+    final result = selected == null
+        ? await ref.read(getProductsUseCaseProvider)()
+        : await ref.read(filterProductsUseCaseProvider)(
+            ProductFilter(category: selected),
+          );
     state = switch (result) {
-      Success<List<Product>>(:final value) => ProductListState(products: value),
+      Success<List<Product>>(:final value) => ProductListState(
+        products: value,
+        selectedCategory: selected,
+      ),
       ResultFailure<List<Product>>(:final failure) => ProductListState(
+        selectedCategory: selected,
         failure: failure,
       ),
     };
+  }
+
+  /// `null` kategori "Tümü" seçimidir ve tam listeyi geri yükler.
+  Future<void> selectCategory(String? categoryId) {
+    state = ProductListState(
+      isLoading: true,
+      products: state.products,
+      selectedCategory: categoryId,
+    );
+    return loadProducts();
   }
 }
 

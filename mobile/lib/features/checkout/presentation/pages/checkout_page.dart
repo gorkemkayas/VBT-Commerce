@@ -9,6 +9,7 @@ import '../../../cart/presentation/providers/cart_providers.dart';
 import '../../../customer/domain/entities/customer.dart';
 import '../../../customer/domain/entities/customer_address.dart';
 import '../../../customer/presentation/providers/customer_providers.dart';
+import '../../../orders/presentation/providers/order_providers.dart';
 import '../providers/checkout_providers.dart';
 import '../widgets/address_selector.dart';
 import '../widgets/complete_order_button.dart';
@@ -30,6 +31,9 @@ class CheckoutPage extends ConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Siparişiniz alındı: ${next.order!.orderId}')),
         );
+        // "Siparişlerim" listesi kalıcı bir provider; yeni sipariş anında
+        // görünsün diye sonraki açılışta yeniden yüklenmeye zorlanır.
+        ref.invalidate(ordersControllerProvider);
         context.go(RoutePaths.home);
       } else if (next.failure != null && next.failure != previous?.failure) {
         ScaffoldMessenger.of(
