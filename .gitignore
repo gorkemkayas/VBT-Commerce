@@ -485,3 +485,10 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# --- Frontend (Next.js) Eklemeleri ---
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/.env*.local
