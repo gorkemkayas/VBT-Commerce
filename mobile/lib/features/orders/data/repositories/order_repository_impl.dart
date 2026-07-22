@@ -29,4 +29,19 @@ class OrderRepositoryImpl implements OrderRepository {
       );
     }
   }
+
+  @override
+  Future<Result<Order>> getOrderById(String orderId) async {
+    try {
+      return Result.success(await _remoteDataSource.getOrderById(orderId));
+    } on DioException catch (error) {
+      return Result.failure(mapDioException(error));
+    } on FormatException catch (error) {
+      return Result.failure(ServerFailure(error.message));
+    } catch (_) {
+      return const Result.failure(
+        UnknownFailure('Sipariş detayı alınırken beklenmeyen bir hata oluştu.'),
+      );
+    }
+  }
 }

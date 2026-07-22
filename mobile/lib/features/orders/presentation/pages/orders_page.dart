@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/utils/currency_formatter.dart';
@@ -64,6 +65,7 @@ class _OrderTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return ListTile(
+      onTap: () => context.push('/orders/${order.id}'),
       title: Text(
         _dateFormat.format(order.createdAt),
         style: theme.textTheme.titleSmall,

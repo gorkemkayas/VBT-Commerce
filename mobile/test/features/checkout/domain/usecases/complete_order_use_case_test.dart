@@ -3,6 +3,7 @@ import 'package:commerce_mobile/core/utils/result.dart';
 import 'package:commerce_mobile/features/cart/domain/entities/cart_item.dart';
 import 'package:commerce_mobile/features/cart/domain/repositories/cart_repository.dart';
 import 'package:commerce_mobile/features/checkout/domain/entities/order.dart';
+import 'package:commerce_mobile/features/checkout/domain/entities/price_calculation.dart';
 import 'package:commerce_mobile/features/checkout/domain/repositories/checkout_repository.dart';
 import 'package:commerce_mobile/features/checkout/domain/usecases/complete_order_use_case.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -22,6 +23,18 @@ class _FakeCheckoutRepository implements CheckoutRepository {
         placedAt: DateTime(2026),
         items: items,
         total: items.fold(0, (total, item) => total + item.lineTotal),
+      ),
+    );
+  }
+
+  @override
+  Future<Result<PriceCalculation>> calculatePrice(List<CartItem> items) async {
+    return const Result.success(
+      PriceCalculation(
+        subtotal: 0,
+        totalDiscount: 0,
+        taxAmount: 0,
+        grandTotal: 0,
       ),
     );
   }

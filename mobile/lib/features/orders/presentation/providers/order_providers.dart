@@ -8,6 +8,7 @@ import '../../data/repositories/order_repository_impl.dart';
 import '../../domain/entities/order.dart';
 import '../../domain/repositories/order_repository.dart';
 import '../../domain/usecases/get_my_orders_use_case.dart';
+import '../../domain/usecases/get_order_by_id_use_case.dart';
 
 final orderRemoteDataSourceProvider = Provider<OrderRemoteDataSource>(
   (ref) => OrderRemoteDataSourceImpl(ref.watch(dioProvider)),
@@ -18,6 +19,16 @@ final orderRepositoryProvider = Provider<OrderRepository>(
 final getMyOrdersUseCaseProvider = Provider<GetMyOrdersUseCase>(
   (ref) => GetMyOrdersUseCase(ref.watch(orderRepositoryProvider)),
 );
+final getOrderByIdUseCaseProvider = Provider<GetOrderByIdUseCase>(
+  (ref) => GetOrderByIdUseCase(ref.watch(orderRepositoryProvider)),
+);
+
+/// Sipariş detay ekranı bunu izler; `productDetailProvider` ile aynı desen
+/// (autoDispose family).
+final orderDetailProvider = FutureProvider.autoDispose
+    .family<Result<Order>, String>((ref, orderId) {
+      return ref.watch(getOrderByIdUseCaseProvider)(orderId);
+    });
 
 class OrdersState {
   const OrdersState({

@@ -6,10 +6,13 @@ import '../../../../core/utils/result.dart';
 import '../../../cart/domain/entities/cart_item.dart';
 import '../../../cart/presentation/providers/cart_providers.dart';
 import '../../data/datasources/order_remote_data_source.dart';
+import '../../data/datasources/pricing_remote_data_source.dart';
 import '../../data/datasources/shipping_company_remote_data_source.dart';
 import '../../data/repositories/checkout_repository_impl.dart';
 import '../../domain/entities/order.dart';
+import '../../domain/entities/price_calculation.dart';
 import '../../domain/repositories/checkout_repository.dart';
+import '../../domain/usecases/calculate_price_use_case.dart';
 import '../../domain/usecases/complete_order_use_case.dart';
 
 final orderRemoteDataSourceProvider = Provider<OrderRemoteDataSource>(
@@ -19,10 +22,14 @@ final shippingCompanyRemoteDataSourceProvider =
     Provider<ShippingCompanyRemoteDataSource>(
       (ref) => ShippingCompanyRemoteDataSourceImpl(ref.watch(dioProvider)),
     );
+final pricingRemoteDataSourceProvider = Provider<PricingRemoteDataSource>(
+  (ref) => PricingRemoteDataSourceImpl(ref.watch(dioProvider)),
+);
 final checkoutRepositoryProvider = Provider<CheckoutRepository>(
   (ref) => CheckoutRepositoryImpl(
     ref.watch(orderRemoteDataSourceProvider),
     ref.watch(shippingCompanyRemoteDataSourceProvider),
+    ref.watch(pricingRemoteDataSourceProvider),
   ),
 );
 final completeOrderUseCaseProvider = Provider<CompleteOrderUseCase>(
@@ -31,6 +38,19 @@ final completeOrderUseCaseProvider = Provider<CompleteOrderUseCase>(
     ref.watch(cartRepositoryProvider),
   ),
 );
+final calculatePriceUseCaseProvider = Provider<CalculatePriceUseCase>(
+  (ref) => CalculatePriceUseCase(ref.watch(checkoutRepositoryProvider)),
+);
+
+/// Checkout açıldığında ve sepet her değiştiğinde (`cartControllerProvider`
+/// izlendiği için) backend'in gerçek fiyat hesaplamasını yeniden çeker.
+final priceCalculationProvider =
+    FutureProvider.autoDispose<Result<PriceCalculation>>((ref) {
+      final items = ref.watch(
+        cartControllerProvider.select((state) => state.items),
+      );
+      return ref.watch(calculatePriceUseCaseProvider)(items);
+    });
 
 class CheckoutState {
   const CheckoutState({

@@ -69,7 +69,7 @@ class CheckoutPage extends ConsumerWidget {
                     },
                   ),
                   const SizedBox(height: 16),
-                  PaymentSummaryView(subtotal: cartState.subtotal),
+                  const PaymentSummaryView(),
                   const SizedBox(height: 24),
                   CompleteOrderButton(
                     isSubmitting: checkoutState.isSubmitting,
