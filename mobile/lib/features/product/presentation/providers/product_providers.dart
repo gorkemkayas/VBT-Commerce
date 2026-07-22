@@ -7,6 +7,7 @@ import '../../../../core/network/dio_client.dart';
 import '../../../../core/utils/result.dart';
 import '../../data/datasources/product_remote_data_source.dart';
 import '../../data/repositories/product_repository_impl.dart';
+import '../../domain/entities/category.dart';
 import '../../domain/entities/product.dart';
 import '../../domain/entities/product_filter.dart';
 import '../../domain/repositories/product_repository.dart';
@@ -35,6 +36,17 @@ final searchProductsUseCaseProvider = Provider<SearchProductsUseCase>(
 final getCategoriesUseCaseProvider = Provider<GetCategoriesUseCase>(
   (ref) => GetCategoriesUseCase(ref.watch(productRepositoryProvider)),
 );
+
+/// Kategori listesini bir kez yükleyip önbelleğe alır; kategori id'sini görünen
+/// ada çevirmek isteyen ekranlar (ör. ürün detayı) bunu izler. Hata durumunda
+/// boş liste döner, böylece tüketiciler id yerine hiçbir şey göstermez.
+final categoriesProvider = FutureProvider<List<Category>>((ref) async {
+  final result = await ref.watch(getCategoriesUseCaseProvider)();
+  return switch (result) {
+    Success<List<Category>>(:final value) => value,
+    ResultFailure<List<Category>>() => const <Category>[],
+  };
+});
 final filterProductsUseCaseProvider = Provider<FilterProductsUseCase>(
   (ref) => FilterProductsUseCase(ref.watch(productRepositoryProvider)),
 );
@@ -89,7 +101,7 @@ class SearchFilterController extends Notifier<FilterState> {
 
   Future<void> _initialize() async {
     final categoriesResult = await ref.read(getCategoriesUseCaseProvider)();
-    if (categoriesResult case Success<List<String>>(:final value)) {
+    if (categoriesResult case Success<List<Category>>(:final value)) {
       state = state.copyWith(categories: value);
     }
     await _refreshResults();

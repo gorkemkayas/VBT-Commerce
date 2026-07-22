@@ -1,12 +1,14 @@
 import 'package:dio/dio.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../models/category_model.dart';
 import '../models/product_detail_model.dart';
 import '../models/product_list_item_model.dart';
 
 abstract interface class ProductRemoteDataSource {
   Future<List<ProductListItemModel>> getProducts();
   Future<ProductDetailModel> getProductDetail(String id);
+  Future<List<CategoryModel>> getCategories();
 }
 
 class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
@@ -45,5 +47,17 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
       throw const FormatException('Sunucudan boş ürün detayı alındı.');
     }
     return ProductDetailModel.fromJson(body);
+  }
+
+  @override
+  Future<List<CategoryModel>> getCategories() async {
+    final response = await _dio.get<List<dynamic>>(
+      '${AppConstants.productApiBaseUrl}/api/categories/tree',
+    );
+    final body = response.data;
+    if (body == null) {
+      throw const FormatException('Sunucudan boş kategori listesi alındı.');
+    }
+    return CategoryModel.flattenTree(body);
   }
 }

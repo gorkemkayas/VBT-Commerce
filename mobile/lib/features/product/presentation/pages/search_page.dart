@@ -86,9 +86,9 @@ class _CategoryList extends StatelessWidget {
         ),
         for (final category in state.categories)
           CategoryChip(
-            label: category,
-            selected: category == state.category,
-            onSelected: (_) => onSelected(category),
+            label: category.name,
+            selected: category.id == state.category,
+            onSelected: (_) => onSelected(category.id),
           ),
       ],
     ),

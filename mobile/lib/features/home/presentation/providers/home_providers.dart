@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/errors/failure.dart';
 import '../../../../core/utils/result.dart';
+import '../../../product/domain/entities/category.dart';
 import '../../../product/domain/entities/product.dart';
 import '../../../product/domain/entities/product_filter.dart';
 import '../../../product/presentation/providers/product_providers.dart';
@@ -21,7 +22,7 @@ class HomeState {
   });
 
   final bool isLoading;
-  final List<String> categories;
+  final List<Category> categories;
   final List<Product> featuredProducts;
   final List<Product> recommendedProducts;
   final String? selectedCategory;
@@ -29,9 +30,20 @@ class HomeState {
 
   bool get isEmpty => featuredProducts.isEmpty && recommendedProducts.isEmpty;
 
+  /// Seçili kategorinin (id) görünen adı; hiçbiri seçili değilse `null`.
+  /// Liste henüz yüklenmemişse eşleşme bulunamayabilir, bu durumda da `null`.
+  String? get selectedCategoryName {
+    final id = selectedCategory;
+    if (id == null) return null;
+    for (final category in categories) {
+      if (category.id == id) return category.name;
+    }
+    return null;
+  }
+
   HomeState copyWith({
     bool? isLoading,
-    List<String>? categories,
+    List<Category>? categories,
     List<Product>? featuredProducts,
     List<Product>? recommendedProducts,
     Object? selectedCategory = _unset,
@@ -61,8 +73,8 @@ class HomeController extends Notifier<HomeState> {
     final productsResult = await ref.read(getProductsUseCaseProvider)();
 
     final categories = switch (categoriesResult) {
-      Success<List<String>>(:final value) => value,
-      ResultFailure<List<String>>() => const <String>[],
+      Success<List<Category>>(:final value) => value,
+      ResultFailure<List<Category>>() => const <Category>[],
     };
 
     state = switch (productsResult) {

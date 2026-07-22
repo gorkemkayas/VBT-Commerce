@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../../product/domain/entities/category.dart';
+
 /// Yatay kaydırılabilir kategori seçici. `null` değeri "Tümü" anlamına gelir.
+/// Chip etiketi kategori adını gösterir; seçim ise kategori id'sini iletir
+/// (ürün filtrelemesi `categoryId` üzerinden yapılır).
 class HomeCategoryChips extends StatelessWidget {
   const HomeCategoryChips({
     super.key,
@@ -9,7 +13,7 @@ class HomeCategoryChips extends StatelessWidget {
     required this.onCategorySelected,
   });
 
-  final List<String> categories;
+  final List<Category> categories;
   final String? selectedCategory;
   final ValueChanged<String?> onCategorySelected;
 
@@ -34,10 +38,10 @@ class HomeCategoryChips extends StatelessWidget {
           }
           final category = categories[index - 1];
           return ChoiceChip(
-            label: Text(category),
-            selected: selectedCategory == category,
+            label: Text(category.name),
+            selected: selectedCategory == category.id,
             onSelected: (selected) =>
-                onCategorySelected(selected ? category : null),
+                onCategorySelected(selected ? category.id : null),
           );
         },
       ),

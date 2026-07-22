@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../../../../core/errors/failure.dart';
 import '../../../../core/network/network_error_mapper.dart';
 import '../../../../core/utils/result.dart';
+import '../../domain/entities/category.dart';
 import '../../domain/entities/product.dart';
 import '../../domain/entities/product_filter.dart';
 import '../../domain/repositories/product_repository.dart';
@@ -45,11 +46,10 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
-  Future<Result<List<String>>> getCategories() async {
+  Future<Result<List<Category>>> getCategories() async {
     try {
-      final products = await _getProductsFromCacheOrRemote();
-      final categoryIds = products.map((product) => product.category).toSet();
-      return Result.success(categoryIds.toList(growable: false));
+      final categories = await _remoteDataSource.getCategories();
+      return Result.success(categories);
     } on DioException catch (error) {
       return Result.failure(mapDioException(error));
     } on FormatException catch (error) {

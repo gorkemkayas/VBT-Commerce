@@ -1,4 +1,5 @@
 import '../../../../core/errors/failure.dart';
+import '../../domain/entities/category.dart';
 import '../../domain/entities/product.dart';
 import '../../domain/entities/product_filter.dart';
 
@@ -22,7 +23,7 @@ class FilterState {
   final double? minPrice;
   final double? maxPrice;
   final ProductSortOption sort;
-  final List<String> categories;
+  final List<Category> categories;
   final List<Product> products;
   final bool isLoading;
   final Failure? failure;
@@ -41,7 +42,7 @@ class FilterState {
     Object? minPrice = _unset,
     Object? maxPrice = _unset,
     ProductSortOption? sort,
-    List<String>? categories,
+    List<Category>? categories,
     List<Product>? products,
     bool? isLoading,
     Object? failure = _unset,

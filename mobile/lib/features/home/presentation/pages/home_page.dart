@@ -142,7 +142,7 @@ class _HomeContent extends StatelessWidget {
 
           SliverToBoxAdapter(
             child: HomeSectionHeader(
-              title: state.selectedCategory ?? 'Senin için önerilenler',
+              title: state.selectedCategoryName ?? 'Senin için önerilenler',
             ),
           ),
 
