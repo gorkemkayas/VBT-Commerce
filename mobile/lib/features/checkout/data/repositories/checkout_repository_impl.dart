@@ -1,30 +1,62 @@
-import 'dart:math';
+import 'package:dio/dio.dart';
 
+import '../../../../core/errors/failure.dart';
+import '../../../../core/network/network_error_mapper.dart';
 import '../../../../core/utils/result.dart';
 import '../../../cart/domain/entities/cart_item.dart';
-import '../../domain/entities/address.dart';
 import '../../domain/entities/order.dart';
 import '../../domain/repositories/checkout_repository.dart';
+import '../datasources/order_remote_data_source.dart';
+import '../datasources/shipping_company_remote_data_source.dart';
 
-/// Backend hazır olana kadar siparişi bellekte simüle eder.
+/// `addressId`, Customer feature'ındaki kayıtlı adreslerden seçilir (bkz.
+/// `CheckoutController.selectAddress`) — bu akışa dokunulmuyor.
+///
+/// Kargo firması seçim UI'ı ve ödeme formu bu görevin kapsamı dışında;
+/// backend'in zorunlu tuttuğu bu alanlar için sırasıyla aktif firmalardan
+/// ilki ve sabit placeholder kart bilgisi kullanılır (bkz.
+/// `ShippingCompanyRemoteDataSource`, `OrderRemoteDataSource`). Bunlar ayrı
+/// bir görevde gerçek seçim/form ile değiştirilecek.
 class CheckoutRepositoryImpl implements CheckoutRepository {
-  CheckoutRepositoryImpl({Random? random}) : _random = random ?? Random();
-  final Random _random;
+  CheckoutRepositoryImpl(this._orderDataSource, this._shippingDataSource);
+  final OrderRemoteDataSource _orderDataSource;
+  final ShippingCompanyRemoteDataSource _shippingDataSource;
 
   @override
   Future<Result<Order>> completeOrder({
-    required Address address,
+    required String addressId,
     required List<CartItem> items,
   }) async {
-    await Future.delayed(const Duration(seconds: 1));
-    final total = items.fold(0.0, (total, item) => total + item.lineTotal);
-    final order = Order(
-      orderId: 'MOCK-${_random.nextInt(900000) + 100000}',
-      placedAt: DateTime.now(),
-      address: address,
-      items: items,
-      total: total,
-    );
-    return Result.success(order);
+    try {
+      final shippingCompanyId = await _shippingDataSource.getFirstActiveId();
+      if (shippingCompanyId == null) {
+        return const Result.failure(
+          ServerFailure(
+            'Şu anda kullanılabilir bir kargo firması bulunamadı. Lütfen daha sonra tekrar deneyin.',
+          ),
+        );
+      }
+      final orderId = await _orderDataSource.placeMyOrder(
+        addressId: addressId,
+        shippingCompanyId: shippingCompanyId,
+      );
+      final total = items.fold(0.0, (total, item) => total + item.lineTotal);
+      return Result.success(
+        Order(
+          orderId: orderId,
+          placedAt: DateTime.now(),
+          items: items,
+          total: total,
+        ),
+      );
+    } on DioException catch (error) {
+      return Result.failure(mapDioException(error));
+    } on FormatException catch (error) {
+      return Result.failure(ServerFailure(error.message));
+    } catch (_) {
+      return const Result.failure(
+        UnknownFailure('Sipariş oluşturulurken beklenmeyen bir hata oluştu.'),
+      );
+    }
   }
 }
