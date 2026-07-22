@@ -19,6 +19,7 @@ class ProductDetailModel extends Product {
     required super.category,
     required super.imageUrl,
     super.variants,
+    super.hasVariants,
   });
 
   factory ProductDetailModel.fromJson(Map<String, dynamic> json) {
@@ -33,13 +34,15 @@ class ProductDetailModel extends Product {
         imageUrl = primary['url'] as String;
       }
     }
+    final variants = _variantsFromJson(json['variants']);
     return ProductDetailModel(
       id: json['id'] as String,
       title: json['name'] as String,
       description: json['description'] as String? ?? '',
       category: json['categoryId'] as String,
       imageUrl: imageUrl,
-      variants: _variantsFromJson(json['variants']),
+      variants: variants,
+      hasVariants: variants.isNotEmpty,
     );
   }
 }

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/errors/failure.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/utils/result.dart';
+import '../../data/datasources/product_price_remote_data_source.dart';
 import '../../data/datasources/product_remote_data_source.dart';
 import '../../data/repositories/product_repository_impl.dart';
 import '../../domain/entities/category.dart';
@@ -15,14 +16,25 @@ import '../../domain/usecases/get_product_detail_use_case.dart';
 import '../../domain/usecases/get_products_use_case.dart';
 import '../../domain/usecases/filter_products_use_case.dart';
 import '../../domain/usecases/get_categories_use_case.dart';
+import '../../domain/usecases/get_variant_price_use_case.dart';
 import '../../domain/usecases/search_products_use_case.dart';
 import 'filter_state.dart';
 
 final productRemoteDataSourceProvider = Provider<ProductRemoteDataSource>(
   (ref) => ProductRemoteDataSourceImpl(ref.watch(dioProvider)),
 );
+final productPriceRemoteDataSourceProvider =
+    Provider<ProductPriceRemoteDataSource>(
+      (ref) => ProductPriceRemoteDataSourceImpl(ref.watch(dioProvider)),
+    );
 final productRepositoryProvider = Provider<ProductRepository>(
-  (ref) => ProductRepositoryImpl(ref.watch(productRemoteDataSourceProvider)),
+  (ref) => ProductRepositoryImpl(
+    ref.watch(productRemoteDataSourceProvider),
+    ref.watch(productPriceRemoteDataSourceProvider),
+  ),
+);
+final getVariantPriceUseCaseProvider = Provider<GetVariantPriceUseCase>(
+  (ref) => GetVariantPriceUseCase(ref.watch(productRepositoryProvider)),
 );
 final getProductsUseCaseProvider = Provider<GetProductsUseCase>(
   (ref) => GetProductsUseCase(ref.watch(productRepositoryProvider)),
@@ -86,6 +98,13 @@ final productListControllerProvider =
 final productDetailProvider = FutureProvider.autoDispose
     .family<Result<Product>, String>((ref, id) {
       return ref.watch(getProductDetailUseCaseProvider)(id);
+    });
+
+/// Kullanıcı, `Product.price`'ın temsil ettiği varsayılan (ilk) varyanttan
+/// farklı bir varyant seçtiğinde o varyantın anlık fiyatını sorgular.
+final variantPriceProvider = FutureProvider.autoDispose
+    .family<Result<double?>, String>((ref, variantId) {
+      return ref.watch(getVariantPriceUseCaseProvider)(variantId);
     });
 
 class SearchFilterController extends Notifier<FilterState> {

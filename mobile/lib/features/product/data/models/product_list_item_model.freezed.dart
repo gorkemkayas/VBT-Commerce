@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ProductListItemModel {
 
- String get id;@JsonKey(name: 'name') String get title; String get description;@JsonKey(name: 'categoryId') String get category;@JsonKey(name: 'primaryImageUrl') String get imageUrl;
+ String get id;@JsonKey(name: 'name') String get title; String get description;@JsonKey(name: 'categoryId') String get category;@JsonKey(name: 'primaryImageUrl') String get imageUrl; bool get hasVariants;
 /// Create a copy of ProductListItemModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $ProductListItemModelCopyWith<ProductListItemModel> get copyWith => _$ProductLis
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ProductListItemModel&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.category, category) || other.category == category)&&(identical(other.imageUrl, imageUrl) || other.imageUrl == imageUrl));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ProductListItemModel&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.category, category) || other.category == category)&&(identical(other.imageUrl, imageUrl) || other.imageUrl == imageUrl)&&(identical(other.hasVariants, hasVariants) || other.hasVariants == hasVariants));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,title,description,category,imageUrl);
+int get hashCode => Object.hash(runtimeType,id,title,description,category,imageUrl,hasVariants);
 
 @override
 String toString() {
-  return 'ProductListItemModel(id: $id, title: $title, description: $description, category: $category, imageUrl: $imageUrl)';
+  return 'ProductListItemModel(id: $id, title: $title, description: $description, category: $category, imageUrl: $imageUrl, hasVariants: $hasVariants)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $ProductListItemModelCopyWith<$Res>  {
   factory $ProductListItemModelCopyWith(ProductListItemModel value, $Res Function(ProductListItemModel) _then) = _$ProductListItemModelCopyWithImpl;
 @useResult
 $Res call({
- String id,@JsonKey(name: 'name') String title, String description,@JsonKey(name: 'categoryId') String category,@JsonKey(name: 'primaryImageUrl') String imageUrl
+ String id,@JsonKey(name: 'name') String title, String description,@JsonKey(name: 'categoryId') String category,@JsonKey(name: 'primaryImageUrl') String imageUrl, bool hasVariants
 });
 
 
@@ -65,14 +65,15 @@ class _$ProductListItemModelCopyWithImpl<$Res>
 
 /// Create a copy of ProductListItemModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? description = null,Object? category = null,Object? imageUrl = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? description = null,Object? category = null,Object? imageUrl = null,Object? hasVariants = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String,category: null == category ? _self.category : category // ignore: cast_nullable_to_non_nullable
 as String,imageUrl: null == imageUrl ? _self.imageUrl : imageUrl // ignore: cast_nullable_to_non_nullable
-as String,
+as String,hasVariants: null == hasVariants ? _self.hasVariants : hasVariants // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -157,10 +158,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'name')  String title,  String description, @JsonKey(name: 'categoryId')  String category, @JsonKey(name: 'primaryImageUrl')  String imageUrl)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'name')  String title,  String description, @JsonKey(name: 'categoryId')  String category, @JsonKey(name: 'primaryImageUrl')  String imageUrl,  bool hasVariants)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ProductListItemModel() when $default != null:
-return $default(_that.id,_that.title,_that.description,_that.category,_that.imageUrl);case _:
+return $default(_that.id,_that.title,_that.description,_that.category,_that.imageUrl,_that.hasVariants);case _:
   return orElse();
 
 }
@@ -178,10 +179,10 @@ return $default(_that.id,_that.title,_that.description,_that.category,_that.imag
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'name')  String title,  String description, @JsonKey(name: 'categoryId')  String category, @JsonKey(name: 'primaryImageUrl')  String imageUrl)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'name')  String title,  String description, @JsonKey(name: 'categoryId')  String category, @JsonKey(name: 'primaryImageUrl')  String imageUrl,  bool hasVariants)  $default,) {final _that = this;
 switch (_that) {
 case _ProductListItemModel():
-return $default(_that.id,_that.title,_that.description,_that.category,_that.imageUrl);case _:
+return $default(_that.id,_that.title,_that.description,_that.category,_that.imageUrl,_that.hasVariants);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -198,10 +199,10 @@ return $default(_that.id,_that.title,_that.description,_that.category,_that.imag
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'name')  String title,  String description, @JsonKey(name: 'categoryId')  String category, @JsonKey(name: 'primaryImageUrl')  String imageUrl)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'name')  String title,  String description, @JsonKey(name: 'categoryId')  String category, @JsonKey(name: 'primaryImageUrl')  String imageUrl,  bool hasVariants)?  $default,) {final _that = this;
 switch (_that) {
 case _ProductListItemModel() when $default != null:
-return $default(_that.id,_that.title,_that.description,_that.category,_that.imageUrl);case _:
+return $default(_that.id,_that.title,_that.description,_that.category,_that.imageUrl,_that.hasVariants);case _:
   return null;
 
 }
@@ -213,7 +214,7 @@ return $default(_that.id,_that.title,_that.description,_that.category,_that.imag
 @JsonSerializable()
 
 class _ProductListItemModel extends ProductListItemModel {
-  const _ProductListItemModel({required final  String id, @JsonKey(name: 'name') required final  String title, final  String description = '', @JsonKey(name: 'categoryId') required final  String category, @JsonKey(name: 'primaryImageUrl') final  String imageUrl = ''}): super._(id: id, title: title, description: description, category: category, imageUrl: imageUrl);
+  const _ProductListItemModel({required final  String id, @JsonKey(name: 'name') required final  String title, final  String description = '', @JsonKey(name: 'categoryId') required final  String category, @JsonKey(name: 'primaryImageUrl') final  String imageUrl = '', final  bool hasVariants = false}): super._(id: id, title: title, description: description, category: category, imageUrl: imageUrl, hasVariants: hasVariants);
   factory _ProductListItemModel.fromJson(Map<String, dynamic> json) => _$ProductListItemModelFromJson(json);
 
 
@@ -231,16 +232,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ProductListItemModel&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.category, category) || other.category == category)&&(identical(other.imageUrl, imageUrl) || other.imageUrl == imageUrl));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ProductListItemModel&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.category, category) || other.category == category)&&(identical(other.imageUrl, imageUrl) || other.imageUrl == imageUrl)&&(identical(other.hasVariants, hasVariants) || other.hasVariants == hasVariants));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,title,description,category,imageUrl);
+int get hashCode => Object.hash(runtimeType,id,title,description,category,imageUrl,hasVariants);
 
 @override
 String toString() {
-  return 'ProductListItemModel(id: $id, title: $title, description: $description, category: $category, imageUrl: $imageUrl)';
+  return 'ProductListItemModel(id: $id, title: $title, description: $description, category: $category, imageUrl: $imageUrl, hasVariants: $hasVariants)';
 }
 
 
@@ -251,7 +252,7 @@ abstract mixin class _$ProductListItemModelCopyWith<$Res> implements $ProductLis
   factory _$ProductListItemModelCopyWith(_ProductListItemModel value, $Res Function(_ProductListItemModel) _then) = __$ProductListItemModelCopyWithImpl;
 @override @useResult
 $Res call({
- String id,@JsonKey(name: 'name') String title, String description,@JsonKey(name: 'categoryId') String category,@JsonKey(name: 'primaryImageUrl') String imageUrl
+ String id,@JsonKey(name: 'name') String title, String description,@JsonKey(name: 'categoryId') String category,@JsonKey(name: 'primaryImageUrl') String imageUrl, bool hasVariants
 });
 
 
@@ -268,14 +269,15 @@ class __$ProductListItemModelCopyWithImpl<$Res>
 
 /// Create a copy of ProductListItemModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = null,Object? description = null,Object? category = null,Object? imageUrl = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = null,Object? description = null,Object? category = null,Object? imageUrl = null,Object? hasVariants = null,}) {
   return _then(_ProductListItemModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String,category: null == category ? _self.category : category // ignore: cast_nullable_to_non_nullable
 as String,imageUrl: null == imageUrl ? _self.imageUrl : imageUrl // ignore: cast_nullable_to_non_nullable
-as String,
+as String,hasVariants: null == hasVariants ? _self.hasVariants : hasVariants // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

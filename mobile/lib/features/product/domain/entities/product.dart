@@ -9,6 +9,7 @@ class Product {
     required this.imageUrl,
     this.price,
     this.variants = const [],
+    this.hasVariants = false,
   });
 
   final String id;
@@ -17,8 +18,9 @@ class Product {
   final String category;
   final String imageUrl;
 
-  /// Bu entegrasyon aşamasında fiyat endpoint'i kullanılmıyor, bu yüzden
-  /// her zaman null döner. Fiyat entegrasyonu ayrı bir aşamada eklenecek.
+  /// Ürün DTO'larında (liste/detay) yer almaz; repository katmanında ayrı bir
+  /// sorgu (`GET /api/prices/{type}/{id}`) ile doldurulur. Fiyat kaydı yoksa
+  /// veya sorgu başarısız olursa `null` kalır ve UI "Fiyat yakında" gösterir.
   final double? price;
 
   /// Ürünün satılabilir varyantları (ör. beden seçenekleri). Yalnızca ürün
@@ -26,4 +28,10 @@ class Product {
   /// bilgi yoktur, bu yüzden liste öğelerinde her zaman boştur. Boşsa ürünün
   /// varyantı yok demektir — sepete kendi id'siyle eklenir.
   final List<ProductVariant> variants;
+
+  /// Ürünün varyantlı olup olmadığı (backend'deki `ProductType == Variant`).
+  /// Liste öğelerinde `variants` her zaman boş geldiği için varyantlı
+  /// ürünleri ayırt etmek amacıyla ayrıca taşınır; detay modelinde
+  /// `variants.isNotEmpty` ile aynı bilgiyi verir.
+  final bool hasVariants;
 }

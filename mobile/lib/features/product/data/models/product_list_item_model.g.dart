@@ -14,6 +14,7 @@ _ProductListItemModel _$ProductListItemModelFromJson(
   description: json['description'] as String? ?? '',
   category: json['categoryId'] as String,
   imageUrl: json['primaryImageUrl'] as String? ?? '',
+  hasVariants: json['hasVariants'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$ProductListItemModelToJson(
@@ -24,4 +25,5 @@ Map<String, dynamic> _$ProductListItemModelToJson(
   'description': instance.description,
   'categoryId': instance.category,
   'primaryImageUrl': instance.imageUrl,
+  'hasVariants': instance.hasVariants,
 };

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/result.dart';
 import '../../../../core/widgets/app_network_image.dart';
 import '../../../../core/widgets/async_state_views.dart';
@@ -65,6 +66,11 @@ class _ProductDetailState extends ConsumerState<_ProductDetail> {
   bool get _hasVariants => widget.product.variants.isNotEmpty;
 
   bool get _canAddToCart => !_hasVariants || _selectedVariantId != null;
+
+  /// `product.price`, repository tarafından bu varyant üzerinden zaten
+  /// doldurulmuştur (bkz. `ProductRepositoryImpl._priceReferenceFor`).
+  String? get _defaultVariantId =>
+      _hasVariants ? widget.product.variants.first.id : null;
 
   Future<void> _addToCart() async {
     final hasVariants = _hasVariants;
@@ -131,11 +137,10 @@ class _ProductDetailState extends ConsumerState<_ProductDetail> {
             ),
             const SizedBox(height: 12),
           ],
-          Text(
-            product.price != null
-                ? '\$${product.price!.toStringAsFixed(2)}'
-                : 'Fiyat bilgisi yakında eklenecek',
-            style: Theme.of(context).textTheme.headlineMedium,
+          _PriceText(
+            defaultPrice: product.price,
+            selectedVariantId: _selectedVariantId,
+            defaultVariantId: _defaultVariantId,
           ),
           const SizedBox(height: 20),
           Text(
@@ -231,4 +236,42 @@ class _SizeBox extends StatelessWidget {
       ),
     );
   }
+}
+
+class _PriceText extends ConsumerWidget {
+  const _PriceText({
+    required this.defaultPrice,
+    required this.selectedVariantId,
+    required this.defaultVariantId,
+  });
+
+  /// Repository tarafından varsayılan (ilk) varyant/ürün üzerinden
+  /// doldurulan fiyat.
+  final double? defaultPrice;
+  final String? selectedVariantId;
+  final String? defaultVariantId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final style = Theme.of(context).textTheme.headlineMedium;
+    final variantId = selectedVariantId;
+    if (variantId == null || variantId == defaultVariantId) {
+      return Text(_label(defaultPrice), style: style);
+    }
+    final variantPrice = ref.watch(variantPriceProvider(variantId));
+    return variantPrice.when(
+      data: (result) => Text(
+        _label(switch (result) {
+          Success<double?>(:final value) => value,
+          ResultFailure<double?>() => null,
+        }),
+        style: style,
+      ),
+      loading: () => Text(_label(defaultPrice), style: style),
+      error: (_, _) => Text(_label(null), style: style),
+    );
+  }
+
+  String _label(double? price) =>
+      price != null ? price.toTryCurrency() : 'Fiyat bilgisi yakında eklenecek';
 }
