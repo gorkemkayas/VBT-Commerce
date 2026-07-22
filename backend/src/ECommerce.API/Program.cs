@@ -29,6 +29,7 @@ using Pricing.Infrastructure;
 using Review.Application.Commands.Me.CreateMyReview;
 using Review.Infrastructure;
 using Scalar.AspNetCore;
+using Serilog;
 using Shipping.Application.Commands.ShippingCompanies.CreateShippingCompany;
 using Shipping.Infrastructure;
 
@@ -38,6 +39,14 @@ builder.Configuration.AddJsonFile(
     $"appsettings.{builder.Environment.EnvironmentName}.Local.json",
     optional: true,
     reloadOnChange: true);
+
+// Console-only default logging is lost on every VPS process restart, so Serilog persists
+// structured logs to rolling daily files as well — the "Serilog" appsettings section drives
+// sinks/levels per environment without a redeploy.
+builder.Host.UseSerilog((context, services, configuration) => configuration
+    .ReadFrom.Configuration(context.Configuration)
+    .ReadFrom.Services(services)
+    .Enrich.FromLogContext());
 
 // Add services to the container.
 
@@ -135,6 +144,8 @@ builder.Services.AddValidatorsFromAssemblies(moduleAssemblies);
 var app = builder.Build();
 
 app.UseForwardedHeaders();
+
+app.UseSerilogRequestLogging();
 
 app.UseExceptionHandler();
 
