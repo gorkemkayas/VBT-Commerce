@@ -7,13 +7,16 @@ import '../../domain/entities/price_calculation.dart';
 import '../providers/checkout_providers.dart';
 
 /// Backend'in gerçek fiyat hesaplamasını (`POST /api/pricing/calculate/me`
-/// — vergi/indirim dahil) gösterir; sepetin yerel toplamını kullanmaz.
+/// — vergi/indirim dahil) ve seçili kargo firmasının ücretini gösterir;
+/// sepetin yerel toplamını kullanmaz. "Toplam Ödenecek" = pricing API'nin
+/// `grandTotal`'ı + seçili kargo firmasının `fee`'si.
 class PaymentSummaryView extends ConsumerWidget {
   const PaymentSummaryView({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final calculation = ref.watch(priceCalculationProvider);
+    final shippingFee = ref.watch(selectedShippingFeeProvider);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -21,6 +24,7 @@ class PaymentSummaryView extends ConsumerWidget {
           data: (result) => switch (result) {
             Success<PriceCalculation>(:final value) => _SummaryColumn(
               calculation: value,
+              shippingFee: shippingFee,
             ),
             ResultFailure<PriceCalculation>(:final failure) => _MessageColumn(
               message: failure.message,
@@ -35,13 +39,18 @@ class PaymentSummaryView extends ConsumerWidget {
 }
 
 class _SummaryColumn extends StatelessWidget {
-  const _SummaryColumn({required this.calculation});
+  const _SummaryColumn({required this.calculation, required this.shippingFee});
   final PriceCalculation calculation;
+
+  /// Henüz bir kargo firması seçilmediyse (veya liste yüklenmediyse) `null`.
+  final double? shippingFee;
 
   @override
   Widget build(BuildContext context) {
     final bodyStyle = Theme.of(context).textTheme.bodyLarge;
     final totalStyle = Theme.of(context).textTheme.titleLarge;
+    final fee = shippingFee;
+    final payable = calculation.grandTotal + (fee ?? 0);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -63,10 +72,23 @@ class _SummaryColumn extends StatelessWidget {
           value: calculation.taxAmount,
           style: bodyStyle,
         ),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Kargo', style: bodyStyle),
+              Text(
+                fee != null ? fee.toTryCurrency() : 'Kargo firması seçin',
+                style: bodyStyle,
+              ),
+            ],
+          ),
+        ),
         const Divider(height: 24),
         _SummaryRow(
-          label: 'Toplam',
-          value: calculation.grandTotal,
+          label: 'Toplam Ödenecek',
+          value: payable,
           style: totalStyle,
         ),
       ],

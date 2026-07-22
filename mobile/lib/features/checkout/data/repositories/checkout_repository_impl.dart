@@ -6,6 +6,7 @@ import '../../../../core/utils/result.dart';
 import '../../../cart/domain/entities/cart_item.dart';
 import '../../domain/entities/order.dart';
 import '../../domain/entities/price_calculation.dart';
+import '../../domain/entities/shipping_company.dart';
 import '../../domain/repositories/checkout_repository.dart';
 import '../datasources/order_remote_data_source.dart';
 import '../datasources/pricing_remote_data_source.dart';
@@ -13,12 +14,8 @@ import '../datasources/shipping_company_remote_data_source.dart';
 
 /// `addressId`, Customer feature'ındaki kayıtlı adreslerden seçilir (bkz.
 /// `CheckoutController.selectAddress`) — bu akışa dokunulmuyor.
-///
-/// Kargo firması seçim UI'ı ve ödeme formu bu görevin kapsamı dışında;
-/// backend'in zorunlu tuttuğu bu alanlar için sırasıyla aktif firmalardan
-/// ilki ve sabit placeholder kart bilgisi kullanılır (bkz.
-/// `ShippingCompanyRemoteDataSource`, `OrderRemoteDataSource`). Bunlar ayrı
-/// bir görevde gerçek seçim/form ile değiştirilecek.
+/// `shippingCompanyId`, kullanıcının Checkout ekranında seçtiği kargo
+/// firmasıdır (bkz. `CheckoutController.selectShippingCompany`).
 class CheckoutRepositoryImpl implements CheckoutRepository {
   CheckoutRepositoryImpl(
     this._orderDataSource,
@@ -32,17 +29,10 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
   @override
   Future<Result<Order>> completeOrder({
     required String addressId,
+    required String shippingCompanyId,
     required List<CartItem> items,
   }) async {
     try {
-      final shippingCompanyId = await _shippingDataSource.getFirstActiveId();
-      if (shippingCompanyId == null) {
-        return const Result.failure(
-          ServerFailure(
-            'Şu anda kullanılabilir bir kargo firması bulunamadı. Lütfen daha sonra tekrar deneyin.',
-          ),
-        );
-      }
       final orderId = await _orderDataSource.placeMyOrder(
         addressId: addressId,
         shippingCompanyId: shippingCompanyId,
@@ -79,6 +69,22 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
     } catch (_) {
       return const Result.failure(
         UnknownFailure('Fiyat hesaplanırken beklenmeyen bir hata oluştu.'),
+      );
+    }
+  }
+
+  @override
+  Future<Result<List<ShippingCompany>>> getShippingCompanies() async {
+    try {
+      final companies = await _shippingDataSource.getActive();
+      return Result.success(companies);
+    } on DioException catch (error) {
+      return Result.failure(mapDioException(error));
+    } on FormatException catch (error) {
+      return Result.failure(ServerFailure(error.message));
+    } catch (_) {
+      return const Result.failure(
+        UnknownFailure('Kargo firmaları alınırken beklenmeyen bir hata oluştu.'),
       );
     }
   }

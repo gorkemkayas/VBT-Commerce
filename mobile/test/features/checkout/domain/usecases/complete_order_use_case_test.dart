@@ -4,6 +4,7 @@ import 'package:commerce_mobile/features/cart/domain/entities/cart_item.dart';
 import 'package:commerce_mobile/features/cart/domain/repositories/cart_repository.dart';
 import 'package:commerce_mobile/features/checkout/domain/entities/order.dart';
 import 'package:commerce_mobile/features/checkout/domain/entities/price_calculation.dart';
+import 'package:commerce_mobile/features/checkout/domain/entities/shipping_company.dart';
 import 'package:commerce_mobile/features/checkout/domain/repositories/checkout_repository.dart';
 import 'package:commerce_mobile/features/checkout/domain/usecases/complete_order_use_case.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -14,6 +15,7 @@ class _FakeCheckoutRepository implements CheckoutRepository {
   @override
   Future<Result<Order>> completeOrder({
     required String addressId,
+    required String shippingCompanyId,
     required List<CartItem> items,
   }) async {
     callCount++;
@@ -37,6 +39,11 @@ class _FakeCheckoutRepository implements CheckoutRepository {
         grandTotal: 0,
       ),
     );
+  }
+
+  @override
+  Future<Result<List<ShippingCompany>>> getShippingCompanies() async {
+    return const Result.success([]);
   }
 }
 
@@ -91,7 +98,11 @@ void main() {
       final cartRepository = _FakeCartRepository();
       final useCase = CompleteOrderUseCase(checkoutRepository, cartRepository);
 
-      final result = await useCase(addressId: null, items: [item]);
+      final result = await useCase(
+        addressId: null,
+        shippingCompanyId: 'shipping-1',
+        items: [item],
+      );
 
       expect(result, isA<ResultFailure<Order>>());
       expect(
@@ -103,12 +114,38 @@ void main() {
     },
   );
 
+  test(
+    'kargo firması seçilmemişse ValidationFailure döner ve repository çağrılmaz',
+    () async {
+      final checkoutRepository = _FakeCheckoutRepository();
+      final cartRepository = _FakeCartRepository();
+      final useCase = CompleteOrderUseCase(checkoutRepository, cartRepository);
+
+      final result = await useCase(
+        addressId: 'address-1',
+        shippingCompanyId: null,
+        items: [item],
+      );
+
+      expect(result, isA<ResultFailure<Order>>());
+      expect(
+        (result as ResultFailure<Order>).failure,
+        isA<ValidationFailure>(),
+      );
+      expect(checkoutRepository.callCount, 0);
+    },
+  );
+
   test('boş sepet ValidationFailure döner', () async {
     final checkoutRepository = _FakeCheckoutRepository();
     final cartRepository = _FakeCartRepository();
     final useCase = CompleteOrderUseCase(checkoutRepository, cartRepository);
 
-    final result = await useCase(addressId: 'address-1', items: const []);
+    final result = await useCase(
+      addressId: 'address-1',
+      shippingCompanyId: 'shipping-1',
+      items: const [],
+    );
 
     expect(result, isA<ResultFailure<Order>>());
     expect(checkoutRepository.callCount, 0);
@@ -119,7 +156,11 @@ void main() {
     final cartRepository = _FakeCartRepository();
     final useCase = CompleteOrderUseCase(checkoutRepository, cartRepository);
 
-    final result = await useCase(addressId: 'address-1', items: [item]);
+    final result = await useCase(
+      addressId: 'address-1',
+      shippingCompanyId: 'shipping-1',
+      items: [item],
+    );
 
     expect(result, isA<Success<Order>>());
     expect((result as Success<Order>).value.total, 200);

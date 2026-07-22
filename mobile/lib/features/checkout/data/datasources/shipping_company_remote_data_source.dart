@@ -1,10 +1,10 @@
 import 'package:dio/dio.dart';
 
+import '../models/shipping_company_model.dart';
+
 abstract interface class ShippingCompanyRemoteDataSource {
-  /// `GET /api/shipping-companies` yalnızca aktif firmaları döner; seçim
-  /// UI'ı henüz yok (ayrı bir görevde eklenecek), bu yüzden ilkinin id'sini
-  /// döner. Liste boşsa `null` döner.
-  Future<String?> getFirstActiveId();
+  /// `GET /api/shipping-companies` — aktif kargo firmalarının tamamını döner.
+  Future<List<ShippingCompanyModel>> getActive();
 }
 
 class ShippingCompanyRemoteDataSourceImpl
@@ -13,14 +13,12 @@ class ShippingCompanyRemoteDataSourceImpl
   final Dio _dio;
 
   @override
-  Future<String?> getFirstActiveId() async {
+  Future<List<ShippingCompanyModel>> getActive() async {
     final response = await _dio.get<List<dynamic>>('/api/shipping-companies');
     final body = response.data ?? const [];
-    for (final item in body) {
-      if (item is Map<String, dynamic> && item['id'] is String) {
-        return item['id'] as String;
-      }
-    }
-    return null;
+    return body
+        .whereType<Map<String, dynamic>>()
+        .map(ShippingCompanyModel.fromJson)
+        .toList(growable: false);
   }
 }

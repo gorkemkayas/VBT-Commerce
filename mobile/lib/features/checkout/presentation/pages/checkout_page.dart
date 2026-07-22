@@ -10,11 +10,13 @@ import '../../../customer/domain/entities/customer.dart';
 import '../../../customer/domain/entities/customer_address.dart';
 import '../../../customer/presentation/providers/customer_providers.dart';
 import '../../../orders/presentation/providers/order_providers.dart';
+import '../../domain/entities/shipping_company.dart';
 import '../providers/checkout_providers.dart';
 import '../widgets/address_selector.dart';
 import '../widgets/complete_order_button.dart';
 import '../widgets/order_summary_view.dart';
 import '../widgets/payment_summary_view.dart';
+import '../widgets/shipping_company_selector.dart';
 
 class CheckoutPage extends ConsumerWidget {
   const CheckoutPage({super.key});
@@ -25,6 +27,7 @@ class CheckoutPage extends ConsumerWidget {
     final checkoutState = ref.watch(checkoutControllerProvider);
     final controller = ref.read(checkoutControllerProvider.notifier);
     final customerResult = ref.watch(currentCustomerProvider);
+    final shippingCompaniesResult = ref.watch(shippingCompaniesProvider);
 
     ref.listen(checkoutControllerProvider, (previous, next) {
       if (next.order != null && previous?.order == null) {
@@ -69,11 +72,32 @@ class CheckoutPage extends ConsumerWidget {
                     },
                   ),
                   const SizedBox(height: 16),
+                  shippingCompaniesResult.when(
+                    loading: () => const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 24),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                    error: (_, _) => const _ShippingLoadError(),
+                    data: (result) => switch (result) {
+                      Success<List<ShippingCompany>>(:final value) =>
+                        _ShippingSection(
+                          companies: value,
+                          selectedShippingCompanyId:
+                              checkoutState.selectedShippingCompanyId,
+                          onSelected: controller.selectShippingCompany,
+                        ),
+                      ResultFailure<List<ShippingCompany>>() =>
+                        const _ShippingLoadError(),
+                    },
+                  ),
+                  const SizedBox(height: 16),
                   const PaymentSummaryView(),
                   const SizedBox(height: 24),
                   CompleteOrderButton(
                     isSubmitting: checkoutState.isSubmitting,
-                    enabled: checkoutState.selectedAddressId != null,
+                    enabled:
+                        checkoutState.selectedAddressId != null &&
+                        checkoutState.selectedShippingCompanyId != null,
                     onPressed: () => controller.completeOrder(cartState.items),
                   ),
                 ],
@@ -136,6 +160,59 @@ class _AddressLoadError extends StatelessWidget {
     child: Padding(
       padding: EdgeInsets.all(16),
       child: Text('Adresleriniz yüklenemedi. Lütfen tekrar deneyin.'),
+    ),
+  );
+}
+
+class _ShippingSection extends StatelessWidget {
+  const _ShippingSection({
+    required this.companies,
+    required this.selectedShippingCompanyId,
+    required this.onSelected,
+  });
+
+  final List<ShippingCompany> companies;
+  final String? selectedShippingCompanyId;
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    if (companies.isEmpty) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Kargo Firması',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Şu anda kullanılabilir bir kargo firması bulunamadı.',
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    return ShippingCompanySelector(
+      companies: companies,
+      selectedShippingCompanyId: selectedShippingCompanyId,
+      onSelected: onSelected,
+    );
+  }
+}
+
+class _ShippingLoadError extends StatelessWidget {
+  const _ShippingLoadError();
+
+  @override
+  Widget build(BuildContext context) => const Card(
+    child: Padding(
+      padding: EdgeInsets.all(16),
+      child: Text('Kargo firmaları yüklenemedi. Lütfen tekrar deneyin.'),
     ),
   );
 }
