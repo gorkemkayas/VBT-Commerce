@@ -7,6 +7,8 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using ECommerce.API.Controllers.Inventory.Requests;
+
 namespace ECommerce.API.Controllers.Inventory;
 
 /// <summary>

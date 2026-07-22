@@ -8,6 +8,8 @@ using Shipping.Application.Queries.ShippingCompanies.GetActiveShippingCompanies;
 using Shipping.Application.Queries.ShippingCompanies.GetShippingCompaniesList;
 using Shipping.Application.Queries.ShippingCompanies.GetShippingCompanyById;
 
+using ECommerce.API.Controllers.Shipping.Requests;
+
 namespace ECommerce.API.Controllers.Shipping;
 
 [ApiController]

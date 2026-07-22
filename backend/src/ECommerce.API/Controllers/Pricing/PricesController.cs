@@ -6,6 +6,8 @@ using Pricing.Application.Common;
 using Pricing.Application.Queries.Prices.GetPrice;
 using Pricing.Domain.Enums;
 
+using ECommerce.API.Controllers.Pricing.Requests;
+
 namespace ECommerce.API.Controllers.Pricing;
 
 [ApiController]

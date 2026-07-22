@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Pricing.Application.Commands.TaxRate.UpdateTaxRate;
 using Pricing.Application.Queries.TaxRate.GetTaxRate;
 
+using ECommerce.API.Controllers.Pricing.Requests;
+
 namespace ECommerce.API.Controllers.Pricing;
 
 [ApiController]

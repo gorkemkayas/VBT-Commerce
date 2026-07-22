@@ -11,6 +11,8 @@ using Customer.Application.Queries.Profile.GetMyCustomerProfile;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
+using ECommerce.API.Controllers.Customers.Requests;
+
 namespace ECommerce.API.Controllers.Customers;
 
 [ApiController]

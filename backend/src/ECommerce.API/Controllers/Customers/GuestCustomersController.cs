@@ -4,6 +4,8 @@ using Customer.Application.Queries.GuestCustomers.GetGuestCustomerById;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
+using ECommerce.API.Controllers.Customers.Requests;
+
 namespace ECommerce.API.Controllers.Customers;
 
 [ApiController]

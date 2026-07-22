@@ -6,6 +6,8 @@ using Shipping.Application.Queries.Shipments.GetShipmentById;
 using Shipping.Application.Queries.Shipments.GetShipmentsList;
 using Shipping.Domain.Enums;
 
+using ECommerce.API.Controllers.Shipping.Requests;
+
 namespace ECommerce.API.Controllers.Shipping;
 
 [ApiController]

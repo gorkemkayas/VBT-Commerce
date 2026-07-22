@@ -7,6 +7,8 @@ using Cart.Application.Queries.Me.GetMyCart;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
+using ECommerce.API.Controllers.Carts.Requests;
+
 namespace ECommerce.API.Controllers.Carts;
 
 [ApiController]

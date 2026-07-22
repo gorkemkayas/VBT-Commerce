@@ -9,6 +9,8 @@ using Inventory.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
+using ECommerce.API.Controllers.Inventory.Requests;
+
 namespace ECommerce.API.Controllers.Inventory;
 
 [ApiController]

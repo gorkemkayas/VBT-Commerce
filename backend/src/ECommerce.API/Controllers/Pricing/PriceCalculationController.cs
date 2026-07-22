@@ -4,6 +4,8 @@ using Pricing.Application.Queries.Calculate.CalculateGuestOrderPrice;
 using Pricing.Application.Queries.Calculate.CalculateMyOrderPrice;
 using Pricing.Contracts;
 
+using ECommerce.API.Controllers.Pricing.Requests;
+
 namespace ECommerce.API.Controllers.Pricing;
 
 [ApiController]

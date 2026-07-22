@@ -6,6 +6,8 @@ using Order.Application.Queries.Admin.GetOrderById;
 using Order.Application.Queries.Admin.GetOrdersList;
 using Order.Domain.Enums;
 
+using ECommerce.API.Controllers.Orders.Requests;
+
 namespace ECommerce.API.Controllers.Orders;
 
 [ApiController]

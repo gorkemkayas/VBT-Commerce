@@ -7,6 +7,8 @@ using Cart.Application.Queries.Anonymous.GetAnonymousCart;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
+using ECommerce.API.Controllers.Carts.Requests;
+
 namespace ECommerce.API.Controllers.Carts;
 
 // Public — no authentication. AnonymousId is a client-generated correlation key (see architecture

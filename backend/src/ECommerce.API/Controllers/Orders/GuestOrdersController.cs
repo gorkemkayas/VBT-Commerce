@@ -4,6 +4,8 @@ using Order.Application.Commands.Checkout.PlaceGuestOrder;
 using Order.Application.Common;
 using Order.Application.Queries.Guest.GetGuestOrderById;
 
+using ECommerce.API.Controllers.Orders.Requests;
+
 namespace ECommerce.API.Controllers.Orders;
 
 [ApiController]

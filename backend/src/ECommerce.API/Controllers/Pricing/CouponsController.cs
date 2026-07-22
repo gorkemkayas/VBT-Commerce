@@ -7,6 +7,8 @@ using Pricing.Application.Common;
 using Pricing.Application.Queries.Coupons.GetCouponByCode;
 using Pricing.Application.Queries.Coupons.GetCouponsList;
 
+using ECommerce.API.Controllers.Pricing.Requests;
+
 namespace ECommerce.API.Controllers.Pricing;
 
 [ApiController]

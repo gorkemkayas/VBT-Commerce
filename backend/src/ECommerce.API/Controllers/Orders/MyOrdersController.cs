@@ -6,6 +6,8 @@ using Order.Application.Common;
 using Order.Application.Queries.Me.GetMyOrderById;
 using Order.Application.Queries.Me.GetMyOrdersList;
 
+using ECommerce.API.Controllers.Orders.Requests;
+
 namespace ECommerce.API.Controllers.Orders;
 
 [ApiController]

@@ -12,6 +12,9 @@ using Identity.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
+using ECommerce.API.Controllers.Auth.Requests;
+using ECommerce.API.Controllers.Auth.Responses;
+
 namespace ECommerce.API.Controllers.Auth;
 
 [ApiController]

@@ -7,6 +7,8 @@ using Catalog.Application.Queries.Categories.GetCategoryTree;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
+using ECommerce.API.Controllers.Catalog.Requests;
+
 namespace ECommerce.API.Controllers.Catalog;
 
 [ApiController]

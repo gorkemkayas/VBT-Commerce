@@ -20,6 +20,8 @@ using Catalog.Application.Queries.Products.GetProductsList;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
+using ECommerce.API.Controllers.Catalog.Requests;
+
 namespace ECommerce.API.Controllers.Catalog;
 
 [ApiController]
