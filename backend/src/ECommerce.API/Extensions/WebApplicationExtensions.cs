@@ -17,10 +17,14 @@ public static class WebApplicationExtensions
         app.UseExceptionHandler();
 
         // Configure the HTTP request pipeline.
+        // Scalar/OpenAPI stay mapped in every environment — this server doubles as the shared
+        // API reference for the web/mobile teammates building against it, not just a public
+        // production endpoint. Only the sample Admin/Customer seed data stays Development-only.
+        app.MapOpenApi();
+        app.MapScalarApiReference();
+
         if (app.Environment.IsDevelopment())
         {
-            app.MapOpenApi();
-            app.MapScalarApiReference();
             await DevelopmentDataSeeder.SeedAsync(app.Services);
         }
         if (!app.Environment.IsDevelopment())
