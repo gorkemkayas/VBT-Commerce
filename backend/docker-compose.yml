@@ -1,7 +1,7 @@
 services:
   mssql:
     image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: ecommerce-mssql
+    container_name: vbtcommerce-mssql
     environment:
       ACCEPT_EULA: "Y"
       MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
@@ -13,7 +13,7 @@ services:
 
   seq:
     image: datalust/seq:latest
-    container_name: ecommerce-seq
+    container_name: vbtcommerce-seq
     environment:
       ACCEPT_EULA: "Y"
       # Seq 2026+ refuses to start without an explicit auth decision on first run — this sets
@@ -34,7 +34,7 @@ services:
     build:
       context: ./src
       dockerfile: ECommerce.API/Dockerfile
-    container_name: ecommerce-api
+    container_name: vbtcommerce-api
     depends_on:
       - mssql
       - seq
