@@ -8,6 +8,7 @@ import '../../../cart/presentation/widgets/cart_icon_button.dart';
 import '../../../product/domain/entities/product.dart';
 import '../../../product/presentation/widgets/product_card.dart';
 import '../providers/home_providers.dart';
+import '../widgets/home_category_chips.dart';
 import '../widgets/home_hero_banner.dart';
 import '../widgets/home_section_header.dart';
 
@@ -37,7 +38,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sneaker Store'),
+        title: const Text('Ürünler'),
         actions: [
           IconButton(
             tooltip: 'Ara ve filtrele',
@@ -63,6 +64,9 @@ class _HomePageState extends ConsumerState<HomePage> {
           state: state,
           onRefresh: _reload,
           onProductTap: _openProduct,
+          onCategorySelected: (category) => ref
+              .read(homeControllerProvider.notifier)
+              .selectCategory(category),
           onSeeAllTap: () => context.push(RoutePaths.products),
         ),
       },
@@ -75,12 +79,14 @@ class _HomeContent extends StatelessWidget {
     required this.state,
     required this.onRefresh,
     required this.onProductTap,
+    required this.onCategorySelected,
     required this.onSeeAllTap,
   });
 
   final HomeState state;
   final Future<void> Function() onRefresh;
   final ValueChanged<Product> onProductTap;
+  final ValueChanged<String?> onCategorySelected;
   final VoidCallback onSeeAllTap;
 
   @override
@@ -89,6 +95,14 @@ class _HomeContent extends StatelessWidget {
       onRefresh: onRefresh,
       child: CustomScrollView(
         slivers: [
+          const SliverToBoxAdapter(child: SizedBox(height: 12)),
+          SliverToBoxAdapter(
+            child: HomeCategoryChips(
+              categories: state.categories,
+              selectedCategory: state.selectedCategory,
+              onCategorySelected: onCategorySelected,
+            ),
+          ),
           const SliverToBoxAdapter(child: SizedBox(height: 16)),
           SliverToBoxAdapter(
             child: HomeHeroBanner(onActionTap: onSeeAllTap),
@@ -126,8 +140,10 @@ class _HomeContent extends StatelessWidget {
             ),
           ],
 
-          const SliverToBoxAdapter(
-            child: HomeSectionHeader(title: 'Senin için önerilenler'),
+          SliverToBoxAdapter(
+            child: HomeSectionHeader(
+              title: state.selectedCategoryName ?? 'Senin için önerilenler',
+            ),
           ),
 
           if (state.isLoading)
@@ -142,7 +158,7 @@ class _HomeContent extends StatelessWidget {
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 32),
                 child: Center(
-                  child: Text('Gösterilecek ürün bulunamadı.'),
+                  child: Text('Bu kategoride ürün bulunamadı.'),
                 ),
               ),
             )

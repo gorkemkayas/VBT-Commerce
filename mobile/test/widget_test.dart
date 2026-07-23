@@ -43,6 +43,6 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Sneaker Store'), findsOneWidget);
+    expect(find.text('Ürünler'), findsOneWidget);
   });
 }
