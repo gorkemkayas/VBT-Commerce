@@ -2,6 +2,7 @@ import 'package:commerce_mobile/core/errors/failure.dart';
 import 'package:commerce_mobile/core/utils/result.dart';
 import 'package:commerce_mobile/features/cart/domain/entities/cart_item.dart';
 import 'package:commerce_mobile/features/cart/domain/repositories/cart_repository.dart';
+import 'package:commerce_mobile/features/checkout/domain/entities/guest_checkout_info.dart';
 import 'package:commerce_mobile/features/checkout/domain/entities/order.dart';
 import 'package:commerce_mobile/features/checkout/domain/entities/price_calculation.dart';
 import 'package:commerce_mobile/features/checkout/domain/entities/shipping_company.dart';
@@ -45,6 +46,38 @@ class _FakeCheckoutRepository implements CheckoutRepository {
   Future<Result<List<ShippingCompany>>> getShippingCompanies() async {
     return const Result.success([]);
   }
+
+  @override
+  Future<Result<String>> createGuestCustomer({
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String phoneNumber,
+  }) async => const Result.success('guest-customer-1');
+
+  @override
+  Future<Result<PriceCalculation>> calculatePriceGuest(
+    String guestCustomerId,
+    List<CartItem> items,
+  ) async => const Result.success(
+    PriceCalculation(subtotal: 0, totalDiscount: 0, taxAmount: 0, grandTotal: 0),
+  );
+
+  @override
+  Future<Result<Order>> completeGuestOrder({
+    required String guestCustomerId,
+    required String anonymousId,
+    required String shippingCompanyId,
+    required GuestCheckoutInfo info,
+    required List<CartItem> items,
+  }) async => Result.success(
+    Order(
+      orderId: 'TEST-GUEST-1',
+      placedAt: DateTime(2026),
+      items: items,
+      total: items.fold(0, (total, item) => total + item.lineTotal),
+    ),
+  );
 }
 
 class _FakeCartRepository implements CartRepository {
