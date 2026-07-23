@@ -5,8 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/errors/failure.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/utils/result.dart';
+import '../../data/datasources/product_price_remote_data_source.dart';
 import '../../data/datasources/product_remote_data_source.dart';
 import '../../data/repositories/product_repository_impl.dart';
+import '../../domain/entities/category.dart';
 import '../../domain/entities/product.dart';
 import '../../domain/entities/product_filter.dart';
 import '../../domain/repositories/product_repository.dart';
@@ -14,14 +16,25 @@ import '../../domain/usecases/get_product_detail_use_case.dart';
 import '../../domain/usecases/get_products_use_case.dart';
 import '../../domain/usecases/filter_products_use_case.dart';
 import '../../domain/usecases/get_categories_use_case.dart';
+import '../../domain/usecases/get_variant_price_use_case.dart';
 import '../../domain/usecases/search_products_use_case.dart';
 import 'filter_state.dart';
 
 final productRemoteDataSourceProvider = Provider<ProductRemoteDataSource>(
   (ref) => ProductRemoteDataSourceImpl(ref.watch(dioProvider)),
 );
+final productPriceRemoteDataSourceProvider =
+    Provider<ProductPriceRemoteDataSource>(
+      (ref) => ProductPriceRemoteDataSourceImpl(ref.watch(dioProvider)),
+    );
 final productRepositoryProvider = Provider<ProductRepository>(
-  (ref) => ProductRepositoryImpl(ref.watch(productRemoteDataSourceProvider)),
+  (ref) => ProductRepositoryImpl(
+    ref.watch(productRemoteDataSourceProvider),
+    ref.watch(productPriceRemoteDataSourceProvider),
+  ),
+);
+final getVariantPriceUseCaseProvider = Provider<GetVariantPriceUseCase>(
+  (ref) => GetVariantPriceUseCase(ref.watch(productRepositoryProvider)),
 );
 final getProductsUseCaseProvider = Provider<GetProductsUseCase>(
   (ref) => GetProductsUseCase(ref.watch(productRepositoryProvider)),
@@ -35,6 +48,17 @@ final searchProductsUseCaseProvider = Provider<SearchProductsUseCase>(
 final getCategoriesUseCaseProvider = Provider<GetCategoriesUseCase>(
   (ref) => GetCategoriesUseCase(ref.watch(productRepositoryProvider)),
 );
+
+/// Kategori listesini bir kez yükleyip önbelleğe alır; kategori id'sini görünen
+/// ada çevirmek isteyen ekranlar (ör. ürün detayı) bunu izler. Hata durumunda
+/// boş liste döner, böylece tüketiciler id yerine hiçbir şey göstermez.
+final categoriesProvider = FutureProvider<List<Category>>((ref) async {
+  final result = await ref.watch(getCategoriesUseCaseProvider)();
+  return switch (result) {
+    Success<List<Category>>(:final value) => value,
+    ResultFailure<List<Category>>() => const <Category>[],
+  };
+});
 final filterProductsUseCaseProvider = Provider<FilterProductsUseCase>(
   (ref) => FilterProductsUseCase(ref.watch(productRepositoryProvider)),
 );
@@ -43,10 +67,14 @@ class ProductListState {
   const ProductListState({
     this.isLoading = false,
     this.products = const [],
+    this.selectedCategory,
     this.failure,
   });
   final bool isLoading;
   final List<Product> products;
+
+  /// Seçili kategori id'si; `null` "Tümü" demektir.
+  final String? selectedCategory;
   final Failure? failure;
 }
 
@@ -54,15 +82,40 @@ class ProductListController extends Notifier<ProductListState> {
   @override
   ProductListState build() => const ProductListState();
 
+  /// Seçili kategoriye göre listeyi (yeniden) yükler. Kategori yoksa tüm
+  /// ürünler getirilir.
   Future<void> loadProducts() async {
-    state = ProductListState(isLoading: true, products: state.products);
-    final result = await ref.read(getProductsUseCaseProvider)();
+    final selected = state.selectedCategory;
+    state = ProductListState(
+      isLoading: true,
+      products: state.products,
+      selectedCategory: selected,
+    );
+    final result = selected == null
+        ? await ref.read(getProductsUseCaseProvider)()
+        : await ref.read(filterProductsUseCaseProvider)(
+            ProductFilter(category: selected),
+          );
     state = switch (result) {
-      Success<List<Product>>(:final value) => ProductListState(products: value),
+      Success<List<Product>>(:final value) => ProductListState(
+        products: value,
+        selectedCategory: selected,
+      ),
       ResultFailure<List<Product>>(:final failure) => ProductListState(
+        selectedCategory: selected,
         failure: failure,
       ),
     };
+  }
+
+  /// `null` kategori "Tümü" seçimidir ve tam listeyi geri yükler.
+  Future<void> selectCategory(String? categoryId) {
+    state = ProductListState(
+      isLoading: true,
+      products: state.products,
+      selectedCategory: categoryId,
+    );
+    return loadProducts();
   }
 }
 
@@ -74,6 +127,13 @@ final productListControllerProvider =
 final productDetailProvider = FutureProvider.autoDispose
     .family<Result<Product>, String>((ref, id) {
       return ref.watch(getProductDetailUseCaseProvider)(id);
+    });
+
+/// Kullanıcı, `Product.price`'ın temsil ettiği varsayılan (ilk) varyanttan
+/// farklı bir varyant seçtiğinde o varyantın anlık fiyatını sorgular.
+final variantPriceProvider = FutureProvider.autoDispose
+    .family<Result<double?>, String>((ref, variantId) {
+      return ref.watch(getVariantPriceUseCaseProvider)(variantId);
     });
 
 class SearchFilterController extends Notifier<FilterState> {
@@ -89,7 +149,7 @@ class SearchFilterController extends Notifier<FilterState> {
 
   Future<void> _initialize() async {
     final categoriesResult = await ref.read(getCategoriesUseCaseProvider)();
-    if (categoriesResult case Success<List<String>>(:final value)) {
+    if (categoriesResult case Success<List<Category>>(:final value)) {
       state = state.copyWith(categories: value);
     }
     await _refreshResults();

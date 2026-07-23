@@ -3,8 +3,47 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/route_paths.dart';
+import '../../../../core/constants/storage_keys.dart';
+import '../../../../core/services/secure_storage_service.dart';
 import '../../../../core/utils/result.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+
+/// Oturum gerektiren bir hesap sayfasına gitmeden önce token kontrolü yapar.
+/// Token yoksa sayfaya hiç gidilmez (aksi halde sayfanın kendi provider'ı
+/// `/me` ucuna gidip 401 alır ve `AuthInterceptor` kullanıcıyı login'e
+/// yönlendirir) — bunun yerine kapatılabilir bir bilgi dialogu gösterilir.
+Future<void> _openIfLoggedIn(
+  BuildContext context,
+  WidgetRef ref,
+  String route,
+) async {
+  final token = await ref
+      .read(secureStorageServiceProvider)
+      .getString(StorageKeys.accessToken);
+  if (token == null) {
+    if (context.mounted) await _showLoginRequiredDialog(context);
+    return;
+  }
+  if (context.mounted) context.push(route);
+}
+
+Future<void> _showLoginRequiredDialog(BuildContext context) => showDialog<void>(
+  context: context,
+  builder: (dialogContext) => AlertDialog(
+    title: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        const Text('Giriş Gerekli'),
+        IconButton(
+          icon: const Icon(Icons.close),
+          tooltip: 'Kapat',
+          onPressed: () => Navigator.of(dialogContext).pop(),
+        ),
+      ],
+    ),
+    content: const Text('Bu özelliği kullanmak için giriş yapmanız gerekiyor.'),
+  ),
+);
 
 class AccountPage extends ConsumerWidget {
   const AccountPage({super.key});
@@ -19,21 +58,21 @@ class AccountPage extends ConsumerWidget {
           icon: Icons.person_outline,
           title: 'Profil Bilgilerim',
           subtitle: 'Telefon ve doğum tarihi bilgileriniz',
-          onTap: () => context.push(RoutePaths.profile),
+          onTap: () => _openIfLoggedIn(context, ref, RoutePaths.profile),
         ),
         const SizedBox(height: 12),
         _AccountSectionCard(
           icon: Icons.receipt_long_outlined,
           title: 'Siparişlerim',
           subtitle: 'Geçmiş ve devam eden siparişleriniz',
-          onTap: () => context.push(RoutePaths.orders),
+          onTap: () => _openIfLoggedIn(context, ref, RoutePaths.orders),
         ),
         const SizedBox(height: 12),
         _AccountSectionCard(
           icon: Icons.location_on_outlined,
           title: 'Adreslerim',
           subtitle: 'Teslimat adreslerinizi yönetin',
-          onTap: () => context.push(RoutePaths.addresses),
+          onTap: () => _openIfLoggedIn(context, ref, RoutePaths.addresses),
         ),
         const SizedBox(height: 12),
         _AccountSectionCard(

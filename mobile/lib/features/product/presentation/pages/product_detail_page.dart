@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/result.dart';
 import '../../../../core/widgets/app_network_image.dart';
 import '../../../../core/widgets/async_state_views.dart';
 import '../../../cart/presentation/providers/cart_providers.dart';
 import '../../../cart/presentation/widgets/cart_icon_button.dart';
+import '../../../favorites/domain/entities/favorite_item.dart';
+import '../../../favorites/presentation/widgets/favorite_button.dart';
+import '../../domain/entities/category.dart';
 import '../../domain/entities/product.dart';
 import '../providers/product_providers.dart';
 
@@ -63,6 +67,11 @@ class _ProductDetailState extends ConsumerState<_ProductDetail> {
 
   bool get _canAddToCart => !_hasVariants || _selectedVariantId != null;
 
+  /// `product.price`, repository tarafından bu varyant üzerinden zaten
+  /// doldurulmuştur (bkz. `ProductRepositoryImpl._priceReferenceFor`).
+  String? get _defaultVariantId =>
+      _hasVariants ? widget.product.variants.first.id : null;
+
   Future<void> _addToCart() async {
     final hasVariants = _hasVariants;
     setState(() => _isAddingToCart = true);
@@ -85,6 +94,13 @@ class _ProductDetailState extends ConsumerState<_ProductDetail> {
   @override
   Widget build(BuildContext context) {
     final product = widget.product;
+    // Ürün detayı yanıtı yalnızca `categoryId` taşır; adı kategori listesinden
+    // çözeriz. Çözülemezse (liste yüklenmemiş ya da eşleşme yok) çip yerine
+    // hiçbir şey göstermeyiz — kullanıcıya asla ham GUID gösterilmez.
+    final categoryName = _resolveCategoryName(
+      ref.watch(categoriesProvider).asData?.value,
+      product.category,
+    );
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -95,15 +111,36 @@ class _ProductDetailState extends ConsumerState<_ProductDetail> {
             child: AppNetworkImage(imageUrl: product.imageUrl),
           ),
           const SizedBox(height: 24),
-          Text(product.title, style: Theme.of(context).textTheme.headlineSmall),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  product.title,
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+              ),
+              FavoriteButton(
+                item: FavoriteItem(
+                  productId: product.id,
+                  title: product.title,
+                  imageUrl: product.imageUrl,
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 12),
-          Chip(label: Text(product.category)),
-          const SizedBox(height: 12),
-          Text(
-            product.price != null
-                ? '\$${product.price!.toStringAsFixed(2)}'
-                : 'Fiyat bilgisi yakında eklenecek',
-            style: Theme.of(context).textTheme.headlineMedium,
+          if (categoryName != null) ...[
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Chip(label: Text(categoryName)),
+            ),
+            const SizedBox(height: 12),
+          ],
+          _PriceText(
+            defaultPrice: product.price,
+            selectedVariantId: _selectedVariantId,
+            defaultVariantId: _defaultVariantId,
           ),
           const SizedBox(height: 20),
           Text(
@@ -144,6 +181,16 @@ class _ProductDetailState extends ConsumerState<_ProductDetail> {
       ),
     );
   }
+}
+
+/// Kategori id'sini görünen ada çevirir; liste henüz yüklenmemişse ya da
+/// eşleşme yoksa `null` döner (bu durumda çip gizlenir).
+String? _resolveCategoryName(List<Category>? categories, String categoryId) {
+  if (categories == null) return null;
+  for (final category in categories) {
+    if (category.id == categoryId) return category.name;
+  }
+  return null;
 }
 
 class _SizeBox extends StatelessWidget {
@@ -189,4 +236,42 @@ class _SizeBox extends StatelessWidget {
       ),
     );
   }
+}
+
+class _PriceText extends ConsumerWidget {
+  const _PriceText({
+    required this.defaultPrice,
+    required this.selectedVariantId,
+    required this.defaultVariantId,
+  });
+
+  /// Repository tarafından varsayılan (ilk) varyant/ürün üzerinden
+  /// doldurulan fiyat.
+  final double? defaultPrice;
+  final String? selectedVariantId;
+  final String? defaultVariantId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final style = Theme.of(context).textTheme.headlineMedium;
+    final variantId = selectedVariantId;
+    if (variantId == null || variantId == defaultVariantId) {
+      return Text(_label(defaultPrice), style: style);
+    }
+    final variantPrice = ref.watch(variantPriceProvider(variantId));
+    return variantPrice.when(
+      data: (result) => Text(
+        _label(switch (result) {
+          Success<double?>(:final value) => value,
+          ResultFailure<double?>() => null,
+        }),
+        style: style,
+      ),
+      loading: () => Text(_label(defaultPrice), style: style),
+      error: (_, _) => Text(_label(null), style: style),
+    );
+  }
+
+  String _label(double? price) =>
+      price != null ? price.toTryCurrency() : 'Fiyat bilgisi yakında eklenecek';
 }

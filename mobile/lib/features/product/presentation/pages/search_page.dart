@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/widgets/app_network_image.dart';
 import '../../../../core/widgets/async_state_views.dart';
 import '../../../cart/presentation/widgets/cart_icon_button.dart';
@@ -86,9 +87,9 @@ class _CategoryList extends StatelessWidget {
         ),
         for (final category in state.categories)
           CategoryChip(
-            label: category,
-            selected: category == state.category,
-            onSelected: (_) => onSelected(category),
+            label: category.name,
+            selected: category.id == state.category,
+            onSelected: (_) => onSelected(category.id),
           ),
       ],
     ),
@@ -157,9 +158,7 @@ class _SearchResultTile extends StatelessWidget {
     title: Text(product.title, maxLines: 2, overflow: TextOverflow.ellipsis),
     subtitle: Text(product.category),
     trailing: Text(
-      product.price != null
-          ? '\$${product.price!.toStringAsFixed(2)}'
-          : 'Fiyat yakında',
+      product.price != null ? product.price!.toTryCurrency() : 'Fiyat yakında',
     ),
   );
 }

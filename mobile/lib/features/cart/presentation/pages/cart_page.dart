@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/route_paths.dart';
+import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/widgets/app_network_image.dart';
 import '../../../../core/widgets/async_state_views.dart';
 import '../../domain/entities/cart_item.dart';
@@ -89,7 +90,7 @@ class _CartItemTile extends ConsumerWidget {
                   const SizedBox(height: 6),
                   Text(
                     item.unitPrice > 0
-                        ? '\$${item.unitPrice.toStringAsFixed(2)}'
+                        ? item.unitPrice.toTryCurrency()
                         : 'Fiyat yakında',
                   ),
                   const SizedBox(height: 8),
@@ -127,7 +128,7 @@ class _CartItemTile extends ConsumerWidget {
                 ),
                 Text(
                   item.unitPrice > 0
-                      ? '\$${item.lineTotal.toStringAsFixed(2)}'
+                      ? item.lineTotal.toTryCurrency()
                       : 'Fiyat yakında',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
@@ -158,16 +159,12 @@ class _CartSummary extends StatelessWidget {
             const SizedBox(height: 8),
             _SummaryRow(
               label: 'Ara Toplam',
-              value: subtotal > 0
-                  ? '\$${subtotal.toStringAsFixed(2)}'
-                  : 'Fiyat yakında',
+              value: subtotal > 0 ? subtotal.toTryCurrency() : 'Fiyat yakında',
             ),
             const Divider(height: 24),
             _SummaryRow(
               label: 'Toplam Tutar',
-              value: subtotal > 0
-                  ? '\$${subtotal.toStringAsFixed(2)}'
-                  : 'Fiyat yakında',
+              value: subtotal > 0 ? subtotal.toTryCurrency() : 'Fiyat yakında',
               emphasized: true,
             ),
             const SizedBox(height: 16),

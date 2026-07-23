@@ -1,18 +1,38 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/errors/failure.dart';
+import '../../../../core/network/dio_client.dart';
 import '../../../../core/utils/result.dart';
+import '../../data/datasources/order_remote_data_source.dart';
 import '../../data/repositories/order_repository_impl.dart';
 import '../../domain/entities/order.dart';
 import '../../domain/repositories/order_repository.dart';
+import '../../domain/usecases/cancel_order_use_case.dart';
 import '../../domain/usecases/get_my_orders_use_case.dart';
+import '../../domain/usecases/get_order_by_id_use_case.dart';
 
+final orderRemoteDataSourceProvider = Provider<OrderRemoteDataSource>(
+  (ref) => OrderRemoteDataSourceImpl(ref.watch(dioProvider)),
+);
 final orderRepositoryProvider = Provider<OrderRepository>(
-  (ref) => OrderRepositoryImpl(),
+  (ref) => OrderRepositoryImpl(ref.watch(orderRemoteDataSourceProvider)),
 );
 final getMyOrdersUseCaseProvider = Provider<GetMyOrdersUseCase>(
   (ref) => GetMyOrdersUseCase(ref.watch(orderRepositoryProvider)),
 );
+final getOrderByIdUseCaseProvider = Provider<GetOrderByIdUseCase>(
+  (ref) => GetOrderByIdUseCase(ref.watch(orderRepositoryProvider)),
+);
+final cancelOrderUseCaseProvider = Provider<CancelOrderUseCase>(
+  (ref) => CancelOrderUseCase(ref.watch(orderRepositoryProvider)),
+);
+
+/// Sipariş detay ekranı bunu izler; `productDetailProvider` ile aynı desen
+/// (autoDispose family).
+final orderDetailProvider = FutureProvider.autoDispose
+    .family<Result<Order>, String>((ref, orderId) {
+      return ref.watch(getOrderByIdUseCaseProvider)(orderId);
+    });
 
 class OrdersState {
   const OrdersState({

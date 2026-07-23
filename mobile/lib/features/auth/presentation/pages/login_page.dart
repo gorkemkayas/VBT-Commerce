@@ -92,6 +92,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       onPressed: () => context.push(RoutePaths.register),
                       child: const Text('Hesabın yok mu? Kayıt ol'),
                     ),
+                    TextButton(
+                      onPressed: () => context.go(RoutePaths.home),
+                      child: const Text('Misafir olarak devam et'),
+                    ),
                   ],
                 ),
               ),

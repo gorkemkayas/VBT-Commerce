@@ -10,4 +10,5 @@ abstract final class RoutePaths {
   static const profile = '/profile';
   static const addresses = '/addresses';
   static const orders = '/orders';
+  static const orderDetail = '/orders/:id';
 }

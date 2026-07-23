@@ -116,6 +116,10 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       onPressed: () => context.pop(),
                       child: const Text('Zaten hesabın var mı? Giriş yap'),
                     ),
+                    TextButton(
+                      onPressed: () => context.go(RoutePaths.home),
+                      child: const Text('Misafir olarak devam et'),
+                    ),
                   ],
                 ),
               ),

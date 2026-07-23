@@ -38,7 +38,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sneaker Store'),
+        title: const Text('Ürünler'),
         actions: [
           IconButton(
             tooltip: 'Ara ve filtrele',
@@ -142,7 +142,7 @@ class _HomeContent extends StatelessWidget {
 
           SliverToBoxAdapter(
             child: HomeSectionHeader(
-              title: state.selectedCategory ?? 'Senin için önerilenler',
+              title: state.selectedCategoryName ?? 'Senin için önerilenler',
             ),
           ),
 

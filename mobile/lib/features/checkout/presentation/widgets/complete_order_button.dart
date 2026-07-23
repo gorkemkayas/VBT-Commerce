@@ -5,13 +5,15 @@ class CompleteOrderButton extends StatelessWidget {
     super.key,
     required this.isSubmitting,
     required this.onPressed,
+    this.enabled = true,
   });
   final bool isSubmitting;
+  final bool enabled;
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) => FilledButton(
-    onPressed: isSubmitting ? null : onPressed,
+    onPressed: (isSubmitting || !enabled) ? null : onPressed,
     child: isSubmitting
         ? const SizedBox(
             height: 20,
