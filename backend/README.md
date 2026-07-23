@@ -349,6 +349,17 @@ backend/
 ## 12. Çalıştırma (yerel geliştirme)
 
 1. SQL Server erişimi + `appsettings.Development.Local.json` içinde `ConnectionStrings:DefaultConnection`, `Jwt:SigningKey`, `Iyzico:ApiKey/SecretKey`, `Smtp:*` gibi gizli değerleri tanımlayın (bu dosya `appsettings.Development.json`'ın üzerine opsiyonel olarak yüklenir, repo'ya commit edilmez — `.gitignore`'da `appsettings.*.Local.json`).
-2. Her modülün kendi migration'larını ilgili `*.Infrastructure` projesinde çalıştırın (`dotnet ef database update --project Modules/<Module>/<Module>.Infrastructure --startup-project ECommerce.API --context <Module>DbContext`).
-3. `dotnet run --project backend/src/ECommerce.API` — Development ortamında `/scalar` üzerinden API dokümantasyonuna erişilebilir, açılışta örnek Admin/Customer hesabı otomatik seed edilir.
+2. `dotnet run --project backend/src/ECommerce.API` — açılışta her modülün bekleyen migration'ları otomatik uygulanır (`DatabaseMigrationExtensions.MigrateModuleDatabasesAsync`, bkz. `WebApplicationExtensions.cs`), elle `dotnet ef database update` çalıştırmaya gerek yok. Development ortamında `/scalar` üzerinden API dokümantasyonuna erişilebilir, açılışta örnek Admin/Customer hesabı otomatik seed edilir.
+
+---
+
+## 13. Production Dağıtımı (Docker)
+
+Sunucuda `api`, `mssql` ve `seq` (log görüntüleme) üç ayrı container olarak, tek `docker-compose.yml` ile çalışır.
+
+1. `backend/.env.example` dosyasını `backend/.env` olarak kopyalayıp gerçek değerleri gir (bu dosya commit edilmez).
+2. `docker compose up -d --build` — üç servisi de build edip ayağa kaldırır. Migration'lar API açılışında otomatik uygulanır (bkz. §12, adım 2) — yeni bir migration içeren bir sürümü deploy ettiğinde bile elle bir şey çalıştırman gerekmez, container her başladığında bekleyen migration'ları kendisi uygular.
+3. Sadece API kodu değiştiğinde `mssql`'i etkilememek için `docker compose up -d --build api` kullan (bkz. yukarıdaki soru-cevap) — `mssql` ve `seq` servis tanımları değişmediği sürece dokunulmaz, veri (`mssql-data`/`seq-data` volume'leri) kalıcıdır.
+4. Loglar `Production` ortamında Console + rolling file'a ek olarak Seq'e de akar (`appsettings.Production.json`) — migration uygulamaları da (`Applying migration '...'.`) dahil. Seq UI varsayılan olarak yalnızca `127.0.0.1:15341`'e bağlanır (dışa kapalı; 5341 değil — bazı geliştirici makinelerinde zaten native bir Seq servisi o portu kullanıyor olabilir); sunucudan uzaktan bakmak için SSH tunnel kullan: `ssh -L 15341:localhost:15341 user@sunucu` ve tarayıcıda `http://localhost:15341` aç, `admin` / `.env`'deki `SEQ_ADMIN_PASSWORD` ile giriş yap. Genel internete açacaksan önce bir reverse proxy'nin arkasına al.
+5. `Cors:AllowedOrigins` (`appsettings.Production.json`), takım arkadaşlarının local dev sunucularının (`localhost:3000/5173/8081/19006`) prod'daki API'ye tarayıcıdan istek atabilmesi için önceden eklenmiştir — mobil geliştirme CORS'tan etkilenmez, native HTTP client'lar origin kontrolüne tabi değildir. Gerçek bir domain alındığında o origin'i (`https://...`) aynı diziye ekleyip `docker compose up -d --build api` ile yeniden başlat.
 

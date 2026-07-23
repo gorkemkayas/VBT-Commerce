@@ -9,6 +9,50 @@ services:
       - "14330:1433"
     volumes:
       - mssql-data:/var/opt/mssql
+    restart: unless-stopped
+
+  seq:
+    image: datalust/seq:latest
+    container_name: ecommerce-seq
+    environment:
+      ACCEPT_EULA: "Y"
+      # Seq 2026+ refuses to start without an explicit auth decision on first run — this sets
+      # the initial admin password instead of opting out of authentication entirely.
+      SEQ_FIRSTRUN_ADMINPASSWORD: ${SEQ_ADMIN_PASSWORD}
+    ports:
+      # Seq serves both its UI and its log-ingestion API on container port 80. Host port is
+      # 15341, not the default 5341 — a native Seq Windows service commonly already owns 5341
+      # on dev machines. Bound to 127.0.0.1 so it isn't reachable from outside the box by
+      # default — browse it over an SSH tunnel (ssh -L 15341:localhost:15341 user@server) or
+      # put a reverse proxy with auth in front of it if you need remote access.
+      - "127.0.0.1:15341:80"
+    volumes:
+      - seq-data:/data
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./src
+      dockerfile: ECommerce.API/Dockerfile
+    container_name: ecommerce-api
+    depends_on:
+      - mssql
+      - seq
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: "Server=mssql,1433;Database=ECommerceDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
+      Jwt__SigningKey: ${JWT_SIGNING_KEY}
+      Iyzico__ApiKey: ${IYZICO_API_KEY}
+      Iyzico__SecretKey: ${IYZICO_SECRET_KEY}
+      Smtp__Host: ${SMTP_HOST}
+      Smtp__Username: ${SMTP_USERNAME}
+      Smtp__Password: ${SMTP_PASSWORD}
+    ports:
+      # nginx on the server proxies intern-api.kayas.dev -> localhost:5242, so the container's
+      # host port must stay 5242 — changing it would require editing the nginx config too.
+      - "5242:8080"
+    restart: unless-stopped
 
 volumes:
   mssql-data:
+  seq-data:

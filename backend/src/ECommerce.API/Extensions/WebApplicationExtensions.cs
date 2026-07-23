@@ -8,6 +8,8 @@ public static class WebApplicationExtensions
 {
     public static async Task UseApiPipelineAsync(this WebApplication app)
     {
+        await app.MigrateModuleDatabasesAsync();
+
         app.UseForwardedHeaders();
 
         app.UseSerilogRequestLogging();
