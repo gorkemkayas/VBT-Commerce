@@ -16,6 +16,8 @@ class OrderDetailModel extends Order {
     required super.subtotal,
     required super.discountAmount,
     required super.taxAmount,
+    required super.shippingCompanyId,
+    required super.shippingFee,
   }) : super(itemCount: items.length);
 
   factory OrderDetailModel.fromJson(Map<String, dynamic> json) {
@@ -32,6 +34,8 @@ class OrderDetailModel extends Order {
       subtotal: (json['subtotal'] as num?)?.toDouble() ?? 0,
       discountAmount: (json['discountAmount'] as num?)?.toDouble() ?? 0,
       taxAmount: (json['taxAmount'] as num?)?.toDouble() ?? 0,
+      shippingCompanyId: json['shippingCompanyId'] as String?,
+      shippingFee: (json['shippingFee'] as num?)?.toDouble() ?? 0,
     );
   }
 }

@@ -28,7 +28,7 @@ class _FakeSecureStorageService extends SecureStorageService {
 }
 
 void main() {
-  testWidgets('ürün listesi ekranı açılır', (tester) async {
+  testWidgets('ana sayfa ekranı açılır', (tester) async {
     SharedPreferences.setMockInitialValues({});
     final preferences = await SharedPreferences.getInstance();
     await tester.pumpWidget(
@@ -43,6 +43,6 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Ürünler'), findsOneWidget);
+    expect(find.text('Sneaker Store'), findsOneWidget);
   });
 }

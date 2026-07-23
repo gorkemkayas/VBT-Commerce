@@ -5,6 +5,7 @@ import '../models/customer_model.dart';
 
 abstract interface class CustomerRemoteDataSource {
   Future<CustomerModel> getCurrentCustomer();
+  Future<void> updateProfile({String? phoneNumber, String? dateOfBirth});
   Future<String> addAddress(CustomerAddressInput input);
   Future<void> updateAddress(String addressId, CustomerAddressInput input);
   Future<void> deleteAddress(String addressId);
@@ -23,6 +24,17 @@ class CustomerRemoteDataSourceImpl implements CustomerRemoteDataSource {
       throw const FormatException('Sunucudan boş müşteri verisi alındı.');
     }
     return CustomerModel.fromJson(body);
+  }
+
+  @override
+  Future<void> updateProfile({
+    String? phoneNumber,
+    String? dateOfBirth,
+  }) async {
+    await _dio.put<void>(
+      '/api/customers/me',
+      data: {'phoneNumber': phoneNumber, 'dateOfBirth': dateOfBirth},
+    );
   }
 
   @override

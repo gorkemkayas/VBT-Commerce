@@ -30,6 +30,26 @@ class CustomerRepositoryImpl implements CustomerRepository {
   }
 
   @override
+  Future<Result<bool>> updateProfile({
+    String? phoneNumber,
+    String? dateOfBirth,
+  }) async {
+    try {
+      await _remoteDataSource.updateProfile(
+        phoneNumber: phoneNumber,
+        dateOfBirth: dateOfBirth,
+      );
+      return const Result.success(true);
+    } on DioException catch (error) {
+      return Result.failure(mapDioException(error));
+    } catch (_) {
+      return const Result.failure(
+        UnknownFailure('Profil güncellenirken beklenmeyen bir hata oluştu.'),
+      );
+    }
+  }
+
+  @override
   Future<Result<String>> addAddress(CustomerAddressInput input) async {
     try {
       return Result.success(await _remoteDataSource.addAddress(input));

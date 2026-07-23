@@ -7,6 +7,7 @@ import '../../data/datasources/order_remote_data_source.dart';
 import '../../data/repositories/order_repository_impl.dart';
 import '../../domain/entities/order.dart';
 import '../../domain/repositories/order_repository.dart';
+import '../../domain/usecases/cancel_order_use_case.dart';
 import '../../domain/usecases/get_my_orders_use_case.dart';
 import '../../domain/usecases/get_order_by_id_use_case.dart';
 
@@ -21,6 +22,9 @@ final getMyOrdersUseCaseProvider = Provider<GetMyOrdersUseCase>(
 );
 final getOrderByIdUseCaseProvider = Provider<GetOrderByIdUseCase>(
   (ref) => GetOrderByIdUseCase(ref.watch(orderRepositoryProvider)),
+);
+final cancelOrderUseCaseProvider = Provider<CancelOrderUseCase>(
+  (ref) => CancelOrderUseCase(ref.watch(orderRepositoryProvider)),
 );
 
 /// Sipariş detay ekranı bunu izler; `productDetailProvider` ile aynı desen

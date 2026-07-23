@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/result.dart';
 import '../../../../core/widgets/async_state_views.dart';
+import '../../../checkout/domain/entities/shipping_company.dart';
+import '../../../checkout/presentation/providers/checkout_providers.dart';
 import '../../../product/domain/entities/product.dart';
 import '../../../product/presentation/providers/product_providers.dart';
 import '../../domain/entities/order.dart';
@@ -30,7 +32,10 @@ class OrderDetailPage extends ConsumerWidget {
           onRetry: () => ref.invalidate(orderDetailProvider(orderId)),
         ),
         data: (result) => switch (result) {
-          Success<Order>(:final value) => _OrderDetailBody(order: value),
+          Success<Order>(:final value) => _OrderDetailBody(
+            orderId: orderId,
+            order: value,
+          ),
           ResultFailure<Order>(:final failure) => ErrorView(
             message: failure.message,
             onRetry: () => ref.invalidate(orderDetailProvider(orderId)),
@@ -41,28 +46,107 @@ class OrderDetailPage extends ConsumerWidget {
   }
 }
 
-class _OrderDetailBody extends StatelessWidget {
-  const _OrderDetailBody({required this.order});
+/// Sipariş, `Pending` veya `Confirmed` durumundayken iptal edilebilir
+/// (bkz. `OrderOperations.CancelAsync`) — bu iki durum dışında backend zaten
+/// `400` ile reddediyor, bu yüzden buton yalnızca bu durumlarda gösterilir.
+bool _isCancellable(String status) =>
+    status == 'Pending' || status == 'Confirmed';
+
+class _OrderDetailBody extends ConsumerStatefulWidget {
+  const _OrderDetailBody({required this.orderId, required this.order});
+  final String orderId;
   final Order order;
 
   @override
-  Widget build(BuildContext context) => SingleChildScrollView(
-    padding: const EdgeInsets.all(16),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _HeaderCard(order: order),
-        const SizedBox(height: 16),
-        if (order.address != null) ...[
-          _AddressCard(address: order.address!),
-          const SizedBox(height: 16),
+  ConsumerState<_OrderDetailBody> createState() => _OrderDetailBodyState();
+}
+
+class _OrderDetailBodyState extends ConsumerState<_OrderDetailBody> {
+  bool _isCancelling = false;
+
+  Future<void> _confirmCancel() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Siparişi iptal et'),
+        content: const Text(
+          'Bu siparişi iptal etmek istediğinize emin misiniz?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Vazgeç'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('İptal Et'),
+          ),
         ],
-        _ItemsCard(items: order.items),
-        const SizedBox(height: 16),
-        _TotalsCard(order: order),
-      ],
-    ),
-  );
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _isCancelling = true);
+    final result = await ref.read(cancelOrderUseCaseProvider)(
+      widget.orderId,
+    );
+    if (!mounted) return;
+    setState(() => _isCancelling = false);
+
+    switch (result) {
+      case Success<bool>():
+        // Sipariş detayı (durumu) ve sipariş listesi güncel bilgiyi
+        // göstersin diye yeniden yüklenmeye zorlanır.
+        ref.invalidate(orderDetailProvider(widget.orderId));
+        ref.invalidate(ordersControllerProvider);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Siparişiniz iptal edildi.')));
+      case ResultFailure<bool>(:final failure):
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(failure.message)));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final order = widget.order;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _HeaderCard(order: order),
+          const SizedBox(height: 16),
+          if (order.address != null) ...[
+            _AddressCard(address: order.address!),
+            const SizedBox(height: 16),
+          ],
+          _ItemsCard(items: order.items),
+          const SizedBox(height: 16),
+          _TotalsCard(order: order),
+          if (_isCancellable(order.status)) ...[
+            const SizedBox(height: 24),
+            OutlinedButton.icon(
+              onPressed: _isCancelling ? null : _confirmCancel,
+              icon: _isCancelling
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.cancel_outlined),
+              label: const Text('Siparişi İptal Et'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.error,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 }
 
 class _HeaderCard extends StatelessWidget {
@@ -242,6 +326,38 @@ class _ProductName extends ConsumerWidget {
   }
 }
 
+/// `OrderDto` kargo firmasının yalnızca id'sini taşıyor, adını taşımıyor.
+/// Ad, Checkout feature'ın (aktif firmaları listeleyen) mevcut
+/// `shippingCompaniesProvider`'ı üzerinden çözülür — sipariş verildikten
+/// sonra firma pasife alınmışsa (artık aktif listede yoksa) genel bir
+/// etikete düşülür.
+class _ShippingCompanyName extends ConsumerWidget {
+  const _ShippingCompanyName({required this.shippingCompanyId, this.style});
+  final String shippingCompanyId;
+  final TextStyle? style;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final companies = ref.watch(shippingCompaniesProvider);
+    return companies.when(
+      data: (result) => Text(_resolveName(result), style: style),
+      loading: () => Text('Yükleniyor...', style: style),
+      error: (_, _) => Text('Kargo Firması', style: style),
+    );
+  }
+
+  String _resolveName(Result<List<ShippingCompany>> result) {
+    final companies = switch (result) {
+      Success<List<ShippingCompany>>(:final value) => value,
+      ResultFailure<List<ShippingCompany>>() => const <ShippingCompany>[],
+    };
+    for (final company in companies) {
+      if (company.id == shippingCompanyId) return company.name;
+    }
+    return 'Kargo Firması';
+  }
+}
+
 class _TotalsCard extends StatelessWidget {
   const _TotalsCard({required this.order});
   final Order order;
@@ -272,6 +388,20 @@ class _TotalsCard extends StatelessWidget {
               value: order.taxAmount,
               style: bodyStyle,
             ),
+            if (order.shippingCompanyId != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _ShippingCompanyName(
+                      shippingCompanyId: order.shippingCompanyId!,
+                      style: bodyStyle,
+                    ),
+                    Text(order.shippingFee.toTryCurrency(), style: bodyStyle),
+                  ],
+                ),
+              ),
             const Divider(height: 24),
             _SummaryRow(
               label: 'Genel Toplam',

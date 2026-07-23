@@ -13,6 +13,7 @@ import '../../domain/usecases/delete_customer_address_use_case.dart';
 import '../../domain/usecases/get_current_customer_use_case.dart';
 import '../../domain/usecases/set_default_customer_address_use_case.dart';
 import '../../domain/usecases/update_customer_address_use_case.dart';
+import '../../domain/usecases/update_customer_profile_use_case.dart';
 
 final customerRemoteDataSourceProvider = Provider<CustomerRemoteDataSource>(
   (ref) => CustomerRemoteDataSourceImpl(ref.watch(dioProvider)),
@@ -23,6 +24,11 @@ final customerRepositoryProvider = Provider<CustomerRepository>(
 final getCurrentCustomerUseCaseProvider = Provider<GetCurrentCustomerUseCase>(
   (ref) => GetCurrentCustomerUseCase(ref.watch(customerRepositoryProvider)),
 );
+final updateCustomerProfileUseCaseProvider =
+    Provider<UpdateCustomerProfileUseCase>(
+      (ref) =>
+          UpdateCustomerProfileUseCase(ref.watch(customerRepositoryProvider)),
+    );
 final addCustomerAddressUseCaseProvider = Provider<AddCustomerAddressUseCase>(
   (ref) => AddCustomerAddressUseCase(ref.watch(customerRepositoryProvider)),
 );

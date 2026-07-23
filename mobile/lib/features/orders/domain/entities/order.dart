@@ -13,6 +13,8 @@ class Order {
     this.subtotal = 0,
     this.discountAmount = 0,
     this.taxAmount = 0,
+    this.shippingCompanyId,
+    this.shippingFee = 0,
   });
 
   final String id;
@@ -41,4 +43,14 @@ class Order {
 
   /// Yalnızca detayda dolar.
   final double taxAmount;
+
+  /// Sipariş verilirken seçilen kargo firmasının id'si. Backend bu id'nin
+  /// adını taşımıyor — ad, sunum katmanında Checkout feature'ın (aktif
+  /// firmaları listeleyen) `shippingCompaniesProvider`'ı üzerinden
+  /// çözülür. Yalnızca detayda dolar.
+  final String? shippingCompanyId;
+
+  /// Kargo ücreti. `totalAmount` (`grandTotal`) bu tutarı zaten içerir —
+  /// burada ayrıca gösterim/kırılım amacıyla tutulur. Yalnızca detayda dolar.
+  final double shippingFee;
 }

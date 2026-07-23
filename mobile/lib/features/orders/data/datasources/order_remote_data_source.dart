@@ -6,6 +6,7 @@ import '../models/order_model.dart';
 abstract interface class OrderRemoteDataSource {
   Future<List<OrderModel>> getMyOrders();
   Future<OrderDetailModel> getOrderById(String orderId);
+  Future<void> cancelOrder(String orderId);
 }
 
 /// `GET /api/orders/me`. Yanıt sayfalıdır (`PagedResult`): siparişler `items`
@@ -48,5 +49,10 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
       throw const FormatException('Sunucudan boş sipariş detayı alındı.');
     }
     return OrderDetailModel.fromJson(body);
+  }
+
+  @override
+  Future<void> cancelOrder(String orderId) async {
+    await _dio.post<void>('/api/orders/me/$orderId/cancel');
   }
 }

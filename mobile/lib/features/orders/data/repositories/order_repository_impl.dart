@@ -44,4 +44,18 @@ class OrderRepositoryImpl implements OrderRepository {
       );
     }
   }
+
+  @override
+  Future<Result<bool>> cancelOrder(String orderId) async {
+    try {
+      await _remoteDataSource.cancelOrder(orderId);
+      return const Result.success(true);
+    } on DioException catch (error) {
+      return Result.failure(mapDioException(error));
+    } catch (_) {
+      return const Result.failure(
+        UnknownFailure('Sipariş iptal edilirken beklenmeyen bir hata oluştu.'),
+      );
+    }
+  }
 }
