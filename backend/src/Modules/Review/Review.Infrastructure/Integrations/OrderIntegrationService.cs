@@ -23,4 +23,7 @@ public class OrderIntegrationService(IOrderPurchaseVerifier orderPurchaseVerifie
 
         return orderPurchaseVerifier.HasCustomerPurchasedItemAsync(userId, sellableItemId, orderItemType, cancellationToken);
     }
+
+    public Task<IReadOnlyCollection<Guid>> GetPurchasedVariantIdsAsync(Guid userId, CancellationToken cancellationToken)
+        => orderPurchaseVerifier.GetPurchasedVariantIdsAsync(userId, cancellationToken);
 }

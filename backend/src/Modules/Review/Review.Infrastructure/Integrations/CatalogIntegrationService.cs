@@ -19,4 +19,10 @@ public class CatalogIntegrationService(IProductCatalogService productCatalogServ
             _ => false
         };
     }
+
+    public async Task<Guid?> GetVariantProductIdAsync(Guid variantId, CancellationToken cancellationToken)
+    {
+        var variant = await productCatalogService.GetVariantAsync(variantId, cancellationToken);
+        return variant?.ProductId;
+    }
 }

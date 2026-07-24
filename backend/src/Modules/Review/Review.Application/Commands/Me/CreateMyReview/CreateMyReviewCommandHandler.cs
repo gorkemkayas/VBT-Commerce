@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Review.Application.Abstractions;
 using Review.Application.Integrations;
 using Review.Domain.Entities;
+using Review.Domain.Enums;
 using Review.Domain.Exceptions;
 
 namespace Review.Application.Commands.Me.CreateMyReview;
@@ -27,6 +28,24 @@ public class CreateMyReviewCommandHandler(
 
         var hasPurchased = await orderIntegrationService.HasPurchasedItemAsync(
             userId, request.SellableItemId, request.SellableItemType, cancellationToken);
+
+        // A product can also be reviewed by someone who bought one of its variants rather than the
+        // bare product itself — Order only knows about variant purchases, not their parent product,
+        // so resolve that link here via Catalog.
+        if (!hasPurchased && request.SellableItemType == ReviewItemType.Product)
+        {
+            var purchasedVariantIds = await orderIntegrationService.GetPurchasedVariantIdsAsync(userId, cancellationToken);
+            foreach (var variantId in purchasedVariantIds)
+            {
+                var parentProductId = await catalogIntegrationService.GetVariantProductIdAsync(variantId, cancellationToken);
+                if (parentProductId != request.SellableItemId)
+                    continue;
+
+                hasPurchased = true;
+                break;
+            }
+        }
+
         if (!hasPurchased)
             throw new ForbiddenException("Only customers who have purchased this item may review it.");
 
