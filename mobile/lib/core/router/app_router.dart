@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/cart/presentation/pages/cart_page.dart';
@@ -28,6 +29,10 @@ final appRouterProvider = Provider<GoRouter>(
       GoRoute(
         path: RoutePaths.register,
         builder: (context, state) => const RegisterPage(),
+      ),
+      GoRoute(
+        path: RoutePaths.forgotPassword,
+        builder: (context, state) => const ForgotPasswordPage(),
       ),
       GoRoute(
         path: RoutePaths.home,

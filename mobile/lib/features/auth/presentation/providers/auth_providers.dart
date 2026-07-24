@@ -11,6 +11,7 @@ import '../../data/datasources/auth_remote_data_source.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/auth_repository.dart';
+import '../../domain/usecases/forgot_password_use_case.dart';
 import '../../domain/usecases/login_use_case.dart';
 import '../../domain/usecases/logout_use_case.dart';
 import '../../domain/usecases/register_use_case.dart';
@@ -41,6 +42,9 @@ final logoutUseCaseProvider = Provider<LogoutUseCase>(
 );
 final registerUseCaseProvider = Provider<RegisterUseCase>(
   (ref) => RegisterUseCase(ref.watch(authRepositoryProvider)),
+);
+final forgotPasswordUseCaseProvider = Provider<ForgotPasswordUseCase>(
+  (ref) => ForgotPasswordUseCase(ref.watch(authRepositoryProvider)),
 );
 
 class LoginState {
@@ -104,3 +108,35 @@ class RegisterController extends Notifier<RegisterState> {
 
 final registerControllerProvider =
     NotifierProvider<RegisterController, RegisterState>(RegisterController.new);
+
+class ForgotPasswordState {
+  const ForgotPasswordState({
+    this.isLoading = false,
+    this.failure,
+    this.isSuccess = false,
+  });
+  final bool isLoading;
+  final Failure? failure;
+  final bool isSuccess;
+}
+
+class ForgotPasswordController extends Notifier<ForgotPasswordState> {
+  @override
+  ForgotPasswordState build() => const ForgotPasswordState();
+
+  Future<void> submit(String email) async {
+    state = const ForgotPasswordState(isLoading: true);
+    final result = await ref.read(forgotPasswordUseCaseProvider)(email);
+    state = switch (result) {
+      Success<bool>() => const ForgotPasswordState(isSuccess: true),
+      ResultFailure<bool>(:final failure) => ForgotPasswordState(
+        failure: failure,
+      ),
+    };
+  }
+}
+
+final forgotPasswordControllerProvider =
+    NotifierProvider<ForgotPasswordController, ForgotPasswordState>(
+      ForgotPasswordController.new,
+    );

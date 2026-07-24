@@ -9,8 +9,8 @@ import '../../../cart/presentation/providers/cart_providers.dart';
 import '../../../cart/presentation/widgets/cart_icon_button.dart';
 import '../../../favorites/domain/entities/favorite_item.dart';
 import '../../../favorites/presentation/widgets/favorite_button.dart';
-import '../../domain/entities/category.dart';
 import '../../domain/entities/product.dart';
+import '../../domain/entities/product_variant.dart';
 import '../providers/product_providers.dart';
 
 class ProductDetailPage extends ConsumerWidget {
@@ -65,6 +65,14 @@ class _ProductDetailState extends ConsumerState<_ProductDetail> {
 
   bool get _hasVariants => widget.product.variants.isNotEmpty;
 
+  /// Varyantlar yalnızca gerçekten "Beden" özniteliğine sahipse (bkz.
+  /// `ProductDetailModel._variantsFromJson` — yalnızca `attributeName ==
+  /// 'Beden'` olan seçenek `size`'a yazılır) beden seçimi anlamlıdır. Kıyafet
+  /// olmayan varyantlı ürünlerde (ör. renk seçenekli ürünler) `size` boş
+  /// string olarak gelir — bu durumda "Beden" bölümü hiç gösterilmez.
+  bool get _hasSizeVariants =>
+      widget.product.variants.any((variant) => variant.size.isNotEmpty);
+
   bool get _canAddToCart => !_hasVariants || _selectedVariantId != null;
 
   /// `product.price`, repository tarafından bu varyant üzerinden zaten
@@ -94,13 +102,6 @@ class _ProductDetailState extends ConsumerState<_ProductDetail> {
   @override
   Widget build(BuildContext context) {
     final product = widget.product;
-    // Ürün detayı yanıtı yalnızca `categoryId` taşır; adı kategori listesinden
-    // çözeriz. Çözülemezse (liste yüklenmemiş ya da eşleşme yok) çip yerine
-    // hiçbir şey göstermeyiz — kullanıcıya asla ham GUID gösterilmez.
-    final categoryName = _resolveCategoryName(
-      ref.watch(categoriesProvider).asData?.value,
-      product.category,
-    );
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -130,13 +131,6 @@ class _ProductDetailState extends ConsumerState<_ProductDetail> {
             ],
           ),
           const SizedBox(height: 12),
-          if (categoryName != null) ...[
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Chip(label: Text(categoryName)),
-            ),
-            const SizedBox(height: 12),
-          ],
           _PriceText(
             defaultPrice: product.price,
             selectedVariantId: _selectedVariantId,
@@ -147,7 +141,7 @@ class _ProductDetailState extends ConsumerState<_ProductDetail> {
             product.description,
             style: Theme.of(context).textTheme.bodyLarge,
           ),
-          if (_hasVariants) ...[
+          if (_hasSizeVariants) ...[
             const SizedBox(height: 20),
             Text('Beden', style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 8),
@@ -155,7 +149,7 @@ class _ProductDetailState extends ConsumerState<_ProductDetail> {
               spacing: 8,
               runSpacing: 8,
               children: [
-                for (final variant in product.variants)
+                for (final variant in _sortedBySizeOrder(product.variants))
                   _SizeBox(
                     label: variant.size,
                     selected: _selectedVariantId == variant.id,
@@ -183,14 +177,21 @@ class _ProductDetailState extends ConsumerState<_ProductDetail> {
   }
 }
 
-/// Kategori id'sini görünen ada çevirir; liste henüz yüklenmemişse ya da
-/// eşleşme yoksa `null` döner (bu durumda çip gizlenir).
-String? _resolveCategoryName(List<Category>? categories, String categoryId) {
-  if (categories == null) return null;
-  for (final category in categories) {
-    if (category.id == categoryId) return category.name;
-  }
-  return null;
+/// Beden seçeneklerini mantıksal sırada gösterir; tanınmayan bir etiket
+/// gelirse (beklenmedik bir değer) listenin sonuna eklenir, mevcut sırası
+/// korunur.
+const _sizeOrder = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+
+List<ProductVariant> _sortedBySizeOrder(List<ProductVariant> variants) {
+  final sorted = [...variants];
+  sorted.sort((first, second) {
+    final firstIndex = _sizeOrder.indexOf(first.size);
+    final secondIndex = _sizeOrder.indexOf(second.size);
+    return (firstIndex == -1 ? _sizeOrder.length : firstIndex).compareTo(
+      secondIndex == -1 ? _sizeOrder.length : secondIndex,
+    );
+  });
+  return sorted;
 }
 
 class _SizeBox extends StatelessWidget {

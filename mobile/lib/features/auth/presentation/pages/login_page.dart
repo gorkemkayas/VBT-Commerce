@@ -51,8 +51,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       'Hoş geldiniz',
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
-                    const SizedBox(height: 8),
-                    const Text('Sneaker Store hesabınıza giriş yapın.'),
                     const SizedBox(height: 32),
                     TextFormField(
                       controller: _emailController,
@@ -72,7 +70,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           ? 'Şifre en az 6 karakter olmalı.'
                           : null,
                     ),
-                    const SizedBox(height: 24),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () =>
+                            context.push(RoutePaths.forgotPassword),
+                        child: const Text('Şifremi Unuttum?'),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     PrimaryButton(
                       label: 'Giriş yap',
                       isLoading: state.isLoading,

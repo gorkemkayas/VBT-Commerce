@@ -81,4 +81,20 @@ class AuthRepositoryImpl implements AuthRepository {
       );
     }
   }
+
+  @override
+  Future<Result<bool>> forgotPassword(String email) async {
+    try {
+      await _remote.forgotPassword(email);
+      return const Result.success(true);
+    } on DioException catch (error) {
+      return Result.failure(mapDioException(error));
+    } catch (_) {
+      return const Result.failure(
+        UnknownFailure(
+          'Şifre sıfırlama isteği gönderilirken beklenmeyen bir hata oluştu.',
+        ),
+      );
+    }
+  }
 }

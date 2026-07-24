@@ -156,7 +156,6 @@ class _SearchResultTile extends StatelessWidget {
       child: AppNetworkImage(imageUrl: product.imageUrl),
     ),
     title: Text(product.title, maxLines: 2, overflow: TextOverflow.ellipsis),
-    subtitle: Text(product.category),
     trailing: Text(
       product.price != null ? product.price!.toTryCurrency() : 'Fiyat yakında',
     ),

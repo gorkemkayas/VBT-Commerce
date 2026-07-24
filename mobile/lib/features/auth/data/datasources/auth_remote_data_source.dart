@@ -11,6 +11,7 @@ abstract interface class AuthRemoteDataSource {
     required String firstName,
     required String lastName,
   });
+  Future<void> forgotPassword(String email);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -64,5 +65,15 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       throw const FormatException('Sunucudan boş yanıt alındı.');
     }
     return UserModel.fromRegisterResponse(body, email);
+  }
+
+  /// `POST /api/auth/forgot-password`. Backend, e-postanın kayıtlı olup
+  /// olmadığından bağımsız olarak her zaman `204 No Content` döner (bkz.
+  /// `ForgotPasswordCommandHandler` — enumeration'ı önlemek için bilinçli
+  /// tasarım); eşleşen bir hesap varsa arka planda sıfırlama e-postası
+  /// gönderilir.
+  @override
+  Future<void> forgotPassword(String email) async {
+    await _dio.post<void>('/api/auth/forgot-password', data: {'email': email});
   }
 }

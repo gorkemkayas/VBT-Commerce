@@ -17,6 +17,36 @@ class CustomerRepositoryImpl implements CustomerRepository {
     try {
       return Result.success(await _remoteDataSource.getCurrentCustomer());
     } on DioException catch (error) {
+      if (error.response?.statusCode == 404) {
+        return _createProfileThenRetry();
+      }
+      return Result.failure(mapDioException(error));
+    } on FormatException catch (error) {
+      return Result.failure(ServerFailure(error.message));
+    } catch (_) {
+      return const Result.failure(
+        UnknownFailure(
+          'Müşteri bilgileri alınırken beklenmeyen bir hata oluştu.',
+        ),
+      );
+    }
+  }
+
+  /// Yeni kayıt olan kullanıcılar için backend'de otomatik bir `Customer`
+  /// profili oluşturulmuyor, bu yüzden ilk `GET /api/customers/me` her zaman
+  /// 404 döner. Bu durum burada bir kez `POST /api/customers/me` ile
+  /// giderilip asıl istek tekrar denenir. `createProfile` başarısız olsa
+  /// bile (ör. eşzamanlı bir başka çağrı profili az önce oluşturmuşsa)
+  /// hatayı yutup `GET`'i yine de tekrar deneriz — gerçek sonucu o belirler.
+  Future<Result<Customer>> _createProfileThenRetry() async {
+    try {
+      await _remoteDataSource.createProfile();
+    } catch (_) {
+      // Görmezden gel: aşağıdaki GET, asıl sonucu zaten belirleyecek.
+    }
+    try {
+      return Result.success(await _remoteDataSource.getCurrentCustomer());
+    } on DioException catch (error) {
       return Result.failure(mapDioException(error));
     } on FormatException catch (error) {
       return Result.failure(ServerFailure(error.message));

@@ -5,6 +5,7 @@ import '../models/customer_model.dart';
 
 abstract interface class CustomerRemoteDataSource {
   Future<CustomerModel> getCurrentCustomer();
+  Future<void> createProfile();
   Future<void> updateProfile({String? phoneNumber, String? dateOfBirth});
   Future<String> addAddress(CustomerAddressInput input);
   Future<void> updateAddress(String addressId, CustomerAddressInput input);
@@ -24,6 +25,19 @@ class CustomerRemoteDataSourceImpl implements CustomerRemoteDataSource {
       throw const FormatException('Sunucudan boş müşteri verisi alındı.');
     }
     return CustomerModel.fromJson(body);
+  }
+
+  /// `POST /api/customers/me`. Yeni kayıt olan kullanıcılar için backend'de
+  /// otomatik bir `Customer` profili oluşturulmuyor (bkz.
+  /// `RegisterCommandHandler` — yalnızca Identity `User` kaydı açılıyor);
+  /// bu yüzden `getCurrentCustomer` ilk 404 aldığında bu uç çağrılarak
+  /// profil şeffafça oluşturulur (bkz. `CustomerRepositoryImpl`).
+  @override
+  Future<void> createProfile() async {
+    await _dio.post<void>(
+      '/api/customers/me',
+      data: const {'phoneNumber': null, 'dateOfBirth': null},
+    );
   }
 
   @override

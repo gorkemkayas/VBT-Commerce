@@ -18,6 +18,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
 
   @override
   void dispose() {
@@ -25,6 +26,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     _lastNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -55,8 +57,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       'Hesap oluştur',
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
-                    const SizedBox(height: 8),
-                    const Text('Sneaker Store için yeni bir hesap oluşturun.'),
                     const SizedBox(height: 32),
                     TextFormField(
                       controller: _firstNameController,
@@ -89,9 +89,23 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     TextFormField(
                       controller: _passwordController,
                       obscureText: true,
-                      decoration: const InputDecoration(labelText: 'Şifre'),
-                      validator: (value) => value == null || value.length < 6
-                          ? 'Şifre en az 6 karakter olmalı.'
+                      decoration: const InputDecoration(
+                        labelText: 'Şifre (En az 8 karakter)',
+                      ),
+                      validator: (value) => value == null || value.length < 8
+                          ? 'Şifre en az 8 karakter olmalı.'
+                          : null,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _confirmPasswordController,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Şifre Tekrar',
+                      ),
+                      validator: (value) =>
+                          value != _passwordController.text
+                          ? 'Şifreler eşleşmiyor.'
                           : null,
                     ),
                     const SizedBox(height: 24),
