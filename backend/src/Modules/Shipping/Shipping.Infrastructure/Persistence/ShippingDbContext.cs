@@ -9,6 +9,7 @@ public class ShippingDbContext(DbContextOptions<ShippingDbContext> options) : Db
 {
     public DbSet<ShippingCompany> ShippingCompanies => Set<ShippingCompany>();
     public DbSet<Shipment> Shipments => Set<Shipment>();
+    public DbSet<ShipmentStatusHistory> ShipmentStatusHistories => Set<ShipmentStatusHistory>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

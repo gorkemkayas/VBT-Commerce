@@ -12,5 +12,9 @@ public static class ShipmentMapper
             shipment.Status,
             shipment.TrackingNumber,
             shipment.CreatedAt,
-            shipment.UpdatedAt);
+            shipment.UpdatedAt,
+            shipment.StatusHistory
+                .OrderBy(h => h.CreatedAt)
+                .Select(h => new ShipmentStatusHistoryEntryDto(h.Status, h.TrackingNumber, h.CreatedAt))
+                .ToList());
 }

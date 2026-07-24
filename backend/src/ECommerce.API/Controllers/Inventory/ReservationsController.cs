@@ -1,7 +1,9 @@
 using Inventory.Application.Commands.Reservations.ConfirmReservationsByReference;
 using Inventory.Application.Commands.Reservations.ReleaseReservationsByReference;
 using Inventory.Application.Commands.Reservations.ReserveStock;
+using Inventory.Application.Common;
 using Inventory.Application.Queries.Reservations.GetAvailableQuantity;
+using Inventory.Application.Queries.Reservations.GetStockReservationsList;
 using Inventory.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -27,6 +29,30 @@ public class ReservationsController(ISender sender) : ControllerBase
         Guid sellableItemId, [FromQuery] InventoryItemType sellableItemType, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetAvailableQuantityQuery(sellableItemId, sellableItemType), cancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Admin-only reservation history/browsing. Unlike Reserve/Confirm/Release above, this query is
+    /// never called in-process by another module, so it follows the repo-wide IRequireRole convention
+    /// (see GetStockReservationsListQuery) instead of the native [Authorize] attribute.
+    /// </summary>
+    [HttpGet]
+    public async Task<ActionResult<PagedResult<StockReservationDto>>> GetList(
+        [FromQuery] Guid? sellableItemId,
+        [FromQuery] InventoryItemType? sellableItemType,
+        [FromQuery] bool? isConfirmed,
+        [FromQuery] bool? isReleased,
+        [FromQuery] int pageNumber,
+        [FromQuery] int pageSize,
+        CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(
+            new GetStockReservationsListQuery(
+                sellableItemId, sellableItemType, isConfirmed, isReleased,
+                pageNumber == 0 ? 1 : pageNumber, pageSize == 0 ? 20 : pageSize),
+            cancellationToken);
+
         return Ok(result);
     }
 

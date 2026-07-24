@@ -33,4 +33,26 @@ public class ShippingContractService(ShippingDbContext dbContext, ISender sender
 
     public Task<Guid> CreateShipmentAsync(Guid orderId, Guid shippingCompanyId, CancellationToken cancellationToken)
         => sender.Send(new CreateShipmentCommand(orderId, shippingCompanyId), cancellationToken);
+
+    public async Task<ShipmentTrackingDto?> GetShipmentByOrderIdAsync(Guid orderId, CancellationToken cancellationToken)
+    {
+        var shipment = await dbContext.Shipments
+            .AsNoTracking()
+            .Include(s => s.StatusHistory)
+            .FirstOrDefaultAsync(s => s.OrderId == orderId, cancellationToken);
+
+        if (shipment is null)
+            return null;
+
+        return new ShipmentTrackingDto(
+            shipment.Id,
+            shipment.Status,
+            shipment.TrackingNumber,
+            shipment.CreatedAt,
+            shipment.UpdatedAt,
+            shipment.StatusHistory
+                .OrderBy(h => h.CreatedAt)
+                .Select(h => new ShipmentStatusHistoryDto(h.Status, h.TrackingNumber, h.CreatedAt))
+                .ToList());
+    }
 }

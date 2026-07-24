@@ -8,6 +8,7 @@ public interface IShippingDbContext
 {
     DbSet<ShippingCompany> ShippingCompanies { get; }
     DbSet<Shipment> Shipments { get; }
+    DbSet<ShipmentStatusHistory> ShipmentStatusHistories { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
     Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken);

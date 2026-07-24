@@ -9,4 +9,7 @@ public record ShipmentDto(
     ShipmentStatus Status,
     string? TrackingNumber,
     DateTime CreatedAt,
-    DateTime? UpdatedAt);
+    DateTime? UpdatedAt,
+    IReadOnlyCollection<ShipmentStatusHistoryEntryDto> History);
+
+public record ShipmentStatusHistoryEntryDto(ShipmentStatus Status, string? TrackingNumber, DateTime CreatedAt);

@@ -13,4 +13,7 @@ public class ShippingIntegrationService(IShippingCatalogService shippingCatalogS
 
     public Task<Guid> CreateShipmentAsync(Guid orderId, Guid shippingCompanyId, CancellationToken cancellationToken)
         => shippingCatalogService.CreateShipmentAsync(orderId, shippingCompanyId, cancellationToken);
+
+    public Task<ShipmentTrackingDto?> GetShipmentByOrderIdAsync(Guid orderId, CancellationToken cancellationToken)
+        => shippingCatalogService.GetShipmentByOrderIdAsync(orderId, cancellationToken);
 }

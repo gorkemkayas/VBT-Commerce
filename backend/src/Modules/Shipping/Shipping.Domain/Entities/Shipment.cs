@@ -12,6 +12,8 @@ namespace Shipping.Domain.Entities;
 /// </summary>
 public class Shipment
 {
+    private readonly List<ShipmentStatusHistory> _statusHistory = [];
+
     public Guid Id { get; private set; }
     public Guid OrderId { get; private set; }
     public Guid ShippingCompanyId { get; private set; }
@@ -19,6 +21,7 @@ public class Shipment
     public string? TrackingNumber { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
+    public IReadOnlyCollection<ShipmentStatusHistory> StatusHistory => _statusHistory.AsReadOnly();
 
     private Shipment()
     {
@@ -26,7 +29,7 @@ public class Shipment
 
     public static Shipment Create(Guid orderId, Guid shippingCompanyId)
     {
-        return new Shipment
+        var shipment = new Shipment
         {
             Id = Guid.NewGuid(),
             OrderId = orderId,
@@ -34,6 +37,10 @@ public class Shipment
             Status = ShipmentStatus.Pending,
             CreatedAt = DateTime.UtcNow
         };
+
+        shipment._statusHistory.Add(ShipmentStatusHistory.Create(shipment.Id, ShipmentStatus.Pending, null));
+
+        return shipment;
     }
 
     public void UpdateStatus(ShipmentStatus status, string? trackingNumber)
@@ -45,5 +52,7 @@ public class Shipment
         if (trackingNumber is not null)
             TrackingNumber = trackingNumber;
         UpdatedAt = DateTime.UtcNow;
+
+        _statusHistory.Add(ShipmentStatusHistory.Create(Id, status, trackingNumber));
     }
 }

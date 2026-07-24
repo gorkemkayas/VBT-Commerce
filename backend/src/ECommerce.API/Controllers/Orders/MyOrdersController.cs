@@ -4,7 +4,9 @@ using Order.Application.Commands.Checkout.PlaceMyOrder;
 using Order.Application.Commands.Me.CancelMyOrder;
 using Order.Application.Common;
 using Order.Application.Queries.Me.GetMyOrderById;
+using Order.Application.Queries.Me.GetMyOrderShipment;
 using Order.Application.Queries.Me.GetMyOrdersList;
+using Shipping.Contracts;
 
 using ECommerce.API.Controllers.Orders.Requests;
 
@@ -54,5 +56,12 @@ public class MyOrdersController(ISender sender) : ControllerBase
     {
         await sender.Send(new CancelMyOrderCommand(orderId), cancellationToken);
         return NoContent();
+    }
+
+    [HttpGet("{orderId:guid}/shipment")]
+    public async Task<ActionResult<ShipmentTrackingDto>> GetOrderShipment(Guid orderId, CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new GetMyOrderShipmentQuery(orderId), cancellationToken);
+        return Ok(result);
     }
 }

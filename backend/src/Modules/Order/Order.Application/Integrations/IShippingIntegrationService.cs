@@ -11,4 +11,6 @@ public interface IShippingIntegrationService
     Task<ShippingCompanySummaryDto?> GetActiveShippingCompanyAsync(Guid shippingCompanyId, CancellationToken cancellationToken);
 
     Task<Guid> CreateShipmentAsync(Guid orderId, Guid shippingCompanyId, CancellationToken cancellationToken);
+
+    Task<ShipmentTrackingDto?> GetShipmentByOrderIdAsync(Guid orderId, CancellationToken cancellationToken);
 }

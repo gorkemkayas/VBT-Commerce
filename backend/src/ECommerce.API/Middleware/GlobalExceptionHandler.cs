@@ -55,6 +55,7 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
             ShippingCompanyNotFoundException shippingCompanyNotFoundException => (StatusCodes.Status404NotFound, "Not Found", shippingCompanyNotFoundException.Message),
             ShipmentNotFoundException shipmentNotFoundException => (StatusCodes.Status404NotFound, "Not Found", shipmentNotFoundException.Message),
             OrderNotFoundException orderNotFoundException => (StatusCodes.Status404NotFound, "Not Found", orderNotFoundException.Message),
+            OrderShipmentNotFoundException orderShipmentNotFoundException => (StatusCodes.Status404NotFound, "Not Found", orderShipmentNotFoundException.Message),
             PaymentNotFoundException paymentNotFoundException => (StatusCodes.Status404NotFound, "Not Found", paymentNotFoundException.Message),
             PaymentDeclinedException paymentDeclinedException => (StatusCodes.Status402PaymentRequired, "Payment Required", paymentDeclinedException.Message),
             PaymentAlreadyRefundedException paymentAlreadyRefundedException => (StatusCodes.Status400BadRequest, "Bad Request", paymentAlreadyRefundedException.Message),
