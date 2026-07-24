@@ -17,9 +17,10 @@ public class PaymentIntegrationService(IPaymentGateway paymentGateway) : IPaymen
         PaymentCardInfo card,
         PaymentBuyerInfo buyer,
         PaymentAddressInfo address,
+        PaymentAddressInfo billingAddress,
         IReadOnlyCollection<PaymentBasketItem> basketItems,
         CancellationToken cancellationToken)
-        => paymentGateway.ChargeAsync(orderId, basketTotal, paidTotal, card, buyer, address, basketItems, cancellationToken);
+        => paymentGateway.ChargeAsync(orderId, basketTotal, paidTotal, card, buyer, address, billingAddress, basketItems, cancellationToken);
 
     public Task RefundAsync(Guid orderId, string ip, CancellationToken cancellationToken)
         => paymentGateway.RefundAsync(orderId, ip, cancellationToken);

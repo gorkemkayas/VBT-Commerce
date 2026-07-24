@@ -23,6 +23,6 @@ public class GetMyReviewsListQueryHandler(IReviewDbContext dbContext, ICurrentUs
             .Take(request.PageSize)
             .ToListAsync(cancellationToken);
 
-        return new PagedResult<ReviewDto>(items.Select(ReviewMapper.ToDto).ToList(), request.PageNumber, request.PageSize, totalCount);
+        return new PagedResult<ReviewDto>(items.Select(r => ReviewMapper.ToDto(r)).ToList(), request.PageNumber, request.PageSize, totalCount);
     }
 }

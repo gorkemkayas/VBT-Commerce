@@ -14,7 +14,8 @@ public static class CustomerMapper
             customer.Addresses
                 .Select(a => new CustomerAddressDto(
                     a.Id, a.Label, a.RecipientName, a.PhoneNumber, a.Country, a.City,
-                    a.District, a.PostalCode, a.AddressLine1, a.AddressLine2, a.IsDefault))
+                    a.District, a.PostalCode, a.AddressLine1, a.AddressLine2, a.IsDefault,
+                    a.IsShippingAddress, a.IsBillingAddress))
                 .ToList());
     }
 }

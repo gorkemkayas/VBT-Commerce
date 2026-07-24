@@ -24,16 +24,18 @@ public class PaymentGatewayContractService(ISender sender) : IPaymentGateway
         PaymentCardInfo card,
         PaymentBuyerInfo buyer,
         PaymentAddressInfo address,
+        PaymentAddressInfo billingAddress,
         IReadOnlyCollection<PaymentBasketItem> basketItems,
         CancellationToken cancellationToken)
     {
         var iyzicoCard = new IyzicoCardInfo(card.HolderName, card.CardNumber, card.ExpireMonth, card.ExpireYear, card.Cvc);
         var iyzicoBuyer = new IyzicoBuyerInfo(buyer.Name, buyer.Surname, buyer.Email, buyer.IdentityNumber, buyer.PhoneNumber, buyer.Ip);
         var iyzicoAddress = new IyzicoAddressInfo(address.Description, address.City, address.Country, address.ZipCode);
+        var iyzicoBillingAddress = new IyzicoAddressInfo(billingAddress.Description, billingAddress.City, billingAddress.Country, billingAddress.ZipCode);
         var iyzicoBasketItems = basketItems.Select(i => new IyzicoBasketItem(i.Name, i.Category, i.Price)).ToList();
 
         return sender.Send(
-            new ChargeOrderPaymentCommand(orderId, basketTotal, paidTotal, iyzicoCard, iyzicoBuyer, iyzicoAddress, iyzicoBasketItems),
+            new ChargeOrderPaymentCommand(orderId, basketTotal, paidTotal, iyzicoCard, iyzicoBuyer, iyzicoAddress, iyzicoBillingAddress, iyzicoBasketItems),
             cancellationToken);
     }
 

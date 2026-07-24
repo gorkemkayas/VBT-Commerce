@@ -4,7 +4,7 @@ namespace Review.Application.Common;
 
 public static class ReviewMapper
 {
-    public static ReviewDto ToDto(ProductReview review) => new(
+    public static ReviewDto ToDto(ProductReview review, string? reviewerDisplayName = null) => new(
         review.Id,
         review.UserId,
         review.SellableItemId,
@@ -12,5 +12,6 @@ public static class ReviewMapper
         review.Rating,
         review.Comment,
         review.CreatedAt,
-        review.UpdatedAt);
+        review.UpdatedAt,
+        reviewerDisplayName);
 }

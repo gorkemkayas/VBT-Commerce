@@ -20,6 +20,8 @@ public class CustomerAddressConfiguration : IEntityTypeConfiguration<CustomerAdd
         builder.Property(a => a.PostalCode).HasMaxLength(20).IsRequired();
         builder.Property(a => a.AddressLine1).HasMaxLength(300).IsRequired();
         builder.Property(a => a.AddressLine2).HasMaxLength(300);
+        builder.Property(a => a.IsShippingAddress).HasDefaultValue(true);
+        builder.Property(a => a.IsBillingAddress).HasDefaultValue(true);
         builder.HasIndex(a => a.CustomerId);
     }
 }

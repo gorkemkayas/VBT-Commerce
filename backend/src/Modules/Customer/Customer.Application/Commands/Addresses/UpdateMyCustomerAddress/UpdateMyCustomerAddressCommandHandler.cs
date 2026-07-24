@@ -20,7 +20,8 @@ public class UpdateMyCustomerAddressCommandHandler(ICustomerDbContext dbContext,
 
         customer.UpdateAddress(
             request.AddressId, request.Label, request.RecipientName, request.PhoneNumber, request.Country,
-            request.City, request.District, request.PostalCode, request.AddressLine1, request.AddressLine2, request.IsDefault);
+            request.City, request.District, request.PostalCode, request.AddressLine1, request.AddressLine2, request.IsDefault,
+            request.IsShippingAddress, request.IsBillingAddress);
 
         await dbContext.SaveChangesAsync(cancellationToken);
 

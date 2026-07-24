@@ -32,6 +32,17 @@ public class CustomerOrder
     public string AddressLine1 { get; private set; } = null!;
     public string? AddressLine2 { get; private set; }
 
+    // Null billing fields mean "same as the shipping address above" — only populated when the
+    // customer picked a distinct billing address at checkout.
+    public string? BillingRecipientName { get; private set; }
+    public string? BillingPhoneNumber { get; private set; }
+    public string? BillingCountry { get; private set; }
+    public string? BillingCity { get; private set; }
+    public string? BillingDistrict { get; private set; }
+    public string? BillingPostalCode { get; private set; }
+    public string? BillingAddressLine1 { get; private set; }
+    public string? BillingAddressLine2 { get; private set; }
+
     public Guid ShippingCompanyId { get; private set; }
     public Guid ShipmentId { get; private set; }
     public decimal ShippingFee { get; private set; }
@@ -71,6 +82,14 @@ public class CustomerOrder
         string postalCode,
         string addressLine1,
         string? addressLine2,
+        string? billingRecipientName,
+        string? billingPhoneNumber,
+        string? billingCountry,
+        string? billingCity,
+        string? billingDistrict,
+        string? billingPostalCode,
+        string? billingAddressLine1,
+        string? billingAddressLine2,
         Guid shippingCompanyId,
         Guid shipmentId,
         decimal shippingFee,
@@ -99,6 +118,14 @@ public class CustomerOrder
             PostalCode = postalCode,
             AddressLine1 = addressLine1,
             AddressLine2 = addressLine2,
+            BillingRecipientName = billingRecipientName,
+            BillingPhoneNumber = billingPhoneNumber,
+            BillingCountry = billingCountry,
+            BillingCity = billingCity,
+            BillingDistrict = billingDistrict,
+            BillingPostalCode = billingPostalCode,
+            BillingAddressLine1 = billingAddressLine1,
+            BillingAddressLine2 = billingAddressLine2,
             ShippingCompanyId = shippingCompanyId,
             ShipmentId = shipmentId,
             ShippingFee = shippingFee,

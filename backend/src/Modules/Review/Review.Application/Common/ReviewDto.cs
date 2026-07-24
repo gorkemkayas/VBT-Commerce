@@ -10,6 +10,7 @@ public record ReviewDto(
     int Rating,
     string Comment,
     DateTime CreatedAt,
-    DateTime? UpdatedAt);
+    DateTime? UpdatedAt,
+    string? ReviewerDisplayName = null);
 
 public record ReviewSummaryDto(Guid SellableItemId, ReviewItemType SellableItemType, double AverageRating, int TotalCount);

@@ -50,7 +50,8 @@ public static class DevelopmentDataSeeder
         {
             var profile = CustomerProfile.Create(customerUser.Id, "5551234567", null);
             profile.AddAddress(
-                "Home", "Test Customer", "5551234567", "Turkey", "Istanbul", "Kadikoy", "34000", "Test Sokak No:1", null, isDefault: true);
+                "Home", "Test Customer", "5551234567", "Turkey", "Istanbul", "Kadikoy", "34000", "Test Sokak No:1", null,
+                isDefault: true, isShippingAddress: true, isBillingAddress: true);
 
             customerDbContext.Customers.Add(profile);
             await customerDbContext.SaveChangesAsync(CancellationToken.None);

@@ -20,7 +20,8 @@ public class AddMyCustomerAddressCommandHandler(ICustomerDbContext dbContext, IC
 
         var address = customer.AddAddress(
             request.Label, request.RecipientName, request.PhoneNumber, request.Country, request.City,
-            request.District, request.PostalCode, request.AddressLine1, request.AddressLine2, request.IsDefault);
+            request.District, request.PostalCode, request.AddressLine1, request.AddressLine2, request.IsDefault,
+            request.IsShippingAddress, request.IsBillingAddress);
 
         dbContext.CustomerAddresses.Add(address);
         await dbContext.SaveChangesAsync(cancellationToken);

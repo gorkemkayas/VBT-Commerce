@@ -25,6 +25,15 @@ public class OrderConfiguration : IEntityTypeConfiguration<CustomerOrder>
         builder.Property(o => o.AddressLine2).HasMaxLength(300);
         builder.Property(o => o.CancelledReason).HasMaxLength(500);
 
+        builder.Property(o => o.BillingRecipientName).HasMaxLength(200);
+        builder.Property(o => o.BillingPhoneNumber).HasMaxLength(30);
+        builder.Property(o => o.BillingCountry).HasMaxLength(100);
+        builder.Property(o => o.BillingCity).HasMaxLength(100);
+        builder.Property(o => o.BillingDistrict).HasMaxLength(100);
+        builder.Property(o => o.BillingPostalCode).HasMaxLength(20);
+        builder.Property(o => o.BillingAddressLine1).HasMaxLength(300);
+        builder.Property(o => o.BillingAddressLine2).HasMaxLength(300);
+
         builder.Property(o => o.ShippingFee).HasColumnType("decimal(18,2)");
         builder.Property(o => o.Subtotal).HasColumnType("decimal(18,2)");
         builder.Property(o => o.DiscountAmount).HasColumnType("decimal(18,2)");

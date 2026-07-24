@@ -16,4 +16,5 @@ public record ChargeOrderPaymentCommand(
     IyzicoCardInfo Card,
     IyzicoBuyerInfo Buyer,
     IyzicoAddressInfo Address,
+    IyzicoAddressInfo BillingAddress,
     IReadOnlyCollection<IyzicoBasketItem> BasketItems) : ICommand<Guid>;

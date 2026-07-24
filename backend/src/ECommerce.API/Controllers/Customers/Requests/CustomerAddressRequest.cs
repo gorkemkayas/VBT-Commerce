@@ -10,7 +10,9 @@ public record AddCustomerAddressRequest(
     string PostalCode,
     string AddressLine1,
     string? AddressLine2,
-    bool IsDefault);
+    bool IsDefault,
+    bool IsShippingAddress,
+    bool IsBillingAddress);
 
 public record UpdateCustomerAddressRequest(
     string Label,
@@ -22,4 +24,6 @@ public record UpdateCustomerAddressRequest(
     string PostalCode,
     string AddressLine1,
     string? AddressLine2,
-    bool IsDefault);
+    bool IsDefault,
+    bool IsShippingAddress,
+    bool IsBillingAddress);

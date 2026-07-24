@@ -22,6 +22,7 @@ public class MyOrdersController(ISender sender) : ControllerBase
         var orderId = await sender.Send(
             new PlaceMyOrderCommand(
                 request.AddressId,
+                request.BillingAddressId,
                 request.ShippingCompanyId,
                 request.CouponCodes,
                 request.CardHolderName,

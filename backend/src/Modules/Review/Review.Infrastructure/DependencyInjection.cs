@@ -19,6 +19,7 @@ public static class DependencyInjection
 
         services.AddScoped<ICatalogIntegrationService, CatalogIntegrationService>();
         services.AddScoped<IOrderIntegrationService, OrderIntegrationService>();
+        services.AddScoped<IIdentityIntegrationService, IdentityIntegrationService>();
 
         return services;
     }

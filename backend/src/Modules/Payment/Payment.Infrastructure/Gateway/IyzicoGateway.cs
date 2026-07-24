@@ -66,10 +66,10 @@ public class IyzicoGateway(IOptions<IyzicoOptions> options) : IIyzicoGateway
             BillingAddress = new Iyzipay.Model.Address
             {
                 ContactName = request.Buyer.Name + " " + request.Buyer.Surname,
-                City = request.Address.City,
-                Country = request.Address.Country,
-                ZipCode = request.Address.ZipCode,
-                Description = request.Address.Description
+                City = request.BillingAddress.City,
+                Country = request.BillingAddress.Country,
+                ZipCode = request.BillingAddress.ZipCode,
+                Description = request.BillingAddress.Description
             },
             BasketItems = request.BasketItems.Select((item, index) => new BasketItem
             {

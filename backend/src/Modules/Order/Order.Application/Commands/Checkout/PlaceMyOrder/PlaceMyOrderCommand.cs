@@ -5,6 +5,7 @@ namespace Order.Application.Commands.Checkout.PlaceMyOrder;
 
 public record PlaceMyOrderCommand(
     Guid AddressId,
+    Guid? BillingAddressId,
     Guid ShippingCompanyId,
     IReadOnlyCollection<string> CouponCodes,
     string CardHolderName,
