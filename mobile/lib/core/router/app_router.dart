@@ -11,6 +11,7 @@ import '../../features/customer/presentation/pages/addresses_page.dart';
 import '../../features/customer/presentation/pages/profile_page.dart';
 import '../../features/orders/presentation/pages/order_detail_page.dart';
 import '../../features/orders/presentation/pages/orders_page.dart';
+import '../../features/orders/presentation/pages/shipment_tracking_page.dart';
 import '../../features/product/presentation/pages/product_detail_page.dart';
 import '../../features/product/presentation/pages/product_list_page.dart';
 import '../../features/product/presentation/pages/search_page.dart';
@@ -71,6 +72,10 @@ final appRouterProvider = Provider<GoRouter>(
       GoRoute(
         path: RoutePaths.orders,
         builder: (context, state) => const OrdersPage(),
+      ),
+      GoRoute(
+        path: RoutePaths.shipmentTracking,
+        builder: (context, state) => const ShipmentTrackingPage(),
       ),
       GoRoute(
         path: RoutePaths.myReviews,

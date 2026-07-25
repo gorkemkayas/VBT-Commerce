@@ -2,11 +2,13 @@ import 'package:dio/dio.dart';
 
 import '../models/order_detail_model.dart';
 import '../models/order_model.dart';
+import '../models/shipment_tracking_model.dart';
 
 abstract interface class OrderRemoteDataSource {
   Future<List<OrderModel>> getMyOrders();
   Future<OrderDetailModel> getOrderById(String orderId);
   Future<void> cancelOrder(String orderId);
+  Future<ShipmentTrackingModel> getOrderShipment(String orderId);
 }
 
 /// `GET /api/orders/me`. Yanıt sayfalıdır (`PagedResult`): siparişler `items`
@@ -54,5 +56,17 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
   @override
   Future<void> cancelOrder(String orderId) async {
     await _dio.post<void>('/api/orders/me/$orderId/cancel');
+  }
+
+  @override
+  Future<ShipmentTrackingModel> getOrderShipment(String orderId) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      '/api/orders/me/$orderId/shipment',
+    );
+    final body = response.data;
+    if (body == null) {
+      throw const FormatException('Sunucudan boş kargo bilgisi alındı.');
+    }
+    return ShipmentTrackingModel.fromJson(body);
   }
 }

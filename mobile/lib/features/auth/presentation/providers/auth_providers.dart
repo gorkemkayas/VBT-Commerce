@@ -15,6 +15,7 @@ import '../../domain/usecases/forgot_password_use_case.dart';
 import '../../domain/usecases/login_use_case.dart';
 import '../../domain/usecases/logout_use_case.dart';
 import '../../domain/usecases/register_use_case.dart';
+import '../../domain/usecases/reset_password_use_case.dart';
 
 final authRemoteDataSourceProvider = Provider<AuthRemoteDataSource>(
   (ref) => AuthRemoteDataSourceImpl(
@@ -45,6 +46,9 @@ final registerUseCaseProvider = Provider<RegisterUseCase>(
 );
 final forgotPasswordUseCaseProvider = Provider<ForgotPasswordUseCase>(
   (ref) => ForgotPasswordUseCase(ref.watch(authRepositoryProvider)),
+);
+final resetPasswordUseCaseProvider = Provider<ResetPasswordUseCase>(
+  (ref) => ResetPasswordUseCase(ref.watch(authRepositoryProvider)),
 );
 
 class LoginState {
@@ -139,4 +143,39 @@ class ForgotPasswordController extends Notifier<ForgotPasswordState> {
 final forgotPasswordControllerProvider =
     NotifierProvider<ForgotPasswordController, ForgotPasswordState>(
       ForgotPasswordController.new,
+    );
+
+class ResetPasswordState {
+  const ResetPasswordState({
+    this.isLoading = false,
+    this.failure,
+    this.isSuccess = false,
+  });
+  final bool isLoading;
+  final Failure? failure;
+  final bool isSuccess;
+}
+
+class ResetPasswordController extends Notifier<ResetPasswordState> {
+  @override
+  ResetPasswordState build() => const ResetPasswordState();
+
+  Future<void> submit({required String token, required String newPassword}) async {
+    state = const ResetPasswordState(isLoading: true);
+    final result = await ref.read(resetPasswordUseCaseProvider)(
+      token: token,
+      newPassword: newPassword,
+    );
+    state = switch (result) {
+      Success<bool>() => const ResetPasswordState(isSuccess: true),
+      ResultFailure<bool>(:final failure) => ResetPasswordState(
+        failure: failure,
+      ),
+    };
+  }
+}
+
+final resetPasswordControllerProvider =
+    NotifierProvider<ResetPasswordController, ResetPasswordState>(
+      ResetPasswordController.new,
     );

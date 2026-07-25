@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/route_paths.dart';
 import '../providers/auth_providers.dart';
 import '../widgets/primary_button.dart';
 
@@ -39,10 +40,16 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
         ).showSnackBar(SnackBar(content: Text(next.failure!.message)));
       }
       if (next.isSuccess && previous?.isSuccess != true) {
+        // Backend, e-posta kayıtlı olsun olmasın her zaman aynı yanıtı
+        // döner (anti-enumeration — bkz. `ForgotPasswordCommandHandler`);
+        // mesaj web'deki (`forgot-password-form.tsx`) ifadeyle birebir
+        // aynı olacak şekilde bunu yansıtır, hesabın var olduğunu ima
+        // etmez.
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-              'Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.',
+              'Eğer bu e-posta adresine kayıtlı bir hesap varsa, şifre '
+              'sıfırlama bağlantısı gönderildi.',
             ),
           ),
         );
@@ -90,6 +97,10 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                       },
                     ),
                     const SizedBox(height: 12),
+                    TextButton(
+                      onPressed: () => context.push(RoutePaths.resetPassword),
+                      child: const Text('Sıfırlama kodum var'),
+                    ),
                     TextButton(
                       onPressed: () => context.pop(),
                       child: const Text('Giriş ekranına dön'),

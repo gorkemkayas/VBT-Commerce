@@ -69,6 +69,14 @@ class AccountPage extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         _AccountSectionCard(
+          icon: Icons.local_shipping_outlined,
+          title: 'Kargo Takibi',
+          subtitle: 'Aktif siparişlerinizin kargo durumunu görün',
+          onTap: () =>
+              _openIfLoggedIn(context, ref, RoutePaths.shipmentTracking),
+        ),
+        const SizedBox(height: 12),
+        _AccountSectionCard(
           icon: Icons.location_on_outlined,
           title: 'Adreslerim',
           subtitle: 'Teslimat adreslerinizi yönetin',

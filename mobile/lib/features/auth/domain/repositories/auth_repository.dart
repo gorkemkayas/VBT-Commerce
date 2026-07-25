@@ -12,4 +12,8 @@ abstract interface class AuthRepository {
   Future<Result<User?>> getCachedUser();
   Future<Result<bool>> logout();
   Future<Result<bool>> forgotPassword(String email);
+  Future<Result<bool>> resetPassword({
+    required String token,
+    required String newPassword,
+  });
 }

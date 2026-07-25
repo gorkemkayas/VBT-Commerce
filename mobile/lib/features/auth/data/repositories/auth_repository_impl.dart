@@ -97,4 +97,23 @@ class AuthRepositoryImpl implements AuthRepository {
       );
     }
   }
+
+  @override
+  Future<Result<bool>> resetPassword({
+    required String token,
+    required String newPassword,
+  }) async {
+    try {
+      await _remote.resetPassword(token: token, newPassword: newPassword);
+      return const Result.success(true);
+    } on DioException catch (error) {
+      return Result.failure(mapDioException(error));
+    } catch (_) {
+      return const Result.failure(
+        UnknownFailure(
+          'Şifre sıfırlanırken beklenmeyen bir hata oluştu.',
+        ),
+      );
+    }
+  }
 }

@@ -5,14 +5,14 @@ import 'package:intl/intl.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/result.dart';
 import '../../../../core/widgets/async_state_views.dart';
-import '../../../checkout/domain/entities/shipping_company.dart';
-import '../../../checkout/presentation/providers/checkout_providers.dart';
 import '../../../product/domain/entities/product.dart';
 import '../../../product/presentation/providers/product_providers.dart';
 import '../../domain/entities/order.dart';
 import '../../domain/entities/order_address.dart';
 import '../../domain/entities/order_item.dart';
+import '../../domain/entities/shipment_tracking.dart';
 import '../providers/order_providers.dart';
+import '../widgets/shipping_info_widgets.dart';
 
 final _dateFormat = DateFormat('d MMMM y, HH:mm', 'tr_TR');
 
@@ -119,6 +119,7 @@ class _OrderDetailBodyState extends ConsumerState<_OrderDetailBody> {
         children: [
           _HeaderCard(order: order),
           const SizedBox(height: 16),
+          if (order.status != 'Cancelled') _ShipmentCard(orderId: widget.orderId),
           if (order.address != null) ...[
             _AddressCard(address: order.address!),
             const SizedBox(height: 16),
@@ -209,6 +210,77 @@ class _StatusChip extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Kargo takibi kartı — web'in `order-confirmation.tsx`'teki aynı bilgiyi
+/// (durum, tracking no, timeline) tekil sipariş bağlamında gösterir.
+///
+/// İki durumda hiç gösterilmez/sorgulanmaz:
+/// 1. Sipariş iptal edildiyse (`order.status == 'Cancelled'`) — backend,
+///    sipariş iptal edilse bile ilişkili `Shipment` kaydını güncellemiyor
+///    (`CancelMyOrderCommandHandler` yalnızca `Order` aggregate'ine dokunuyor,
+///    Shipping modülüne hiç dokunmuyor); bu yüzden eski shipment'ın durumu
+///    (ör. hâlâ `Pending`) yanıltıcı olurdu. Web bunu tam olarak aynı şekilde
+///    çözüyor — `ShippingTab`, iptal edilen siparişleri listeye hiç almadan
+///    filtreliyor (`items.filter(o => o.status !== "Cancelled")`).
+/// 2. Sipariş henüz kargoya verilmediyse backend 404 döner; bu bir hata
+///    değildir (kart yüklenirken/hata durumunda da hiç gösterilmez) — web'in
+///    `.catch(() => null)` ile sessizce atlama davranışıyla aynı.
+class _ShipmentCard extends ConsumerWidget {
+  const _ShipmentCard({required this.orderId});
+  final String orderId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final shipment = ref.watch(orderShipmentProvider(orderId));
+    return shipment.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (result) => switch (result) {
+        Success<ShipmentTracking?>(:final value) when value != null =>
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: _ShipmentContent(shipment: value),
+          ),
+        _ => const SizedBox.shrink(),
+      },
+    );
+  }
+}
+
+class _ShipmentContent extends StatelessWidget {
+  const _ShipmentContent({required this.shipment});
+  final ShipmentTracking shipment;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Kargo Takibi',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              ShipmentStatusChip(status: shipment.status),
+            ],
+          ),
+          if (shipment.trackingNumber != null) ...[
+            const SizedBox(height: 8),
+            Text('Takip No: ${shipment.trackingNumber}'),
+          ],
+          if (shipment.history.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            ShipmentTimeline(history: shipment.history),
+          ],
+        ],
+      ),
+    ),
+  );
 }
 
 class _AddressCard extends StatelessWidget {
@@ -326,38 +398,6 @@ class _ProductName extends ConsumerWidget {
   }
 }
 
-/// `OrderDto` kargo firmasının yalnızca id'sini taşıyor, adını taşımıyor.
-/// Ad, Checkout feature'ın (aktif firmaları listeleyen) mevcut
-/// `shippingCompaniesProvider`'ı üzerinden çözülür — sipariş verildikten
-/// sonra firma pasife alınmışsa (artık aktif listede yoksa) genel bir
-/// etikete düşülür.
-class _ShippingCompanyName extends ConsumerWidget {
-  const _ShippingCompanyName({required this.shippingCompanyId, this.style});
-  final String shippingCompanyId;
-  final TextStyle? style;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final companies = ref.watch(shippingCompaniesProvider);
-    return companies.when(
-      data: (result) => Text(_resolveName(result), style: style),
-      loading: () => Text('Yükleniyor...', style: style),
-      error: (_, _) => Text('Kargo Firması', style: style),
-    );
-  }
-
-  String _resolveName(Result<List<ShippingCompany>> result) {
-    final companies = switch (result) {
-      Success<List<ShippingCompany>>(:final value) => value,
-      ResultFailure<List<ShippingCompany>>() => const <ShippingCompany>[],
-    };
-    for (final company in companies) {
-      if (company.id == shippingCompanyId) return company.name;
-    }
-    return 'Kargo Firması';
-  }
-}
-
 class _TotalsCard extends StatelessWidget {
   const _TotalsCard({required this.order});
   final Order order;
@@ -394,7 +434,7 @@ class _TotalsCard extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _ShippingCompanyName(
+                    ShippingCompanyName(
                       shippingCompanyId: order.shippingCompanyId!,
                       style: bodyStyle,
                     ),

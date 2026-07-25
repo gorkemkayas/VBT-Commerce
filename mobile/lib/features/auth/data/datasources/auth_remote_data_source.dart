@@ -12,6 +12,7 @@ abstract interface class AuthRemoteDataSource {
     required String lastName,
   });
   Future<void> forgotPassword(String email);
+  Future<void> resetPassword({required String token, required String newPassword});
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -75,5 +76,19 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> forgotPassword(String email) async {
     await _dio.post<void>('/api/auth/forgot-password', data: {'email': email});
+  }
+
+  /// `POST /api/auth/reset-password`. Token, e-posta ile gönderilen
+  /// sıfırlama bağlantısındaki 64 karakterlik koddur; tek başına kullanıcıyı
+  /// bulmaya yeter (ayrıca e-posta göndermeye gerek yok).
+  @override
+  Future<void> resetPassword({
+    required String token,
+    required String newPassword,
+  }) async {
+    await _dio.post<void>(
+      '/api/auth/reset-password',
+      data: {'token': token, 'newPassword': newPassword},
+    );
   }
 }
