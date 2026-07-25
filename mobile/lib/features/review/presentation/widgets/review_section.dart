@@ -11,11 +11,11 @@ import '../providers/review_providers.dart';
 
 final _dateFormat = DateFormat('d MMMM y', 'tr_TR');
 
-/// Ürün detay ekranında yalnızca mevcut değerlendirmeler (özet + liste)
-/// gösterilsin diye "Değerlendirme Yaz" formu geçici olarak kapatıldı.
-/// `_CreateReviewForm` ve ilgili akış (use case, provider) hiç silinmedi —
-/// bu bayrak `true` yapılınca aynen geri döner.
-const _showCreateReviewForm = false;
+/// "Değerlendirme Yaz" formu — satın alma kontrolü tamamen backend'de
+/// yapılır (`CreateMyReviewCommandHandler`); burada tekrarlanmaz. Backend
+/// hatası (ör. satın alınmamış ürün, tekrar değerlendirme) `Result.failure`
+/// üzerinden aynen kullanıcıya gösterilir (bkz. `_CreateReviewFormState._submit`).
+const _showCreateReviewForm = true;
 
 /// Ürün detay sayfasına gömülü değerlendirme bölümü: özet (ortalama puan +
 /// toplam sayı), yorum listesi ve (oturum açmış kullanıcılar için, şu an
@@ -165,73 +165,64 @@ class _CreateReviewFormState extends ConsumerState<_CreateReviewForm> {
   }
 
   @override
-  Widget build(BuildContext context) => Card(
-    margin: EdgeInsets.zero,
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+  Widget build(BuildContext context) => Form(
+    key: _formKey,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Divider(height: 24),
+        Text(
+          'Değerlendirme yaz',
+          style: Theme.of(context).textTheme.labelLarge,
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              'Değerlendirme Yaz',
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
-            const SizedBox(height: 12),
-            Center(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  for (var index = 0; index < 5; index++) ...[
-                    InkWell(
-                      onTap: () => setState(() => _rating = index + 1),
-                      borderRadius: BorderRadius.circular(4),
-                      child: Icon(
-                        index < _rating ? Icons.star : Icons.star_border,
-                        size: 22,
-                        color: Colors.black,
-                      ),
-                    ),
-                    if (index != 4) const SizedBox(width: 2),
-                  ],
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _commentController,
-              maxLines: 3,
-              maxLength: 2000,
-              decoration: const InputDecoration(
-                hintText: 'Yorumunuz...',
-                isDense: true,
-                border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
+            for (var index = 0; index < 5; index++) ...[
+              InkWell(
+                onTap: () => setState(() => _rating = index + 1),
+                borderRadius: BorderRadius.circular(4),
+                child: Icon(
+                  index < _rating ? Icons.star : Icons.star_border,
+                  size: 20,
+                  color: Colors.black,
                 ),
               ),
-              validator: (value) => value == null || value.trim().isEmpty
-                  ? 'Yorum boş olamaz.'
-                  : null,
-            ),
-            const SizedBox(height: 4),
-            Center(
-              child: FilledButton(
-                onPressed: _isSubmitting ? null : _submit,
-                child: _isSubmitting
-                    ? const SizedBox(
-                        height: 18,
-                        width: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Gönder'),
-              ),
-            ),
+              if (index != 4) const SizedBox(width: 2),
+            ],
           ],
         ),
-      ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _commentController,
+          maxLines: 2,
+          maxLength: 2000,
+          style: Theme.of(context).textTheme.bodyMedium,
+          decoration: const InputDecoration(
+            hintText: 'Yorumunuz...',
+            isDense: true,
+            counterText: '',
+          ),
+          validator: (value) => value == null || value.trim().isEmpty
+              ? 'Yorum boş olamaz.'
+              : null,
+        ),
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerRight,
+          child: FilledButton(
+            onPressed: _isSubmitting ? null : _submit,
+            child: _isSubmitting
+                ? const SizedBox(
+                    height: 16,
+                    width: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text('Gönder'),
+          ),
+        ),
+      ],
     ),
   );
 }
@@ -285,6 +276,13 @@ class _ReviewTile extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Text(
+          review.reviewerDisplayName ?? 'Anonim Kullanıcı',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 2),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [

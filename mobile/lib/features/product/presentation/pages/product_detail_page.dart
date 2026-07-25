@@ -106,16 +106,17 @@ class _ProductDetailState extends ConsumerState<_ProductDetail> {
     return [widget.product.imageUrl];
   }
 
-  /// Değerlendirmeler backend'de her zaman kullanıcının satın aldığı tam
-  /// kaleme bağlanır (ürün ya da seçtiği varyant), üst ürüne değil (bkz.
-  /// `Review.Domain.Entities.ProductReview`). Bu yüzden hedef, fiyat
-  /// gösteriminde kullanılanla aynı mantıkla seçilir: bir beden seçilmemişse
-  /// varsayılan (ilk) varyant kullanılır.
-  String get _reviewSellableItemId =>
-      _hasVariants ? (_selectedVariantId ?? _defaultVariantId!) : widget.product.id;
+  /// Bir varyant satın alan kullanıcı da üst ürünü değerlendirebilir —
+  /// backend bunu açıkça destekler (bkz. `CreateMyReviewCommandHandler`:
+  /// "A product can also be reviewed by someone who bought one of its
+  /// variants rather than the bare product itself"). Bu yüzden
+  /// değerlendirmeler her zaman ürünün kendi id'siyle (varyant seçimi ne
+  /// olursa olsun sabit) sorgulanır — aksi halde varyantlı bir üründe,
+  /// ürün seviyesinde girilmiş değerlendirmeler varyant id'siyle sorgu
+  /// yapıldığı için hiç görünmez.
+  String get _reviewSellableItemId => widget.product.id;
 
-  ReviewItemType get _reviewSellableItemType =>
-      _hasVariants ? ReviewItemType.variant : ReviewItemType.product;
+  ReviewItemType get _reviewSellableItemType => ReviewItemType.product;
 
   Future<void> _addToCart() async {
     final hasVariants = _hasVariants;

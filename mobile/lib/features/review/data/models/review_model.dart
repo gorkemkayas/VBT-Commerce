@@ -13,6 +13,7 @@ class ReviewModel extends Review {
     required super.comment,
     required super.createdAt,
     super.updatedAt,
+    super.reviewerDisplayName,
   });
 
   factory ReviewModel.fromJson(Map<String, dynamic> json) => ReviewModel(
@@ -31,5 +32,6 @@ class ReviewModel extends Review {
     updatedAt: (json['updatedAt'] as String?) == null
         ? null
         : DateTime.tryParse(json['updatedAt'] as String)?.toLocal(),
+    reviewerDisplayName: json['reviewerDisplayName'] as String?,
   );
 }

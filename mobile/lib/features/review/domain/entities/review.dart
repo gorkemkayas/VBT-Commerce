@@ -10,6 +10,7 @@ class Review {
     required this.comment,
     required this.createdAt,
     this.updatedAt,
+    this.reviewerDisplayName,
   });
 
   final String id;
@@ -20,4 +21,8 @@ class Review {
   final String comment;
   final DateTime createdAt;
   final DateTime? updatedAt;
+
+  /// Backend'in maskelenmiş görünen adı (ör. "Ahmet Y."). Kullanıcı artık
+  /// mevcut değilse `null` olabilir.
+  final String? reviewerDisplayName;
 }

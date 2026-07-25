@@ -36,6 +36,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       if (next.user != null) context.go(RoutePaths.home);
     });
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.arrow_forward),
+            tooltip: 'Misafir olarak devam et',
+            onPressed: () => context.go(RoutePaths.home),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -97,10 +109,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     TextButton(
                       onPressed: () => context.push(RoutePaths.register),
                       child: const Text('Hesabın yok mu? Kayıt ol'),
-                    ),
-                    TextButton(
-                      onPressed: () => context.go(RoutePaths.home),
-                      child: const Text('Misafir olarak devam et'),
                     ),
                   ],
                 ),

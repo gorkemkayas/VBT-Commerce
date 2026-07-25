@@ -42,6 +42,18 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       if (next.user != null) context.go(RoutePaths.home);
     });
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.arrow_forward),
+            tooltip: 'Misafir olarak devam et',
+            onPressed: () => context.go(RoutePaths.home),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -129,10 +141,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     TextButton(
                       onPressed: () => context.pop(),
                       child: const Text('Zaten hesabın var mı? Giriş yap'),
-                    ),
-                    TextButton(
-                      onPressed: () => context.go(RoutePaths.home),
-                      child: const Text('Misafir olarak devam et'),
                     ),
                   ],
                 ),
