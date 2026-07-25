@@ -31,6 +31,7 @@ public class CreateCategoryCommandHandler(ICatalogDbContext dbContext) : IReques
             request.Name,
             request.Slug,
             request.Description,
+            request.ImageUrl,
             request.ParentCategoryId,
             request.DisplayOrder);
 

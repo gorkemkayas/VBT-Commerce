@@ -9,6 +9,7 @@ public record UpdateCategoryCommand(
     string Name,
     string Slug,
     string? Description,
+    string? ImageUrl,
     int DisplayOrder,
     Guid? ParentCategoryId) : ICommand<Unit>, IRequireRole
 {

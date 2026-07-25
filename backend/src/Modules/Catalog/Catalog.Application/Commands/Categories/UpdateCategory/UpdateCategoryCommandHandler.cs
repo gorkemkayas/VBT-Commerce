@@ -24,7 +24,7 @@ public class UpdateCategoryCommandHandler(ICatalogDbContext dbContext) : IReques
         if (request.ParentCategoryId != category.ParentCategoryId)
             await ValidateNewParentAsync(request.CategoryId, request.ParentCategoryId, cancellationToken);
 
-        category.Update(request.Name, request.Slug, request.Description, request.DisplayOrder);
+        category.Update(request.Name, request.Slug, request.Description, request.ImageUrl, request.DisplayOrder);
         category.ChangeParent(request.ParentCategoryId);
 
         await dbContext.SaveChangesAsync(cancellationToken);

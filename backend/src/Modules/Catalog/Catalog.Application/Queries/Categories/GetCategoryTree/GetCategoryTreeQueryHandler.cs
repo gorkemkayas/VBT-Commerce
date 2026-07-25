@@ -39,6 +39,7 @@ public class GetCategoryTreeQueryHandler(ICatalogDbContext dbContext)
         category.Name,
         category.Slug,
         category.Description,
+        category.ImageUrl,
         category.DisplayOrder,
         category.IsActive,
         children);

@@ -7,6 +7,7 @@ public record CreateCategoryCommand(
     string Name,
     string Slug,
     string? Description,
+    string? ImageUrl,
     Guid? ParentCategoryId,
     int DisplayOrder) : ICommand<Guid>, IRequireRole
 {

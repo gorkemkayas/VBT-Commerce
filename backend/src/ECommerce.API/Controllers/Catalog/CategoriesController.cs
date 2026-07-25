@@ -34,7 +34,7 @@ public class CategoriesController(ISender sender) : ControllerBase
     public async Task<ActionResult<Guid>> Create(CreateCategoryRequest request, CancellationToken cancellationToken)
     {
         var categoryId = await sender.Send(
-            new CreateCategoryCommand(request.Name, request.Slug, request.Description, request.ParentCategoryId, request.DisplayOrder),
+            new CreateCategoryCommand(request.Name, request.Slug, request.Description, request.ImageUrl, request.ParentCategoryId, request.DisplayOrder),
             cancellationToken);
 
         return CreatedAtAction(nameof(GetById), new { categoryId }, categoryId);
@@ -44,7 +44,7 @@ public class CategoriesController(ISender sender) : ControllerBase
     public async Task<IActionResult> Update(Guid categoryId, UpdateCategoryRequest request, CancellationToken cancellationToken)
     {
         await sender.Send(
-            new UpdateCategoryCommand(categoryId, request.Name, request.Slug, request.Description, request.DisplayOrder, request.ParentCategoryId),
+            new UpdateCategoryCommand(categoryId, request.Name, request.Slug, request.Description, request.ImageUrl, request.DisplayOrder, request.ParentCategoryId),
             cancellationToken);
 
         return NoContent();

@@ -6,6 +6,7 @@ public class Category
     public string Name { get; private set; } = null!;
     public string Slug { get; private set; } = null!;
     public string? Description { get; private set; }
+    public string? ImageUrl { get; private set; }
     public Guid? ParentCategoryId { get; private set; }
     public int DisplayOrder { get; private set; }
     public bool IsActive { get; private set; }
@@ -16,7 +17,7 @@ public class Category
     {
     }
 
-    public static Category Create(string name, string slug, string? description, Guid? parentCategoryId, int displayOrder)
+    public static Category Create(string name, string slug, string? description, string? imageUrl, Guid? parentCategoryId, int displayOrder)
     {
         return new Category
         {
@@ -24,6 +25,7 @@ public class Category
             Name = name.Trim(),
             Slug = NormalizeSlug(slug),
             Description = description,
+            ImageUrl = imageUrl,
             ParentCategoryId = parentCategoryId,
             DisplayOrder = displayOrder,
             IsActive = true,
@@ -31,11 +33,12 @@ public class Category
         };
     }
 
-    public void Update(string name, string slug, string? description, int displayOrder)
+    public void Update(string name, string slug, string? description, string? imageUrl, int displayOrder)
     {
         Name = name.Trim();
         Slug = NormalizeSlug(slug);
         Description = description;
+        ImageUrl = imageUrl;
         DisplayOrder = displayOrder;
         UpdatedAt = DateTime.UtcNow;
     }

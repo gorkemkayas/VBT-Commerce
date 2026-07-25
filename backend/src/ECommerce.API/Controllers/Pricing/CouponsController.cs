@@ -4,6 +4,7 @@ using Pricing.Application.Commands.Coupons.CreateCoupon;
 using Pricing.Application.Commands.Coupons.DeactivateCoupon;
 using Pricing.Application.Commands.Coupons.UpdateCoupon;
 using Pricing.Application.Common;
+using Pricing.Application.Queries.Coupons.GetActiveCoupons;
 using Pricing.Application.Queries.Coupons.GetCouponByCode;
 using Pricing.Application.Queries.Coupons.GetCouponsList;
 
@@ -15,6 +16,14 @@ namespace ECommerce.API.Controllers.Pricing;
 [Route("api/admin/coupons")]
 public class CouponsController(ISender sender) : ControllerBase
 {
+    /// <summary>Public storefront listing (e.g. homepage promo ticker) — no role required.</summary>
+    [HttpGet("~/api/coupons/active")]
+    public async Task<ActionResult<IReadOnlyList<CouponDto>>> GetActiveCoupons(CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new GetActiveCouponsQuery(), cancellationToken);
+        return Ok(result);
+    }
+
     [HttpPost]
     public async Task<ActionResult<Guid>> CreateCoupon(CreateCouponRequest request, CancellationToken cancellationToken)
     {

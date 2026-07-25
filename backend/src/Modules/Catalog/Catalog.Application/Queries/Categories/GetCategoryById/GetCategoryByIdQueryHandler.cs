@@ -20,6 +20,7 @@ public class GetCategoryByIdQueryHandler(ICatalogDbContext dbContext) : IRequest
             category.Name,
             category.Slug,
             category.Description,
+            category.ImageUrl,
             category.ParentCategoryId,
             category.DisplayOrder,
             category.IsActive);
