@@ -2,6 +2,7 @@ abstract final class RoutePaths {
   static const login = '/login';
   static const register = '/register';
   static const forgotPassword = '/forgot-password';
+  static const resetPassword = '/reset-password';
   static const home = '/';
   static const products = '/products';
   static const productDetail = '/product/:id';
@@ -12,4 +13,5 @@ abstract final class RoutePaths {
   static const addresses = '/addresses';
   static const orders = '/orders';
   static const orderDetail = '/orders/:id';
+  static const myReviews = '/my-reviews';
 }

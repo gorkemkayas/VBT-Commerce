@@ -8,6 +8,7 @@ import '../../domain/entities/review.dart';
 import '../../domain/entities/review_item_type.dart';
 import '../../domain/entities/review_summary.dart';
 import '../providers/review_providers.dart';
+import 'star_rating_input.dart';
 
 final _dateFormat = DateFormat('d MMMM y', 'tr_TR');
 
@@ -176,22 +177,9 @@ class _CreateReviewFormState extends ConsumerState<_CreateReviewForm> {
           style: Theme.of(context).textTheme.labelLarge,
         ),
         const SizedBox(height: 8),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (var index = 0; index < 5; index++) ...[
-              InkWell(
-                onTap: () => setState(() => _rating = index + 1),
-                borderRadius: BorderRadius.circular(4),
-                child: Icon(
-                  index < _rating ? Icons.star : Icons.star_border,
-                  size: 20,
-                  color: Colors.black,
-                ),
-              ),
-              if (index != 4) const SizedBox(width: 2),
-            ],
-          ],
+        StarRatingInput(
+          rating: _rating,
+          onChanged: (value) => setState(() => _rating = value),
         ),
         const SizedBox(height: 8),
         TextFormField(

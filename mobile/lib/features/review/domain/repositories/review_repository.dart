@@ -25,4 +25,19 @@ abstract interface class ReviewRepository {
     required int rating,
     required String comment,
   });
+
+  /// `GET /api/reviews/me` — giriş yapmış kullanıcının kendi yorumları.
+  Future<Result<List<Review>>> getMyReviews();
+
+  /// `PUT /api/reviews/me/{reviewId}` — sahiplik kontrolü backend'de yapılır
+  /// (`UpdateMyReviewCommandHandler`); burada tekrarlanmaz.
+  Future<Result<bool>> updateReview({
+    required String reviewId,
+    required int rating,
+    required String comment,
+  });
+
+  /// `DELETE /api/reviews/me/{reviewId}` — sahiplik kontrolü backend'de
+  /// yapılır (`DeleteMyReviewCommandHandler`); burada tekrarlanmaz.
+  Future<Result<bool>> deleteReview(String reviewId);
 }

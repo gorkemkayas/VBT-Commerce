@@ -21,6 +21,19 @@ abstract interface class ReviewRemoteDataSource {
     required int rating,
     required String comment,
   });
+
+  /// `GET /api/reviews/me` — oturum gerektirir.
+  Future<List<ReviewModel>> getMyReviews();
+
+  /// `PUT /api/reviews/me/{reviewId}` — oturum gerektirir.
+  Future<void> updateReview({
+    required String reviewId,
+    required int rating,
+    required String comment,
+  });
+
+  /// `DELETE /api/reviews/me/{reviewId}` — oturum gerektirir.
+  Future<void> deleteReview(String reviewId);
 }
 
 /// Okuma uçları herkese açıktır (bkz. `ReviewsController`) — auth
@@ -107,5 +120,45 @@ class ReviewRemoteDataSourceImpl implements ReviewRemoteDataSource {
       );
     }
     return id;
+  }
+
+  /// Sayfalama UI'ı henüz yok (bkz. `OrderRemoteDataSourceImpl`'daki aynı
+  /// yaklaşım) — ilk sayfa yeterince büyük bir `pageSize` ile çekilir.
+  @override
+  Future<List<ReviewModel>> getMyReviews() async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      '/api/reviews/me',
+      queryParameters: {'pageNumber': 1, 'pageSize': 50},
+    );
+    final body = response.data;
+    if (body == null) {
+      throw const FormatException('Sunucudan boş yorum listesi alındı.');
+    }
+    final items = body['items'];
+    if (items is! List) {
+      throw const FormatException(
+        'Yorum listesi yanıtı beklenen şekilde değil.',
+      );
+    }
+    return items
+        .map((item) => ReviewModel.fromJson(item as Map<String, dynamic>))
+        .toList(growable: false);
+  }
+
+  @override
+  Future<void> updateReview({
+    required String reviewId,
+    required int rating,
+    required String comment,
+  }) async {
+    await _dio.put<void>(
+      '/api/reviews/me/$reviewId',
+      data: {'rating': rating, 'comment': comment},
+    );
+  }
+
+  @override
+  Future<void> deleteReview(String reviewId) async {
+    await _dio.delete<void>('/api/reviews/me/$reviewId');
   }
 }

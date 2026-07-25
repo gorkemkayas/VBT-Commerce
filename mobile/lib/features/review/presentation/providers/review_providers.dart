@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/storage_keys.dart';
+import '../../../../core/errors/failure.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/services/secure_storage_service.dart';
 import '../../../../core/utils/result.dart';
@@ -11,8 +12,11 @@ import '../../domain/entities/review_item_type.dart';
 import '../../domain/entities/review_summary.dart';
 import '../../domain/repositories/review_repository.dart';
 import '../../domain/usecases/create_review_use_case.dart';
+import '../../domain/usecases/delete_review_use_case.dart';
+import '../../domain/usecases/get_my_reviews_use_case.dart';
 import '../../domain/usecases/get_product_review_summary_use_case.dart';
 import '../../domain/usecases/get_product_reviews_use_case.dart';
+import '../../domain/usecases/update_review_use_case.dart';
 
 final reviewRemoteDataSourceProvider = Provider<ReviewRemoteDataSource>(
   (ref) => ReviewRemoteDataSourceImpl(ref.watch(dioProvider)),
@@ -30,6 +34,15 @@ final getProductReviewsUseCaseProvider = Provider<GetProductReviewsUseCase>(
 );
 final createReviewUseCaseProvider = Provider<CreateReviewUseCase>(
   (ref) => CreateReviewUseCase(ref.watch(reviewRepositoryProvider)),
+);
+final getMyReviewsUseCaseProvider = Provider<GetMyReviewsUseCase>(
+  (ref) => GetMyReviewsUseCase(ref.watch(reviewRepositoryProvider)),
+);
+final updateReviewUseCaseProvider = Provider<UpdateReviewUseCase>(
+  (ref) => UpdateReviewUseCase(ref.watch(reviewRepositoryProvider)),
+);
+final deleteReviewUseCaseProvider = Provider<DeleteReviewUseCase>(
+  (ref) => DeleteReviewUseCase(ref.watch(reviewRepositoryProvider)),
 );
 
 /// Yorum formunu göstermeden önce oturum durumunu kontrol eder. Backend
@@ -69,4 +82,44 @@ final productReviewsProvider = FutureProvider.autoDispose
         target.sellableItemId,
         target.sellableItemType,
       ),
+    );
+
+/// "Yorumlarım" ekranının durumu — `OrdersState`/`OrdersController` ile aynı
+/// desen (bkz. `order_providers.dart`): ilk build'de otomatik yüklenir,
+/// `RefreshIndicator` ile yeniden yüklenebilir, düzenleme/silme sonrası da
+/// aynı `loadMyReviews()` ile tazelenir.
+class MyReviewsState {
+  const MyReviewsState({
+    this.isLoading = false,
+    this.reviews = const [],
+    this.failure,
+  });
+  final bool isLoading;
+  final List<Review> reviews;
+  final Failure? failure;
+}
+
+class MyReviewsController extends Notifier<MyReviewsState> {
+  @override
+  MyReviewsState build() {
+    Future.microtask(loadMyReviews);
+    return const MyReviewsState(isLoading: true);
+  }
+
+  Future<void> loadMyReviews() async {
+    state = MyReviewsState(isLoading: true, reviews: state.reviews);
+    final result = await ref.read(getMyReviewsUseCaseProvider)();
+    state = switch (result) {
+      Success<List<Review>>(:final value) => MyReviewsState(reviews: value),
+      ResultFailure<List<Review>>(:final failure) => MyReviewsState(
+        reviews: state.reviews,
+        failure: failure,
+      ),
+    };
+  }
+}
+
+final myReviewsControllerProvider =
+    NotifierProvider<MyReviewsController, MyReviewsState>(
+      MyReviewsController.new,
     );

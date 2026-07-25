@@ -76,6 +76,13 @@ class AccountPage extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         _AccountSectionCard(
+          icon: Icons.rate_review_outlined,
+          title: 'Yorumlarım',
+          subtitle: 'Yazdığınız değerlendirmeleri yönetin',
+          onTap: () => _openIfLoggedIn(context, ref, RoutePaths.myReviews),
+        ),
+        const SizedBox(height: 12),
+        _AccountSectionCard(
           icon: Icons.logout,
           title: 'Çıkış Yap',
           subtitle: 'Hesabınızdan çıkış yapın',

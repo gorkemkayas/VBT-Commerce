@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
+import '../../features/auth/presentation/pages/reset_password_page.dart';
 import '../../features/cart/presentation/pages/cart_page.dart';
 import '../../features/checkout/presentation/pages/checkout_page.dart';
 import '../../features/customer/presentation/pages/addresses_page.dart';
@@ -13,6 +14,7 @@ import '../../features/orders/presentation/pages/orders_page.dart';
 import '../../features/product/presentation/pages/product_detail_page.dart';
 import '../../features/product/presentation/pages/product_list_page.dart';
 import '../../features/product/presentation/pages/search_page.dart';
+import '../../features/review/presentation/pages/my_reviews_page.dart';
 import '../constants/route_paths.dart';
 import '../navigation/main_shell_page.dart';
 import 'navigation_service.dart';
@@ -33,6 +35,10 @@ final appRouterProvider = Provider<GoRouter>(
       GoRoute(
         path: RoutePaths.forgotPassword,
         builder: (context, state) => const ForgotPasswordPage(),
+      ),
+      GoRoute(
+        path: RoutePaths.resetPassword,
+        builder: (context, state) => const ResetPasswordPage(),
       ),
       GoRoute(
         path: RoutePaths.home,
@@ -65,6 +71,10 @@ final appRouterProvider = Provider<GoRouter>(
       GoRoute(
         path: RoutePaths.orders,
         builder: (context, state) => const OrdersPage(),
+      ),
+      GoRoute(
+        path: RoutePaths.myReviews,
+        builder: (context, state) => const MyReviewsPage(),
       ),
       GoRoute(
         path: RoutePaths.orderDetail,
