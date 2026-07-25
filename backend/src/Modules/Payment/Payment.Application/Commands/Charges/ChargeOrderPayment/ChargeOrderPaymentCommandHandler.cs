@@ -9,7 +9,8 @@ public class ChargeOrderPaymentCommandHandler(PaymentOperations paymentOperation
     public Task<Guid> Handle(ChargeOrderPaymentCommand request, CancellationToken cancellationToken)
     {
         var chargeRequest = new IyzicoChargeRequest(
-            request.OrderId, request.BasketTotal, request.PaidTotal, request.Card, request.Buyer, request.Address, request.BasketItems);
+            request.OrderId, request.BasketTotal, request.PaidTotal, request.Card, request.Buyer,
+            request.Address, request.BillingAddress, request.BasketItems);
 
         return paymentOperations.ChargeAsync(chargeRequest, cancellationToken);
     }

@@ -11,6 +11,7 @@ public interface IPaymentIntegrationService
         PaymentCardInfo card,
         PaymentBuyerInfo buyer,
         PaymentAddressInfo address,
+        PaymentAddressInfo billingAddress,
         IReadOnlyCollection<PaymentBasketItem> basketItems,
         CancellationToken cancellationToken);
 

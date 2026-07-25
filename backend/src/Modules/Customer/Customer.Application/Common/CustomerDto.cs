@@ -11,7 +11,9 @@ public record CustomerAddressDto(
     string PostalCode,
     string AddressLine1,
     string? AddressLine2,
-    bool IsDefault);
+    bool IsDefault,
+    bool IsShippingAddress,
+    bool IsBillingAddress);
 
 public record CustomerDto(
     Guid Id,

@@ -15,6 +15,7 @@ public record IyzicoChargeRequest(
     IyzicoCardInfo Card,
     IyzicoBuyerInfo Buyer,
     IyzicoAddressInfo Address,
+    IyzicoAddressInfo BillingAddress,
     IReadOnlyCollection<IyzicoBasketItem> BasketItems);
 
 public record IyzicoChargeResult(

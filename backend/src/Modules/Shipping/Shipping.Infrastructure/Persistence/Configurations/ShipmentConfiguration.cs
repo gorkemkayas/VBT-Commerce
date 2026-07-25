@@ -15,5 +15,10 @@ public class ShipmentConfiguration : IEntityTypeConfiguration<Shipment>
         builder.HasIndex(s => s.ShippingCompanyId);
 
         builder.Property(s => s.TrackingNumber).HasMaxLength(100);
+
+        builder.HasMany(s => s.StatusHistory)
+            .WithOne()
+            .HasForeignKey(h => h.ShipmentId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

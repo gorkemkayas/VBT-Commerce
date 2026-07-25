@@ -10,7 +10,9 @@ public class GetShipmentByOrderIdQueryHandler(IShippingDbContext dbContext) : IR
 {
     public async Task<ShipmentDto> Handle(GetShipmentByOrderIdQuery request, CancellationToken cancellationToken)
     {
-        var shipment = await dbContext.Shipments.FirstOrDefaultAsync(s => s.OrderId == request.OrderId, cancellationToken)
+        var shipment = await dbContext.Shipments
+            .Include(s => s.StatusHistory)
+            .FirstOrDefaultAsync(s => s.OrderId == request.OrderId, cancellationToken)
             ?? throw new ShipmentNotFoundException(request.OrderId);
 
         return ShipmentMapper.ToDto(shipment);

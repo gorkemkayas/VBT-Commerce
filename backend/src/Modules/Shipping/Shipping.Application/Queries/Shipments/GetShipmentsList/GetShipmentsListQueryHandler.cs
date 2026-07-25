@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Shipping.Application.Abstractions;
 using Shipping.Application.Common;
+using Shipping.Domain.Entities;
 
 namespace Shipping.Application.Queries.Shipments.GetShipmentsList;
 
@@ -10,7 +11,7 @@ public class GetShipmentsListQueryHandler(IShippingDbContext dbContext)
 {
     public async Task<PagedResult<ShipmentDto>> Handle(GetShipmentsListQuery request, CancellationToken cancellationToken)
     {
-        var query = dbContext.Shipments.AsNoTracking();
+        IQueryable<Shipment> query = dbContext.Shipments.AsNoTracking().Include(s => s.StatusHistory);
 
         if (request.Status is not null)
             query = query.Where(s => s.Status == request.Status.Value);

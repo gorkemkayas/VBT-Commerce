@@ -48,7 +48,8 @@ public class CustomersController(ISender sender) : ControllerBase
         var addressId = await sender.Send(
             new AddMyCustomerAddressCommand(
                 request.Label, request.RecipientName, request.PhoneNumber, request.Country, request.City,
-                request.District, request.PostalCode, request.AddressLine1, request.AddressLine2, request.IsDefault),
+                request.District, request.PostalCode, request.AddressLine1, request.AddressLine2, request.IsDefault,
+                request.IsShippingAddress, request.IsBillingAddress),
             cancellationToken);
 
         return CreatedAtAction(nameof(GetMyProfile), null, addressId);
@@ -60,7 +61,8 @@ public class CustomersController(ISender sender) : ControllerBase
         await sender.Send(
             new UpdateMyCustomerAddressCommand(
                 addressId, request.Label, request.RecipientName, request.PhoneNumber, request.Country, request.City,
-                request.District, request.PostalCode, request.AddressLine1, request.AddressLine2, request.IsDefault),
+                request.District, request.PostalCode, request.AddressLine1, request.AddressLine2, request.IsDefault,
+                request.IsShippingAddress, request.IsBillingAddress),
             cancellationToken);
 
         return NoContent();

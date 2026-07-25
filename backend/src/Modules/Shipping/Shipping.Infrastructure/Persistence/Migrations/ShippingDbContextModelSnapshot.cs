@@ -58,6 +58,32 @@ namespace Shipping.Infrastructure.Persistence.Migrations
                     b.ToTable("Shipments", "shipping_schema");
                 });
 
+            modelBuilder.Entity("Shipping.Domain.Entities.ShipmentStatusHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("ShipmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TrackingNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ShipmentId");
+
+                    b.ToTable("ShipmentStatusHistories", "shipping_schema");
+                });
+
             modelBuilder.Entity("Shipping.Domain.Entities.ShippingCompany", b =>
                 {
                     b.Property<Guid>("Id")
@@ -87,6 +113,20 @@ namespace Shipping.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("ShippingCompanies", "shipping_schema");
+                });
+
+            modelBuilder.Entity("Shipping.Domain.Entities.ShipmentStatusHistory", b =>
+                {
+                    b.HasOne("Shipping.Domain.Entities.Shipment", null)
+                        .WithMany("StatusHistory")
+                        .HasForeignKey("ShipmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Shipping.Domain.Entities.Shipment", b =>
+                {
+                    b.Navigation("StatusHistory");
                 });
 #pragma warning restore 612, 618
         }

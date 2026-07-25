@@ -13,7 +13,9 @@ public record AddMyCustomerAddressCommand(
     string PostalCode,
     string AddressLine1,
     string? AddressLine2,
-    bool IsDefault) : ICommand<Guid>, IRequireRole
+    bool IsDefault,
+    bool IsShippingAddress,
+    bool IsBillingAddress) : ICommand<Guid>, IRequireRole
 {
     public string[] AllowedRoles => ["Customer", "Admin"];
 }

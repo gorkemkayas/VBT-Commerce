@@ -32,6 +32,17 @@ public class PlaceMyOrderCommandHandler(
         var address = await customerIntegrationService.GetCustomerAddressAsync(customer.Id, request.AddressId, cancellationToken)
             ?? throw new OrderAddressNotFoundException(request.AddressId);
 
+        OrderAddressSnapshot? billingAddressSnapshot = null;
+        if (request.BillingAddressId is { } billingAddressId && billingAddressId != request.AddressId)
+        {
+            var billingAddress = await customerIntegrationService.GetCustomerAddressAsync(customer.Id, billingAddressId, cancellationToken)
+                ?? throw new OrderAddressNotFoundException(billingAddressId);
+
+            billingAddressSnapshot = new OrderAddressSnapshot(
+                billingAddress.RecipientName, billingAddress.PhoneNumber, billingAddress.Country, billingAddress.City,
+                billingAddress.District, billingAddress.PostalCode, billingAddress.AddressLine1, billingAddress.AddressLine2);
+        }
+
         var priceItems = cart.Items
             .Select(i => new PriceCalculationItem(i.SellableItemId, MapToPriceItemType(i.SellableItemType), i.Quantity))
             .ToList();
@@ -59,6 +70,7 @@ public class PlaceMyOrderCommandHandler(
             OrderOwnerKey.ForUser(userId),
             cart.Items,
             addressSnapshot,
+            billingAddressSnapshot,
             request.ShippingCompanyId,
             priceResult,
             card,

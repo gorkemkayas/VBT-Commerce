@@ -14,6 +14,8 @@ public class CustomerAddress
     public string AddressLine1 { get; private set; } = null!;
     public string? AddressLine2 { get; private set; }
     public bool IsDefault { get; private set; }
+    public bool IsShippingAddress { get; private set; }
+    public bool IsBillingAddress { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
 
@@ -32,7 +34,9 @@ public class CustomerAddress
         string postalCode,
         string addressLine1,
         string? addressLine2,
-        bool isDefault)
+        bool isDefault,
+        bool isShippingAddress,
+        bool isBillingAddress)
     {
         return new CustomerAddress
         {
@@ -48,6 +52,8 @@ public class CustomerAddress
             AddressLine1 = addressLine1.Trim(),
             AddressLine2 = addressLine2,
             IsDefault = isDefault,
+            IsShippingAddress = isShippingAddress,
+            IsBillingAddress = isBillingAddress,
             CreatedAt = DateTime.UtcNow
         };
     }
@@ -61,7 +67,9 @@ public class CustomerAddress
         string district,
         string postalCode,
         string addressLine1,
-        string? addressLine2)
+        string? addressLine2,
+        bool isShippingAddress,
+        bool isBillingAddress)
     {
         Label = label.Trim();
         RecipientName = recipientName.Trim();
@@ -72,6 +80,8 @@ public class CustomerAddress
         PostalCode = postalCode.Trim();
         AddressLine1 = addressLine1.Trim();
         AddressLine2 = addressLine2;
+        IsShippingAddress = isShippingAddress;
+        IsBillingAddress = isBillingAddress;
         UpdatedAt = DateTime.UtcNow;
     }
 

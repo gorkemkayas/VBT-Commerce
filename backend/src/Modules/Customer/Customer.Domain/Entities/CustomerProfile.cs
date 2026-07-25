@@ -52,7 +52,9 @@ public class CustomerProfile
         string postalCode,
         string addressLine1,
         string? addressLine2,
-        bool isDefault)
+        bool isDefault,
+        bool isShippingAddress,
+        bool isBillingAddress)
     {
         // The first address a customer adds is always the default, regardless of what was requested.
         var shouldBeDefault = isDefault || _addresses.Count == 0;
@@ -61,7 +63,8 @@ public class CustomerProfile
             UnsetExistingDefaultAddress();
 
         var address = CustomerAddress.Create(
-            Id, label, recipientName, phoneNumber, country, city, district, postalCode, addressLine1, addressLine2, shouldBeDefault);
+            Id, label, recipientName, phoneNumber, country, city, district, postalCode, addressLine1, addressLine2,
+            shouldBeDefault, isShippingAddress, isBillingAddress);
 
         _addresses.Add(address);
         UpdatedAt = DateTime.UtcNow;
@@ -80,7 +83,9 @@ public class CustomerProfile
         string postalCode,
         string addressLine1,
         string? addressLine2,
-        bool isDefault)
+        bool isDefault,
+        bool isShippingAddress,
+        bool isBillingAddress)
     {
         var address = _addresses.FirstOrDefault(a => a.Id == addressId)
             ?? throw new CustomerAddressNotFoundException(addressId);
@@ -89,7 +94,8 @@ public class CustomerProfile
         // once a customer has at least one address.
         var shouldBeDefault = isDefault || _addresses.Count == 1;
 
-        address.Update(label, recipientName, phoneNumber, country, city, district, postalCode, addressLine1, addressLine2);
+        address.Update(label, recipientName, phoneNumber, country, city, district, postalCode, addressLine1, addressLine2,
+            isShippingAddress, isBillingAddress);
 
         if (shouldBeDefault && !address.IsDefault)
         {

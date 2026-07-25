@@ -10,4 +10,11 @@ public interface IOrderPurchaseVerifier
 {
     Task<bool> HasCustomerPurchasedItemAsync(
         Guid userId, Guid sellableItemId, OrderItemType sellableItemType, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Distinct variant IDs the customer has a Confirmed order for. Lets callers (Review) resolve
+    /// "purchased variant X" up to "purchased variant X's parent product" without Order needing to
+    /// know about Catalog's product/variant hierarchy itself.
+    /// </summary>
+    Task<IReadOnlyCollection<Guid>> GetPurchasedVariantIdsAsync(Guid userId, CancellationToken cancellationToken);
 }

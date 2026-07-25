@@ -10,4 +10,10 @@ namespace Review.Application.Integrations;
 public interface ICatalogIntegrationService
 {
     Task<bool> SellableItemExistsAsync(Guid sellableItemId, ReviewItemType sellableItemType, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The parent product ID of a variant, or null if the variant doesn't exist. Lets a purchase of a
+    /// variant count toward "has purchased" for that variant's product-level review.
+    /// </summary>
+    Task<Guid?> GetVariantProductIdAsync(Guid variantId, CancellationToken cancellationToken);
 }

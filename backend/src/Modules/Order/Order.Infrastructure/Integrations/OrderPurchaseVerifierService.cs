@@ -21,4 +21,16 @@ public class OrderPurchaseVerifierService(OrderDbContext dbContext) : IOrderPurc
             .SelectMany(o => o.Items)
             .AnyAsync(i => i.SellableItemId == sellableItemId && i.SellableItemType == sellableItemType, cancellationToken);
     }
+
+    public async Task<IReadOnlyCollection<Guid>> GetPurchasedVariantIdsAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        return await dbContext.Orders
+            .AsNoTracking()
+            .Where(o => o.UserId == userId && o.Status == OrderStatus.Confirmed)
+            .SelectMany(o => o.Items)
+            .Where(i => i.SellableItemType == OrderItemType.Variant)
+            .Select(i => i.SellableItemId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+    }
 }

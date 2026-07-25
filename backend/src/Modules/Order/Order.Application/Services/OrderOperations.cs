@@ -38,6 +38,7 @@ public class OrderOperations(
         OrderOwnerKey owner,
         IReadOnlyCollection<CartItemSummaryDto> cartItems,
         OrderAddressSnapshot address,
+        OrderAddressSnapshot? billingAddress,
         Guid shippingCompanyId,
         PriceCalculationResultDto priceResult,
         PaymentCardInfo card,
@@ -84,11 +85,17 @@ public class OrderOperations(
         var addressInfo = new PaymentAddressInfo(
             $"{address.AddressLine1} {address.AddressLine2}".Trim(), address.City, address.Country, address.PostalCode);
 
+        var billingAddressInfo = billingAddress is null
+            ? addressInfo
+            : new PaymentAddressInfo(
+                $"{billingAddress.AddressLine1} {billingAddress.AddressLine2}".Trim(),
+                billingAddress.City, billingAddress.Country, billingAddress.PostalCode);
+
         Guid paymentId;
         try
         {
             paymentId = await paymentIntegrationService.ChargeAsync(
-                orderId, priceResult.Subtotal + shippingCompany.Fee, grandTotal, card, buyer, addressInfo, basketItems, cancellationToken);
+                orderId, priceResult.Subtotal + shippingCompany.Fee, grandTotal, card, buyer, addressInfo, billingAddressInfo, basketItems, cancellationToken);
         }
         catch
         {
@@ -108,6 +115,14 @@ public class OrderOperations(
             address.PostalCode,
             address.AddressLine1,
             address.AddressLine2,
+            billingAddress?.RecipientName,
+            billingAddress?.PhoneNumber,
+            billingAddress?.Country,
+            billingAddress?.City,
+            billingAddress?.District,
+            billingAddress?.PostalCode,
+            billingAddress?.AddressLine1,
+            billingAddress?.AddressLine2,
             shippingCompanyId,
             shipmentId,
             shippingCompany.Fee,

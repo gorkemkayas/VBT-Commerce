@@ -10,4 +10,6 @@ namespace Review.Application.Integrations;
 public interface IOrderIntegrationService
 {
     Task<bool> HasPurchasedItemAsync(Guid userId, Guid sellableItemId, ReviewItemType sellableItemType, CancellationToken cancellationToken);
+
+    Task<IReadOnlyCollection<Guid>> GetPurchasedVariantIdsAsync(Guid userId, CancellationToken cancellationToken);
 }

@@ -6,6 +6,7 @@
     <ProjectReference Include="..\Review.Application\Review.Application.csproj" />
     <ProjectReference Include="..\..\Catalog\Catalog.Contracts\Catalog.Contracts.csproj" />
     <ProjectReference Include="..\..\Order\Order.Contracts\Order.Contracts.csproj" />
+    <ProjectReference Include="..\..\Identity\Identity.Contracts\Identity.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

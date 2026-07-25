@@ -38,6 +38,18 @@ public class PlaceGuestOrderCommandHandler(
             request.RecipientName, request.PhoneNumber, request.Country, request.City,
             request.District, request.PostalCode, request.AddressLine1, request.AddressLine2);
 
+        var billingAddressSnapshot = request.BillingAddressLine1 is null
+            ? null
+            : new OrderAddressSnapshot(
+                request.BillingRecipientName ?? request.RecipientName,
+                request.BillingPhoneNumber ?? request.PhoneNumber,
+                request.BillingCountry ?? request.Country,
+                request.BillingCity ?? request.City,
+                request.BillingDistrict ?? request.District,
+                request.BillingPostalCode ?? request.PostalCode,
+                request.BillingAddressLine1,
+                request.BillingAddressLine2);
+
         var card = new PaymentCardInfo(request.CardHolderName, request.CardNumber, request.CardExpireMonth, request.CardExpireYear, request.CardCvc);
         var buyer = new PaymentBuyerInfo(
             guest.FirstName,
@@ -51,6 +63,7 @@ public class PlaceGuestOrderCommandHandler(
             OrderOwnerKey.ForGuestCustomer(request.GuestCustomerId),
             cart.Items,
             addressSnapshot,
+            billingAddressSnapshot,
             request.ShippingCompanyId,
             priceResult,
             card,

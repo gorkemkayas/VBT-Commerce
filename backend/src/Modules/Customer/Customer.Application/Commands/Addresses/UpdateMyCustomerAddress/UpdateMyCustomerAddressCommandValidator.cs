@@ -16,5 +16,7 @@ public class UpdateMyCustomerAddressCommandValidator : AbstractValidator<UpdateM
         RuleFor(x => x.PostalCode).NotEmpty().MaximumLength(20);
         RuleFor(x => x.AddressLine1).NotEmpty().MaximumLength(300);
         RuleFor(x => x.AddressLine2).MaximumLength(300);
+        RuleFor(x => x).Must(x => x.IsShippingAddress || x.IsBillingAddress)
+            .WithMessage("An address must be usable as a shipping address, a billing address, or both.");
     }
 }
