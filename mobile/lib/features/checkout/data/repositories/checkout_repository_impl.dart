@@ -35,11 +35,13 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
     required String addressId,
     required String shippingCompanyId,
     required List<CartItem> items,
+    required List<String> couponCodes,
   }) async {
     try {
       final orderId = await _orderDataSource.placeMyOrder(
         addressId: addressId,
         shippingCompanyId: shippingCompanyId,
+        couponCodes: couponCodes,
       );
       final total = items.fold(0.0, (total, item) => total + item.lineTotal);
       return Result.success(
@@ -62,9 +64,12 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
   }
 
   @override
-  Future<Result<PriceCalculation>> calculatePrice(List<CartItem> items) async {
+  Future<Result<PriceCalculation>> calculatePrice(
+    List<CartItem> items,
+    List<String> couponCodes,
+  ) async {
     try {
-      final result = await _pricingDataSource.calculateMy(items);
+      final result = await _pricingDataSource.calculateMy(items, couponCodes);
       return Result.success(result);
     } on DioException catch (error) {
       return Result.failure(mapDioException(error));
@@ -126,11 +131,13 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
   Future<Result<PriceCalculation>> calculatePriceGuest(
     String guestCustomerId,
     List<CartItem> items,
+    List<String> couponCodes,
   ) async {
     try {
       final result = await _pricingDataSource.calculateGuest(
         guestCustomerId,
         items,
+        couponCodes,
       );
       return Result.success(result);
     } on DioException catch (error) {
@@ -151,12 +158,14 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
     required String shippingCompanyId,
     required GuestCheckoutInfo info,
     required List<CartItem> items,
+    required List<String> couponCodes,
   }) async {
     try {
       final orderId = await _orderDataSource.placeGuestOrder(
         guestCustomerId: guestCustomerId,
         anonymousId: anonymousId,
         shippingCompanyId: shippingCompanyId,
+        couponCodes: couponCodes,
         recipientName: info.recipientName,
         phoneNumber: info.phoneNumber,
         country: info.country,

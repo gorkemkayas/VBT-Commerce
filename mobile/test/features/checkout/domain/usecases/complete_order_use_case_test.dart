@@ -18,6 +18,7 @@ class _FakeCheckoutRepository implements CheckoutRepository {
     required String addressId,
     required String shippingCompanyId,
     required List<CartItem> items,
+    required List<String> couponCodes,
   }) async {
     callCount++;
     return Result.success(
@@ -31,7 +32,10 @@ class _FakeCheckoutRepository implements CheckoutRepository {
   }
 
   @override
-  Future<Result<PriceCalculation>> calculatePrice(List<CartItem> items) async {
+  Future<Result<PriceCalculation>> calculatePrice(
+    List<CartItem> items,
+    List<String> couponCodes,
+  ) async {
     return const Result.success(
       PriceCalculation(
         subtotal: 0,
@@ -59,6 +63,7 @@ class _FakeCheckoutRepository implements CheckoutRepository {
   Future<Result<PriceCalculation>> calculatePriceGuest(
     String guestCustomerId,
     List<CartItem> items,
+    List<String> couponCodes,
   ) async => const Result.success(
     PriceCalculation(subtotal: 0, totalDiscount: 0, taxAmount: 0, grandTotal: 0),
   );
@@ -70,6 +75,7 @@ class _FakeCheckoutRepository implements CheckoutRepository {
     required String shippingCompanyId,
     required GuestCheckoutInfo info,
     required List<CartItem> items,
+    required List<String> couponCodes,
   }) async => Result.success(
     Order(
       orderId: 'TEST-GUEST-1',

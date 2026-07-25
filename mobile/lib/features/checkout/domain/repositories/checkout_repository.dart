@@ -10,12 +10,16 @@ abstract interface class CheckoutRepository {
     required String addressId,
     required String shippingCompanyId,
     required List<CartItem> items,
+    required List<String> couponCodes,
   });
 
   /// `POST /api/pricing/calculate/me` üzerinden vergi/indirim dahil gerçek
-  /// sipariş toplamını hesaplar (kupon kodu girişi henüz yok, her zaman boş
-  /// liste gönderilir).
-  Future<Result<PriceCalculation>> calculatePrice(List<CartItem> items);
+  /// sipariş toplamını hesaplar. `couponCodes`, kullanıcının uyguladığı kupon
+  /// kodlarıdır; geçerli olanların indirimi sonuçta döner.
+  Future<Result<PriceCalculation>> calculatePrice(
+    List<CartItem> items,
+    List<String> couponCodes,
+  );
 
   /// `GET /api/shipping-companies` — aktif kargo firmalarının tamamını döner.
   Future<Result<List<ShippingCompany>>> getShippingCompanies();
@@ -33,6 +37,7 @@ abstract interface class CheckoutRepository {
   Future<Result<PriceCalculation>> calculatePriceGuest(
     String guestCustomerId,
     List<CartItem> items,
+    List<String> couponCodes,
   );
 
   /// `POST /api/orders/guest`.
@@ -42,5 +47,6 @@ abstract interface class CheckoutRepository {
     required String shippingCompanyId,
     required GuestCheckoutInfo info,
     required List<CartItem> items,
+    required List<String> couponCodes,
   });
 }

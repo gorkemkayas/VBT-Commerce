@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/utils/result.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../domain/entities/customer.dart';
 import '../providers/customer_providers.dart';
 
@@ -106,9 +107,22 @@ class _ProfileContentState extends ConsumerState<_ProfileContent> {
   @override
   Widget build(BuildContext context) {
     final dateOfBirth = _dateOfBirth;
+    final userAsync = ref.watch(currentUserProvider);
+    final email = userAsync.asData?.value?.email;
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        _InfoTile(
+          icon: Icons.email_outlined,
+          label: 'E-posta',
+          value: email ?? '—',
+        ),
+        const SizedBox(height: 20),
+        Text(
+          'İletişim Bilgileri',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 12),
         TextField(
           controller: _phoneController,
           keyboardType: TextInputType.phone,
@@ -136,6 +150,40 @@ class _ProfileContentState extends ConsumerState<_ProfileContent> {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : const Text('Kaydet'),
+        ),
+      ],
+    );
+  }
+}
+
+/// Değiştirilemeyen (salt-okunur) profil bilgisi satırı — ör. e-posta.
+class _InfoTile extends StatelessWidget {
+  const _InfoTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        Icon(icon, color: theme.colorScheme.primary),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: theme.textTheme.labelMedium),
+              const SizedBox(height: 2),
+              Text(value, style: theme.textTheme.bodyLarge),
+            ],
+          ),
         ),
       ],
     );

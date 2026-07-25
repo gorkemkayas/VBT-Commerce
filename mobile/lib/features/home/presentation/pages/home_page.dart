@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/route_paths.dart';
 import '../../../../core/widgets/async_state_views.dart';
-import '../../../cart/presentation/widgets/cart_icon_button.dart';
 import '../../../product/domain/entities/product.dart';
 import '../../../product/presentation/widgets/product_card.dart';
 import '../providers/home_providers.dart';
@@ -45,7 +44,6 @@ class _HomePageState extends ConsumerState<HomePage> {
             onPressed: () => context.push(RoutePaths.search),
             icon: const Icon(Icons.search),
           ),
-          const CartIconButton(),
         ],
       ),
       body: switch (state) {

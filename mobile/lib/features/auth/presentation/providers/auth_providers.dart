@@ -35,6 +35,17 @@ final authRepositoryProvider = Provider<AuthRepository>(
     ref.watch(authLocalDataSourceProvider),
   ),
 );
+/// Yerelde saklanan oturum açmış kullanıcı (girişte kaydedilir). Şu an yalnızca
+/// `email` taşır — backend'in auth yanıtı ad/soyad döndürmediği için (bkz.
+/// `UserModel.fromLoginResponse`) profilde e-posta bundan gösterilir.
+final currentUserProvider = FutureProvider<User?>((ref) async {
+  final result = await ref.watch(authRepositoryProvider).getCachedUser();
+  return switch (result) {
+    Success<User?>(:final value) => value,
+    ResultFailure<User?>() => null,
+  };
+});
+
 final loginUseCaseProvider = Provider<LoginUseCase>(
   (ref) => LoginUseCase(ref.watch(authRepositoryProvider)),
 );

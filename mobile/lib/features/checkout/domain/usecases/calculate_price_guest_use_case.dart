@@ -9,6 +9,7 @@ class CalculatePriceGuestUseCase {
 
   Future<Result<PriceCalculation>> call(
     String guestCustomerId,
-    List<CartItem> items,
-  ) => _repository.calculatePriceGuest(guestCustomerId, items);
+    List<CartItem> items, [
+    List<String> couponCodes = const [],
+  ]) => _repository.calculatePriceGuest(guestCustomerId, items, couponCodes);
 }

@@ -17,6 +17,7 @@ class CompleteGuestOrderUseCase {
     required String? shippingCompanyId,
     required GuestCheckoutInfo info,
     required List<CartItem> items,
+    List<String> couponCodes = const [],
   }) async {
     if (shippingCompanyId == null || shippingCompanyId.isEmpty) {
       return const Result.failure(
@@ -32,6 +33,7 @@ class CompleteGuestOrderUseCase {
       shippingCompanyId: shippingCompanyId,
       info: info,
       items: items,
+      couponCodes: couponCodes,
     );
     if (result case Success<Order>()) {
       await _cartRepository.clearCart();

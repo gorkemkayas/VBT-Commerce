@@ -9,7 +9,10 @@ class CalculatePriceUseCase {
 
   /// Backend `Items` alanını boş kabul etmiyor; sepet boşken ağa hiç
   /// gitmeden yerel sıfır sonucu döner.
-  Future<Result<PriceCalculation>> call(List<CartItem> items) {
+  Future<Result<PriceCalculation>> call(
+    List<CartItem> items, [
+    List<String> couponCodes = const [],
+  ]) {
     if (items.isEmpty) {
       return Future.value(
         const Result.success(
@@ -22,6 +25,6 @@ class CalculatePriceUseCase {
         ),
       );
     }
-    return _repository.calculatePrice(items);
+    return _repository.calculatePrice(items, couponCodes);
   }
 }

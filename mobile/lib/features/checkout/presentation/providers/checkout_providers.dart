@@ -100,9 +100,13 @@ final priceCalculationProvider =
       final items = ref.watch(
         cartControllerProvider.select((state) => state.items),
       );
+      // Uygulanan kupon kodları değiştiğinde de yeniden hesaplanır.
+      final couponCodes = ref.watch(
+        checkoutControllerProvider.select((state) => state.couponCodes),
+      );
       final isLoggedIn = await ref.watch(isLoggedInProvider.future);
       if (isLoggedIn) {
-        return ref.watch(calculatePriceUseCaseProvider)(items);
+        return ref.watch(calculatePriceUseCaseProvider)(items, couponCodes);
       }
       final guestCustomerId = ref.watch(
         checkoutControllerProvider.select((state) => state.guestCustomerId),
@@ -117,6 +121,7 @@ final priceCalculationProvider =
       return ref.watch(calculatePriceGuestUseCaseProvider)(
         guestCustomerId,
         items,
+        couponCodes,
       );
     });
 
@@ -153,6 +158,9 @@ class CheckoutState {
     this.selectedShippingCompanyId,
     this.guestCustomerId,
     this.guestInfo,
+    this.couponCodes = const [],
+    this.isApplyingCoupon = false,
+    this.couponError,
     this.isCreatingGuestCustomer = false,
     this.isSubmitting = false,
     this.order,
@@ -177,6 +185,18 @@ class CheckoutState {
   /// sipariş oluşturulurken kullanılır.
   final GuestCheckoutInfo? guestInfo;
 
+  /// Kullanıcının uyguladığı (backend'ce doğrulanmış) kupon kodları. Yalnızca
+  /// geçerli çıkan kodlar buraya eklenir (bkz. `applyCoupon`); fiyat hesaplama
+  /// ve sipariş oluşturma bu listeyi kullanır.
+  final List<String> couponCodes;
+
+  /// Bir kupon uygulanırken (doğrulama isteği sürerken) `true`.
+  final bool isApplyingCoupon;
+
+  /// Son kupon denemesinin hata mesajı (geçersiz/süresi geçmiş kod vb.);
+  /// başarılı uygulama ya da kaldırma bunu temizler.
+  final String? couponError;
+
   /// Misafir bilgileri kaydedilirken (`POST /api/guest-customers`) `true`.
   final bool isCreatingGuestCustomer;
   final bool isSubmitting;
@@ -188,6 +208,9 @@ class CheckoutState {
     String? selectedShippingCompanyId,
     Object? guestCustomerId = _unset,
     Object? guestInfo = _unset,
+    List<String>? couponCodes,
+    bool? isApplyingCoupon,
+    Object? couponError = _unset,
     bool? isCreatingGuestCustomer,
     bool? isSubmitting,
     Order? order,
@@ -203,6 +226,11 @@ class CheckoutState {
     guestInfo: identical(guestInfo, _unset)
         ? this.guestInfo
         : guestInfo as GuestCheckoutInfo?,
+    couponCodes: couponCodes ?? this.couponCodes,
+    isApplyingCoupon: isApplyingCoupon ?? this.isApplyingCoupon,
+    couponError: identical(couponError, _unset)
+        ? this.couponError
+        : couponError as String?,
     isCreatingGuestCustomer:
         isCreatingGuestCustomer ?? this.isCreatingGuestCustomer,
     isSubmitting: isSubmitting ?? this.isSubmitting,
@@ -243,12 +271,76 @@ class CheckoutController extends Notifier<CheckoutState> {
     );
   }
 
+  /// Bir kupon kodunu uygular. Kodu doğrudan state'e eklemek yerine önce
+  /// backend'de doğrulanır (aday kod listesiyle fiyat hesaplanır): geçerliyse
+  /// kod listeye eklenir ve `priceCalculationProvider` indirimi gösterir;
+  /// geçersizse (`CouponNotFound`, süresi geçmiş, min. sepet tutarı vb.) kod
+  /// eklenmez ve backend'in mesajı `couponError`'da gösterilir. Böylece hatalı
+  /// bir kod, ödeme özetinin tamamını bozmaz.
+  Future<void> applyCoupon(String rawCode) async {
+    final code = rawCode.trim();
+    if (code.isEmpty) return;
+    if (state.couponCodes.any((c) => c.toLowerCase() == code.toLowerCase())) {
+      state = state.copyWith(couponError: 'Bu kupon zaten uygulandı.');
+      return;
+    }
+
+    state = state.copyWith(isApplyingCoupon: true, couponError: null);
+    final candidate = [...state.couponCodes, code];
+    final result = await _calculate(candidate);
+    state = switch (result) {
+      Success<PriceCalculation>() => state.copyWith(
+        couponCodes: candidate,
+        isApplyingCoupon: false,
+        couponError: null,
+      ),
+      ResultFailure<PriceCalculation>(:final failure) => state.copyWith(
+        isApplyingCoupon: false,
+        couponError: failure.message,
+      ),
+    };
+  }
+
+  void removeCoupon(String code) {
+    state = state.copyWith(
+      couponCodes: state.couponCodes
+          .where((c) => c != code)
+          .toList(growable: false),
+      couponError: null,
+    );
+  }
+
+  /// Verilen kupon adaylarıyla fiyat hesaplar — `applyCoupon`'un doğrulama
+  /// adımı. Giriş yapmış/misafir dalını `priceCalculationProvider` ile aynı
+  /// şekilde ayırır.
+  Future<Result<PriceCalculation>> _calculate(List<String> couponCodes) async {
+    final items = ref.read(cartControllerProvider).items;
+    final isLoggedIn = await ref.read(isLoggedInProvider.future);
+    if (isLoggedIn) {
+      return ref.read(calculatePriceUseCaseProvider)(items, couponCodes);
+    }
+    final guestCustomerId = state.guestCustomerId;
+    if (guestCustomerId == null) {
+      return const Result.failure(
+        ValidationFailure(
+          'Kupon uygulamak için önce iletişim bilgilerinizi kaydedin.',
+        ),
+      );
+    }
+    return ref.read(calculatePriceGuestUseCaseProvider)(
+      guestCustomerId,
+      items,
+      couponCodes,
+    );
+  }
+
   Future<void> completeOrder(List<CartItem> items) async {
     state = state.copyWith(isSubmitting: true, clearFailure: true);
     final result = await ref.read(completeOrderUseCaseProvider)(
       addressId: state.selectedAddressId,
       shippingCompanyId: state.selectedShippingCompanyId,
       items: items,
+      couponCodes: state.couponCodes,
     );
     state = switch (result) {
       Success<Order>(:final value) => state.copyWith(
@@ -302,6 +394,7 @@ class CheckoutController extends Notifier<CheckoutState> {
       shippingCompanyId: state.selectedShippingCompanyId,
       info: guestInfo,
       items: items,
+      couponCodes: state.couponCodes,
     );
     state = switch (result) {
       Success<Order>(:final value) => state.copyWith(

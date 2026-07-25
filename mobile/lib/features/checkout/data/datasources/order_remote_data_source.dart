@@ -4,11 +4,13 @@ abstract interface class OrderRemoteDataSource {
   Future<String> placeMyOrder({
     required String addressId,
     required String shippingCompanyId,
+    required List<String> couponCodes,
   });
   Future<String> placeGuestOrder({
     required String guestCustomerId,
     required String anonymousId,
     required String shippingCompanyId,
+    required List<String> couponCodes,
     required String recipientName,
     required String phoneNumber,
     required String country,
@@ -39,13 +41,14 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
   Future<String> placeMyOrder({
     required String addressId,
     required String shippingCompanyId,
+    required List<String> couponCodes,
   }) async {
     final response = await _dio.post<dynamic>(
       '/api/orders/me',
       data: {
         'addressId': addressId,
         'shippingCompanyId': shippingCompanyId,
-        'couponCodes': <String>[],
+        'couponCodes': couponCodes,
         // iyzico sandbox test kartı (Halkbank, Master Card - Debit).
         'cardHolderName': 'John Doe',
         'cardNumber': '5528790000000008',
@@ -71,6 +74,7 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
     required String guestCustomerId,
     required String anonymousId,
     required String shippingCompanyId,
+    required List<String> couponCodes,
     required String recipientName,
     required String phoneNumber,
     required String country,
@@ -86,7 +90,7 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
         'guestCustomerId': guestCustomerId,
         'anonymousId': anonymousId,
         'shippingCompanyId': shippingCompanyId,
-        'couponCodes': <String>[],
+        'couponCodes': couponCodes,
         'recipientName': recipientName,
         'phoneNumber': phoneNumber,
         'country': country,

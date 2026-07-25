@@ -15,6 +15,7 @@ import '../../domain/entities/shipping_company.dart';
 import '../providers/checkout_providers.dart';
 import '../widgets/address_selector.dart';
 import '../widgets/complete_order_button.dart';
+import '../widgets/coupon_input.dart';
 import '../widgets/guest_checkout_form.dart';
 import '../widgets/order_summary_view.dart';
 import '../widgets/payment_summary_view.dart';
@@ -118,6 +119,8 @@ class CheckoutPage extends ConsumerWidget {
                         const _ShippingLoadError(),
                     },
                   ),
+                  const SizedBox(height: 16),
+                  const CouponInput(),
                   const SizedBox(height: 16),
                   const PaymentSummaryView(),
                   const SizedBox(height: 24),

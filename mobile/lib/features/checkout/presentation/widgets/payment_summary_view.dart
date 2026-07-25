@@ -61,7 +61,16 @@ class _SummaryColumn extends StatelessWidget {
           value: calculation.subtotal,
           style: bodyStyle,
         ),
-        if (calculation.totalDiscount > 0)
+        // Kupon başına indirim kırılımı; backend detay vermezse (ör. yalnızca
+        // toplam indirim geldiyse) tek bir "İndirim" satırına düşülür.
+        if (calculation.appliedCoupons.isNotEmpty)
+          for (final coupon in calculation.appliedCoupons)
+            _SummaryRow(
+              label: 'Kupon (${coupon.code})',
+              value: -coupon.discountAmount,
+              style: bodyStyle,
+            )
+        else if (calculation.totalDiscount > 0)
           _SummaryRow(
             label: 'İndirim',
             value: -calculation.totalDiscount,
