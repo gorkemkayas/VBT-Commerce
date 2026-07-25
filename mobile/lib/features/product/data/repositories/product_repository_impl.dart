@@ -137,6 +137,7 @@ class ProductRepositoryImpl implements ProductRepository {
       description: product.description,
       category: product.category,
       imageUrl: product.imageUrl,
+      imageUrls: product.imageUrls,
       price: price,
       variants: product.variants,
       hasVariants: product.hasVariants,

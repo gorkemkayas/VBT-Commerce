@@ -7,6 +7,7 @@ class Product {
     required this.description,
     required this.category,
     required this.imageUrl,
+    this.imageUrls = const [],
     this.price,
     this.variants = const [],
     this.hasVariants = false,
@@ -17,6 +18,14 @@ class Product {
   final String description;
   final String category;
   final String imageUrl;
+
+  /// Ürünün tüm görselleri, backend'in `DisplayOrder`'ına göre sıralı.
+  /// Yalnızca ürün detayında (`GET /api/products/{id}`) doldurulur; ürün
+  /// listesinde her zaman boştur (liste DTO'su yalnızca `primaryImageUrl`
+  /// taşır, bkz. `ProductListItemModel`). `imageUrl` (tekil, birincil
+  /// görsel) alanının anlamı değişmedi — cart/checkout/pricing hâlâ onu
+  /// okur; bu alan tamamen ek (additive) bir gösterim kaynağıdır.
+  final List<String> imageUrls;
 
   /// Ürün DTO'larında (liste/detay) yer almaz; repository katmanında ayrı bir
   /// sorgu (`GET /api/prices/{type}/{id}`) ile doldurulur. Fiyat kaydı yoksa

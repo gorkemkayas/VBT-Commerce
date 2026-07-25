@@ -15,26 +15,48 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
   ProductRemoteDataSourceImpl(this._dio);
   final Dio _dio;
 
+  /// Backend `pageSize` için 1-100 aralığını kabul ediyor (bkz.
+  /// `GetProductsListQueryValidator`); tek istekte alınabilecek en büyük
+  /// sayfa boyutu.
+  static const _pageSize = 100;
+
+  /// Aşırı büyük bir katalogda sonsuz döngüye girmemek için güvenlik sınırı
+  /// (50 sayfa × 100 = 5000 ürün).
+  static const _maxPages = 50;
+
   @override
   Future<List<ProductListItemModel>> getProducts() async {
-    final response = await _dio.get<Map<String, dynamic>>(
-      '${AppConstants.productApiBaseUrl}/api/products',
-    );
-    final body = response.data;
-    if (body == null) {
-      throw const FormatException('Sunucudan boş ürün listesi alındı.');
-    }
-    final items = body['items'];
-    if (items is! List) {
-      throw const FormatException(
-        'Ürün listesi yanıtı beklenen şekilde değil.',
+    final items = <ProductListItemModel>[];
+    var pageNumber = 1;
+    while (pageNumber <= _maxPages) {
+      final response = await _dio.get<Map<String, dynamic>>(
+        '${AppConstants.productApiBaseUrl}/api/products',
+        queryParameters: {'pageNumber': pageNumber, 'pageSize': _pageSize},
       );
-    }
-    return items
-        .map(
+      final body = response.data;
+      if (body == null) {
+        throw const FormatException('Sunucudan boş ürün listesi alındı.');
+      }
+      final pageItems = body['items'];
+      if (pageItems is! List) {
+        throw const FormatException(
+          'Ürün listesi yanıtı beklenen şekilde değil.',
+        );
+      }
+      items.addAll(
+        pageItems.map(
           (item) => ProductListItemModel.fromJson(item as Map<String, dynamic>),
-        )
-        .toList(growable: false);
+        ),
+      );
+      final totalCount = (body['totalCount'] as num?)?.toInt();
+      final reachedEnd =
+          pageItems.isEmpty ||
+          pageItems.length < _pageSize ||
+          (totalCount != null && items.length >= totalCount);
+      if (reachedEnd) break;
+      pageNumber++;
+    }
+    return items;
   }
 
   @override

@@ -9,6 +9,8 @@ import '../../../cart/presentation/providers/cart_providers.dart';
 import '../../../cart/presentation/widgets/cart_icon_button.dart';
 import '../../../favorites/domain/entities/favorite_item.dart';
 import '../../../favorites/presentation/widgets/favorite_button.dart';
+import '../../../review/domain/entities/review_item_type.dart';
+import '../../../review/presentation/widgets/review_section.dart';
 import '../../domain/entities/product.dart';
 import '../../domain/entities/product_variant.dart';
 import '../providers/product_providers.dart';
@@ -73,12 +75,47 @@ class _ProductDetailState extends ConsumerState<_ProductDetail> {
   bool get _hasSizeVariants =>
       widget.product.variants.any((variant) => variant.size.isNotEmpty);
 
+  /// Aynı mantık renk için: yalnızca gerçekten "Renk" değeri olan
+  /// varyantlarda renk seçimi gösterilir.
+  bool get _hasColorVariants =>
+      widget.product.variants.any((variant) => variant.color.isNotEmpty);
+
   bool get _canAddToCart => !_hasVariants || _selectedVariantId != null;
 
   /// `product.price`, repository tarafından bu varyant üzerinden zaten
   /// doldurulmuştur (bkz. `ProductRepositoryImpl._priceReferenceFor`).
   String? get _defaultVariantId =>
       _hasVariants ? widget.product.variants.first.id : null;
+
+  /// Galeri, seçili (ya da henüz seçilmediyse varsayılan) varyantın kendine
+  /// özel görselleri varsa onları gösterir (bkz. `ProductVariant.imageUrls`)
+  /// — ör. renk değişince fotoğraflar da değişir. Varyantın özel görseli
+  /// yoksa (ör. yalnızca beden farkı olan ürünlerde fotoğraflar ortak
+  /// olabilir) ürünün genel görsellerine, o da yoksa tekil `imageUrl`'e
+  /// düşülür.
+  List<String> get _galleryImageUrls {
+    final variantId = _selectedVariantId ?? _defaultVariantId;
+    if (variantId != null) {
+      for (final variant in widget.product.variants) {
+        if (variant.id == variantId && variant.imageUrls.isNotEmpty) {
+          return variant.imageUrls;
+        }
+      }
+    }
+    if (widget.product.imageUrls.isNotEmpty) return widget.product.imageUrls;
+    return [widget.product.imageUrl];
+  }
+
+  /// Değerlendirmeler backend'de her zaman kullanıcının satın aldığı tam
+  /// kaleme bağlanır (ürün ya da seçtiği varyant), üst ürüne değil (bkz.
+  /// `Review.Domain.Entities.ProductReview`). Bu yüzden hedef, fiyat
+  /// gösteriminde kullanılanla aynı mantıkla seçilir: bir beden seçilmemişse
+  /// varsayılan (ilk) varyant kullanılır.
+  String get _reviewSellableItemId =>
+      _hasVariants ? (_selectedVariantId ?? _defaultVariantId!) : widget.product.id;
+
+  ReviewItemType get _reviewSellableItemType =>
+      _hasVariants ? ReviewItemType.variant : ReviewItemType.product;
 
   Future<void> _addToCart() async {
     final hasVariants = _hasVariants;
@@ -109,7 +146,12 @@ class _ProductDetailState extends ConsumerState<_ProductDetail> {
         children: [
           SizedBox(
             height: 300,
-            child: AppNetworkImage(imageUrl: product.imageUrl),
+            child: _ProductImageGallery(
+              // Seçili varyant (ör. renk) değişince galerinin sıfırdan
+              // (ilk sayfadan) başlaması için varyant id'sine göre key.
+              key: ValueKey(_selectedVariantId ?? _defaultVariantId ?? 'default'),
+              imageUrls: _galleryImageUrls,
+            ),
           ),
           const SizedBox(height: 24),
           Row(
@@ -159,6 +201,25 @@ class _ProductDetailState extends ConsumerState<_ProductDetail> {
               ],
             ),
           ],
+          if (_hasColorVariants) ...[
+            const SizedBox(height: 20),
+            Text('Renk', style: Theme.of(context).textTheme.titleSmall),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                for (final variant in product.variants)
+                  if (variant.color.isNotEmpty)
+                    _ColorOption(
+                      value: variant.color,
+                      selected: _selectedVariantId == variant.id,
+                      onTap: () =>
+                          setState(() => _selectedVariantId = variant.id),
+                    ),
+              ],
+            ),
+          ],
           const SizedBox(height: 32),
           FilledButton.icon(
             onPressed: (_isAddingToCart || !_canAddToCart) ? null : _addToCart,
@@ -171,8 +232,78 @@ class _ProductDetailState extends ConsumerState<_ProductDetail> {
                 : const Icon(Icons.add_shopping_cart),
             label: const Text('Sepete Ekle'),
           ),
+          ReviewSection(
+            sellableItemId: _reviewSellableItemId,
+            sellableItemType: _reviewSellableItemType,
+          ),
         ],
       ),
+    );
+  }
+}
+
+/// Ürün detayındaki görsel alanı. Tek görsel varsa eski davranış gibi
+/// doğrudan `AppNetworkImage` gösterir (kaydırma/gösterge yok); birden
+/// fazla görsel varsa yatay kaydırılabilir bir `PageView` + alt nokta
+/// göstergesi ekler. Çağıran taraftaki `SizedBox(height: 300)` (yükseklik)
+/// ve etraftaki boşluklar değişmedi.
+class _ProductImageGallery extends StatefulWidget {
+  const _ProductImageGallery({super.key, required this.imageUrls});
+  final List<String> imageUrls;
+
+  @override
+  State<_ProductImageGallery> createState() => _ProductImageGalleryState();
+}
+
+class _ProductImageGalleryState extends State<_ProductImageGallery> {
+  final _pageController = PageController();
+  int _page = 0;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final imageUrls = widget.imageUrls;
+    if (imageUrls.length <= 1) {
+      return AppNetworkImage(
+        imageUrl: imageUrls.isNotEmpty ? imageUrls.first : '',
+      );
+    }
+    return Stack(
+      alignment: Alignment.bottomCenter,
+      children: [
+        PageView.builder(
+          controller: _pageController,
+          itemCount: imageUrls.length,
+          onPageChanged: (index) => setState(() => _page = index),
+          itemBuilder: (context, index) =>
+              AppNetworkImage(imageUrl: imageUrls[index]),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (var i = 0; i < imageUrls.length; i++)
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: i == _page
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.outlineVariant,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -238,6 +369,84 @@ class _SizeBox extends StatelessWidget {
     );
   }
 }
+
+/// Renk seçeneğini küçük bir renk kutusu (swatch) olarak gösterir — ham hex
+/// kod ya da renk adı kullanıcıya asla metin olarak gösterilmez, her zaman
+/// çözümlenmiş renge boyanmış küçük bir kare olarak render edilir. Seçili
+/// olduğunda yalnızca ince bir border ile belli olur; büyük arka plan veya
+/// chip görünümü yoktur.
+class _ColorOption extends StatelessWidget {
+  const _ColorOption({
+    required this.value,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String value;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(4),
+      child: Container(
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(
+          color: _resolveColor(value),
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(
+            color: selected ? theme.colorScheme.primary : theme.colorScheme.outline,
+            width: selected ? 2 : 1,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// `value`'yu (hex kod ya da bilinen bir renk adı) gösterilecek `Color`'a
+/// çevirir; ikisi de tanınmazsa nötr bir yer tutucu renk döner — kullanıcıya
+/// asla ham metin/hex gösterilmez.
+Color _resolveColor(String value) {
+  return _tryParseHexColor(value) ??
+      _namedColors[value.trim().toLowerCase()] ??
+      Colors.grey.shade300;
+}
+
+/// `"#RRGGBB"`/`"#AARRGGBB"` biçimindeki bir hex kodu `Color`'a çevirir;
+/// geçersizse `null` döner.
+Color? _tryParseHexColor(String value) {
+  final hex = value.trim();
+  if (!RegExp(r'^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$').hasMatch(hex)) return null;
+  final digits = hex.substring(1);
+  final argb = digits.length == 6 ? 'FF$digits' : digits;
+  return Color(int.parse(argb, radix: 16));
+}
+
+/// Backend'de hex yerine düz renk adı gelme ihtimaline karşı bilinen
+/// Türkçe renk adlarının karşılıkları.
+const _namedColors = <String, Color>{
+  'siyah': Colors.black,
+  'beyaz': Colors.white,
+  'kırmızı': Colors.red,
+  'kirmizi': Colors.red,
+  'mavi': Colors.blue,
+  'lacivert': Color(0xFF000080),
+  'yeşil': Colors.green,
+  'yesil': Colors.green,
+  'sarı': Colors.yellow,
+  'sari': Colors.yellow,
+  'turuncu': Colors.orange,
+  'mor': Colors.purple,
+  'pembe': Colors.pink,
+  'gri': Colors.grey,
+  'kahverengi': Colors.brown,
+  'bej': Color(0xFFF5F5DC),
+};
 
 class _PriceText extends ConsumerWidget {
   const _PriceText({
