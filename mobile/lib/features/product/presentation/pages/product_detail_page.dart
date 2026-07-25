@@ -10,6 +10,8 @@ import '../../../cart/presentation/widgets/cart_icon_button.dart';
 import '../../../favorites/domain/entities/favorite_item.dart';
 import '../../../favorites/presentation/widgets/favorite_button.dart';
 import '../../../review/domain/entities/review_item_type.dart';
+import '../../../review/domain/entities/review_summary.dart';
+import '../../../review/presentation/providers/review_providers.dart';
 import '../../../review/presentation/widgets/review_section.dart';
 import '../../domain/entities/product.dart';
 import '../../domain/entities/product_variant.dart';
@@ -140,13 +142,17 @@ class _ProductDetailState extends ConsumerState<_ProductDetail> {
   @override
   Widget build(BuildContext context) {
     final product = widget.product;
+    final theme = Theme.of(context);
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SizedBox(
-            height: 300,
+          // 3:4 en-boy oranı — web'deki `aspect-[3/4]` ürün görseli
+          // yerleşimiyle aynı; kenardan kenara (tam genişlik), eski sabit
+          // 300px yüksekliğe göre daha büyük ve dikkat çekici.
+          AspectRatio(
+            aspectRatio: 3 / 4,
             child: _ProductImageGallery(
               // Seçili varyant (ör. renk) değişince galerinin sıfırdan
               // (ilk sayfadan) başlaması için varyant id'sine göre key.
@@ -154,91 +160,180 @@ class _ProductDetailState extends ConsumerState<_ProductDetail> {
               imageUrls: _galleryImageUrls,
             ),
           ),
-          const SizedBox(height: 24),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Text(
-                  product.title,
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-              ),
-              FavoriteButton(
-                item: FavoriteItem(
-                  productId: product.id,
-                  title: product.title,
-                  imageUrl: product.imageUrl,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          _PriceText(
-            defaultPrice: product.price,
-            selectedVariantId: _selectedVariantId,
-            defaultVariantId: _defaultVariantId,
-          ),
-          const SizedBox(height: 20),
-          Text(
-            product.description,
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-          if (_hasSizeVariants) ...[
-            const SizedBox(height: 20),
-            Text('Beden', style: Theme.of(context).textTheme.titleSmall),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                for (final variant in _sortedBySizeOrder(product.variants))
-                  _SizeBox(
-                    label: variant.size,
-                    selected: _selectedVariantId == variant.id,
-                    onTap: () =>
-                        setState(() => _selectedVariantId = variant.id),
-                  ),
-              ],
-            ),
-          ],
-          if (_hasColorVariants) ...[
-            const SizedBox(height: 20),
-            Text('Renk', style: Theme.of(context).textTheme.titleSmall),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                for (final variant in product.variants)
-                  if (variant.color.isNotEmpty)
-                    _ColorOption(
-                      value: variant.color,
-                      selected: _selectedVariantId == variant.id,
-                      onTap: () =>
-                          setState(() => _selectedVariantId = variant.id),
+                if (product.category.isNotEmpty)
+                  Text(
+                    product.category.toUpperCase(),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      letterSpacing: 1.2,
                     ),
+                  ),
+                const SizedBox(height: 8),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        product.title,
+                        style: theme.textTheme.headlineMedium,
+                      ),
+                    ),
+                    FavoriteButton(
+                      item: FavoriteItem(
+                        productId: product.id,
+                        title: product.title,
+                        imageUrl: product.imageUrl,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                _ReviewSummaryRow(
+                  sellableItemId: _reviewSellableItemId,
+                  sellableItemType: _reviewSellableItemType,
+                ),
+                const SizedBox(height: 12),
+                _PriceText(
+                  defaultPrice: product.price,
+                  selectedVariantId: _selectedVariantId,
+                  defaultVariantId: _defaultVariantId,
+                ),
+                const SizedBox(height: 20),
+                Text(product.description, style: theme.textTheme.bodyLarge),
+                if (_hasSizeVariants) ...[
+                  const SizedBox(height: 24),
+                  Text(
+                    'BEDEN',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final variant in _sortedBySizeOrder(product.variants))
+                        _SizeBox(
+                          label: variant.size,
+                          selected: _selectedVariantId == variant.id,
+                          onTap: () =>
+                              setState(() => _selectedVariantId = variant.id),
+                        ),
+                    ],
+                  ),
+                ],
+                if (_hasColorVariants) ...[
+                  const SizedBox(height: 24),
+                  Text(
+                    'RENK',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: [
+                      for (final variant in product.variants)
+                        if (variant.color.isNotEmpty)
+                          _ColorOption(
+                            value: variant.color,
+                            selected: _selectedVariantId == variant.id,
+                            onTap: () =>
+                                setState(() => _selectedVariantId = variant.id),
+                          ),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 32),
+                SizedBox(
+                  height: 52,
+                  child: FilledButton.icon(
+                    onPressed: (_isAddingToCart || !_canAddToCart)
+                        ? null
+                        : _addToCart,
+                    icon: _isAddingToCart
+                        ? const SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.add_shopping_cart),
+                    label: Text(
+                      'SEPETE EKLE',
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: theme.colorScheme.onPrimary,
+                      ),
+                    ),
+                  ),
+                ),
+                ReviewSection(
+                  sellableItemId: _reviewSellableItemId,
+                  sellableItemType: _reviewSellableItemType,
+                ),
               ],
             ),
-          ],
-          const SizedBox(height: 32),
-          FilledButton.icon(
-            onPressed: (_isAddingToCart || !_canAddToCart) ? null : _addToCart,
-            icon: _isAddingToCart
-                ? const SizedBox(
-                    height: 18,
-                    width: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.add_shopping_cart),
-            label: const Text('Sepete Ekle'),
-          ),
-          ReviewSection(
-            sellableItemId: _reviewSellableItemId,
-            sellableItemType: _reviewSellableItemType,
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Ürün başlığının hemen altında kompakt bir "★ 4.5 (12)" özeti — web'in
+/// ürün detayındaki aynı yerleşimi. Zaten var olan
+/// `productReviewSummaryProvider`'ı izler; yeni provider/usecase eklenmedi.
+/// Değerlendirme yoksa (ya da yüklenirken/hata durumunda) hiçbir şey
+/// göstermez, aşağıdaki `ReviewSection` zaten tam durumu gösteriyor.
+class _ReviewSummaryRow extends ConsumerWidget {
+  const _ReviewSummaryRow({
+    required this.sellableItemId,
+    required this.sellableItemType,
+  });
+
+  final String sellableItemId;
+  final ReviewItemType sellableItemType;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final target = (
+      sellableItemId: sellableItemId,
+      sellableItemType: sellableItemType,
+    );
+    final summary = ref.watch(productReviewSummaryProvider(target));
+    return summary.when(
+      data: (result) => switch (result) {
+        Success<ReviewSummary>(:final value) when value.totalCount > 0 =>
+          Row(
+            children: [
+              const Icon(Icons.star, size: 16),
+              const SizedBox(width: 4),
+              Text(
+                value.averageRating.toStringAsFixed(1),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '(${value.totalCount} değerlendirme)',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
+        _ => const SizedBox.shrink(),
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
     );
   }
 }
@@ -272,6 +367,7 @@ class _ProductImageGalleryState extends State<_ProductImageGallery> {
     if (imageUrls.length <= 1) {
       return AppNetworkImage(
         imageUrl: imageUrls.isNotEmpty ? imageUrls.first : '',
+        fit: BoxFit.cover,
       );
     }
     return Stack(
@@ -281,24 +377,25 @@ class _ProductImageGalleryState extends State<_ProductImageGallery> {
           controller: _pageController,
           itemCount: imageUrls.length,
           onPageChanged: (index) => setState(() => _page = index),
-          itemBuilder: (context, index) =>
-              AppNetworkImage(imageUrl: imageUrls[index]),
+          itemBuilder: (context, index) => AppNetworkImage(
+            imageUrl: imageUrls[index],
+            fit: BoxFit.cover,
+          ),
         ),
         Padding(
-          padding: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.only(bottom: 12),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               for (var i = 0; i < imageUrls.length; i++)
-                Container(
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
                   margin: const EdgeInsets.symmetric(horizontal: 3),
-                  width: 6,
+                  width: i == _page ? 16 : 6,
                   height: 6,
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: i == _page
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).colorScheme.outlineVariant,
+                    borderRadius: BorderRadius.circular(3),
+                    color: Colors.white.withValues(alpha: i == _page ? 1 : .5),
                   ),
                 ),
             ],

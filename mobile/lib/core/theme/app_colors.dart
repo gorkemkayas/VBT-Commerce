@@ -6,17 +6,20 @@ import 'package:flutter/material.dart';
 /// Bu değerler tek doğruluk kaynağıdır — widget'larda hex kodu yazmayın,
 /// `Theme.of(context).colorScheme` üzerinden okuyun.
 abstract final class AppColors {
-  // Primary
-  static const primary = Color(0xFF0041C8);
+  // Primary — web'deki (Trendora) monokrom kimlikle uyumlu: parlak marka
+  // mavisi yerine neredeyse siyah/nötr gri aile. Linkler, seçili durumlar
+  // ve odak halkaları için kullanılır (web'de linkler de mavi değil,
+  // siyah + alt çizgi).
+  static const primary = Color(0xFF1C1B1B);
   static const onPrimary = Color(0xFFFFFFFF);
-  static const primaryContainer = Color(0xFF0055FF);
-  static const onPrimaryContainer = Color(0xFFE3E6FF);
+  static const primaryContainer = Color(0xFF3A3938);
+  static const onPrimaryContainer = Color(0xFFF6F3F2);
 
   // Secondary
-  static const secondary = Color(0xFF445AA7);
+  static const secondary = Color(0xFF5A5D5D);
   static const onSecondary = Color(0xFFFFFFFF);
-  static const secondaryContainer = Color(0xFF95AAFD);
-  static const onSecondaryContainer = Color(0xFF243C88);
+  static const secondaryContainer = Color(0xFFE5E2E1);
+  static const onSecondaryContainer = Color(0xFF1C1B1B);
 
   // Tertiary
   static const tertiary = Color(0xFF972500);
@@ -33,7 +36,7 @@ abstract final class AppColors {
   // Surface
   static const surface = Color(0xFFFCF9F8);
   static const onSurface = Color(0xFF1C1B1B);
-  static const onSurfaceVariant = Color(0xFF434656);
+  static const onSurfaceVariant = Color(0xFF57565A);
   static const surfaceContainerLowest = Color(0xFFFFFFFF);
   static const surfaceContainerLow = Color(0xFFF6F3F2);
   static const surfaceContainer = Color(0xFFF0EDED);
@@ -43,14 +46,14 @@ abstract final class AppColors {
   static const surfaceBright = Color(0xFFFCF9F8);
 
   // Outline
-  static const outline = Color(0xFF737688);
-  static const outlineVariant = Color(0xFFC3C5D9);
+  static const outline = Color(0xFF6E6E6E);
+  static const outlineVariant = Color(0xFFD8D6D5);
 
   // Inverse
   static const inverseSurface = Color(0xFF313030);
   static const onInverseSurface = Color(0xFFF3F0EF);
-  static const inversePrimary = Color(0xFFB6C4FF);
-  static const surfaceTint = Color(0xFF004DEA);
+  static const inversePrimary = Color(0xFFCFCCCB);
+  static const surfaceTint = Color(0xFF1C1B1B);
 
   /// Tasarımdaki birincil aksiyon butonları markanın mavisini değil,
   /// neredeyse siyah olan `onSurface` tonunu kullanır.
