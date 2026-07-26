@@ -57,13 +57,22 @@ class _ProductDetail extends ConsumerStatefulWidget {
 
 class _ProductDetailState extends ConsumerState<_ProductDetail> {
   bool _isAddingToCart = false;
-  String? _selectedVariantId;
+
+  /// Kullanıcının seçtiği renk/beden — ham varyant id'si değil, tekilleşmiş
+  /// öznitelik değeri. Gerçek varyant id'si (`_selectedVariantId`) bu
+  /// ikisinden türetilir (bkz. aşağısı).
+  String? _selectedColor;
+  String? _selectedSize;
 
   @override
   void initState() {
     super.initState();
+    // Tek varyant varsa (gerçek bir seçim yok) rengi/bedeni baştan seçili
+    // göster — eski davranışla aynı (`variants.length == 1` durumu).
     if (widget.product.variants.length == 1) {
-      _selectedVariantId = widget.product.variants.first.id;
+      final only = widget.product.variants.first;
+      _selectedColor = only.color.isEmpty ? null : only.color;
+      _selectedSize = only.size.isEmpty ? null : only.size;
     }
   }
 
@@ -82,6 +91,89 @@ class _ProductDetailState extends ConsumerState<_ProductDetail> {
   bool get _hasColorVariants =>
       widget.product.variants.any((variant) => variant.color.isNotEmpty);
 
+  /// Ürünün benzersiz renkleri — aynı renk birden fazla varyantta (farklı
+  /// bedenlerde) tekrar ediyorsa burada yalnızca bir kez yer alır.
+  List<String> get _uniqueColors {
+    final seen = <String>{};
+    return [
+      for (final variant in widget.product.variants)
+        if (variant.color.isNotEmpty && seen.add(variant.color)) variant.color,
+    ];
+  }
+
+  /// Ürünün tüm benzersiz bedenleri (mantıksal sırada), seçili renkten
+  /// bağımsız olarak — beden bölümü artık renk seçilmeden gizlenmiyor,
+  /// her zaman tüm bedenler gösteriliyor. Hangilerinin seçili renkte
+  /// gerçekten seçilebilir olduğu `_isSizeAvailable` ile ayrıca belirlenir.
+  List<String> get _allSizes {
+    final seen = <String>{};
+    return [
+      for (final variant in _sortedBySizeOrder(widget.product.variants))
+        if (variant.size.isNotEmpty && seen.add(variant.size)) variant.size,
+    ];
+  }
+
+  /// Bu beden, seçili renkte (bir renk seçildiyse) gerçekten bir varyant
+  /// olarak var mı? Renk henüz seçilmediyse (ya da ürünün renk boyutu
+  /// yoksa) her beden seçilebilir kabul edilir. Bu, "renk -> beden"
+  /// ilişkisinin mevcut varyant verisinden (her kaydın hem rengi hem
+  /// bedeni birlikte taşıması) doğrudan kurulduğu yer — geçersiz bir
+  /// renk+beden kombinasyonu bu sayede hiç seçilemez (buton disabled olur).
+  bool _isSizeAvailable(String size) {
+    if (!_hasColorVariants || _selectedColor == null) return true;
+    return widget.product.variants.any(
+      (variant) => variant.size == size && variant.color == _selectedColor,
+    );
+  }
+
+  /// Kullanıcının seçtiği renk+beden kombinasyonuna uyan gerçek varyant.
+  /// Sepete eklenen/backend'e gönderilen id hâlâ budur — sadece kullanıcıya
+  /// artık ham varyant listesi değil, tekilleşmiş seçenekler gösteriliyor.
+  /// Ürünün hem renk hem beden boyutu varsa, ikisi de seçilmeden `null`
+  /// kalır (sepete yanlış/eksik bir varyant eklenmesin diye kasıtlı).
+  String? get _selectedVariantId {
+    if (!_hasVariants) return null;
+    for (final variant in widget.product.variants) {
+      if (_hasColorVariants && variant.color != _selectedColor) continue;
+      if (_hasSizeVariants && variant.size != _selectedSize) continue;
+      return variant.id;
+    }
+    return null;
+  }
+
+  /// Galeri/fiyat önizlemesi için kullanılır — `_selectedVariantId`'nin
+  /// aksine, kullanıcı henüz **tüm** boyutları seçmemiş olsa bile (ör.
+  /// sadece renk seçip bedeni henüz seçmediyse) şimdiye kadar seçilenlere
+  /// uyan İLK varyantı gösterir. Bu sayede bir renge dokunur dokunmaz
+  /// ürün görseli/fiyatı hemen o renge geçer — beden seçimi tamamlanmasını
+  /// beklemez. Sepete ekleme bundan ETKİLENMEZ, o hâlâ kesin eşleşme
+  /// (`_selectedVariantId`) kullanır.
+  String? get _previewVariantId {
+    if (_selectedVariantId != null) return _selectedVariantId;
+    if (!_hasVariants) return null;
+    for (final variant in widget.product.variants) {
+      if (_selectedColor != null && variant.color != _selectedColor) continue;
+      if (_selectedSize != null && variant.size != _selectedSize) continue;
+      return variant.id;
+    }
+    return _defaultVariantId;
+  }
+
+  void _selectColor(String color) {
+    setState(() {
+      _selectedColor = color;
+      // Yeni renkte artık mevcut olmayan bir beden seçiliyse sıfırla —
+      // kullanıcı geçersiz bir renk+beden kombinasyonunda kalmasın.
+      if (_selectedSize != null && !_isSizeAvailable(_selectedSize!)) {
+        _selectedSize = null;
+      }
+    });
+  }
+
+  void _selectSize(String size) {
+    setState(() => _selectedSize = size);
+  }
+
   bool get _canAddToCart => !_hasVariants || _selectedVariantId != null;
 
   /// `product.price`, repository tarafından bu varyant üzerinden zaten
@@ -96,7 +188,7 @@ class _ProductDetailState extends ConsumerState<_ProductDetail> {
   /// olabilir) ürünün genel görsellerine, o da yoksa tekil `imageUrl`'e
   /// düşülür.
   List<String> get _galleryImageUrls {
-    final variantId = _selectedVariantId ?? _defaultVariantId;
+    final variantId = _previewVariantId;
     if (variantId != null) {
       for (final variant in widget.product.variants) {
         if (variant.id == variantId && variant.imageUrls.isNotEmpty) {
@@ -156,7 +248,7 @@ class _ProductDetailState extends ConsumerState<_ProductDetail> {
             child: _ProductImageGallery(
               // Seçili varyant (ör. renk) değişince galerinin sıfırdan
               // (ilk sayfadan) başlaması için varyant id'sine göre key.
-              key: ValueKey(_selectedVariantId ?? _defaultVariantId ?? 'default'),
+              key: ValueKey(_previewVariantId ?? 'default'),
               imageUrls: _galleryImageUrls,
             ),
           ),
@@ -199,34 +291,11 @@ class _ProductDetailState extends ConsumerState<_ProductDetail> {
                 const SizedBox(height: 12),
                 _PriceText(
                   defaultPrice: product.price,
-                  selectedVariantId: _selectedVariantId,
+                  selectedVariantId: _previewVariantId,
                   defaultVariantId: _defaultVariantId,
                 ),
                 const SizedBox(height: 20),
                 Text(product.description, style: theme.textTheme.bodyLarge),
-                if (_hasSizeVariants) ...[
-                  const SizedBox(height: 24),
-                  Text(
-                    'BEDEN',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      for (final variant in _sortedBySizeOrder(product.variants))
-                        _SizeBox(
-                          label: variant.size,
-                          selected: _selectedVariantId == variant.id,
-                          onTap: () =>
-                              setState(() => _selectedVariantId = variant.id),
-                        ),
-                    ],
-                  ),
-                ],
                 if (_hasColorVariants) ...[
                   const SizedBox(height: 24),
                   Text(
@@ -240,14 +309,35 @@ class _ProductDetailState extends ConsumerState<_ProductDetail> {
                     spacing: 10,
                     runSpacing: 10,
                     children: [
-                      for (final variant in product.variants)
-                        if (variant.color.isNotEmpty)
-                          _ColorOption(
-                            value: variant.color,
-                            selected: _selectedVariantId == variant.id,
-                            onTap: () =>
-                                setState(() => _selectedVariantId = variant.id),
-                          ),
+                      for (final color in _uniqueColors)
+                        _ColorOption(
+                          value: color,
+                          selected: _selectedColor == color,
+                          onTap: () => _selectColor(color),
+                        ),
+                    ],
+                  ),
+                ],
+                if (_hasSizeVariants) ...[
+                  const SizedBox(height: 24),
+                  Text(
+                    'BEDEN',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final size in _allSizes)
+                        _SizeBox(
+                          label: size,
+                          selected: _selectedSize == size,
+                          disabled: !_isSizeAvailable(size),
+                          onTap: () => _selectSize(size),
+                        ),
                     ],
                   ),
                 ],
@@ -428,17 +518,23 @@ class _SizeBox extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    this.disabled = false,
   });
 
   final String label;
   final bool selected;
   final VoidCallback onTap;
 
+  /// Seçili renkte bu bedenin gerçek bir varyantı yoksa `true` — buton
+  /// tıklanamaz hale getirilir ve soluk gösterilir, böylece geçersiz bir
+  /// renk+beden kombinasyonu hiç seçilemez (silinmek yerine görünür kalır).
+  final bool disabled;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return InkWell(
-      onTap: onTap,
+      onTap: disabled ? null : onTap,
       borderRadius: BorderRadius.circular(4),
       child: Container(
         width: 48,
@@ -447,7 +543,9 @@ class _SizeBox extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected ? theme.colorScheme.primaryContainer : null,
           border: Border.all(
-            color: selected
+            color: disabled
+                ? theme.colorScheme.outline.withValues(alpha: .3)
+                : selected
                 ? theme.colorScheme.primary
                 : theme.colorScheme.outline,
             width: selected ? 2 : 1,
@@ -458,7 +556,9 @@ class _SizeBox extends StatelessWidget {
           label,
           style: TextStyle(
             fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-            color: selected
+            color: disabled
+                ? theme.colorScheme.onSurface.withValues(alpha: .3)
+                : selected
                 ? theme.colorScheme.primary
                 : theme.colorScheme.onSurface,
           ),
