@@ -73,6 +73,17 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Result<bool>> logout() async {
     try {
+      final cachedUser = await _local.getCachedUser();
+      try {
+        // Ek güvenlik: sunucudaki refresh token'ı iptal eder (bkz.
+        // backend `LogoutCommandHandler.Revoke()`) — web'in yaptığı gibi.
+        // Bu çağrı başarısız olsa bile (ağ hatası, timeout, backend hatası)
+        // kullanıcı yine de çıkış yapabilmeli; bu yüzden hata burada
+        // yutulur ve local temizleme her zaman devam eder.
+        await _remote.logout(cachedUser?.refreshToken);
+      } catch (_) {
+        // Kasıtlı olarak yutuluyor — bkz. yukarıdaki not.
+      }
       await _local.clearUser();
       return const Result.success(true);
     } catch (_) {

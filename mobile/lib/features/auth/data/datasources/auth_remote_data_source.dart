@@ -13,6 +13,11 @@ abstract interface class AuthRemoteDataSource {
   });
   Future<void> forgotPassword(String email);
   Future<void> resetPassword({required String token, required String newPassword});
+
+  /// `POST /api/auth/logout`. Refresh token gövdede gönderilir — mobilde
+  /// (web'in aksine) oturum cookie'si yok, backend `refreshToken` gövdede
+  /// de yoksa isteği reddeder (bkz. `AuthController.ResolveIncomingRefreshToken`).
+  Future<void> logout(String? refreshToken);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -89,6 +94,14 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     await _dio.post<void>(
       '/api/auth/reset-password',
       data: {'token': token, 'newPassword': newPassword},
+    );
+  }
+
+  @override
+  Future<void> logout(String? refreshToken) async {
+    await _dio.post<void>(
+      '/api/auth/logout',
+      data: {'refreshToken': refreshToken},
     );
   }
 }
