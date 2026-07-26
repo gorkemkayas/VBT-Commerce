@@ -3,6 +3,7 @@ import '../../../../core/utils/result.dart';
 import '../../../cart/domain/entities/cart_item.dart';
 import '../../../cart/domain/repositories/cart_repository.dart';
 import '../entities/order.dart';
+import '../entities/payment_card_info.dart';
 import '../repositories/checkout_repository.dart';
 
 class CompleteOrderUseCase {
@@ -16,6 +17,7 @@ class CompleteOrderUseCase {
     required String? shippingCompanyId,
     required List<CartItem> items,
     List<String> couponCodes = const [],
+    required PaymentCardInfo cardInfo,
   }) async {
     if (addressId == null || addressId.isEmpty) {
       return const Result.failure(
@@ -36,6 +38,7 @@ class CompleteOrderUseCase {
       shippingCompanyId: shippingCompanyId,
       items: items,
       couponCodes: couponCodes,
+      cardInfo: cardInfo,
     );
     if (result case Success<Order>()) {
       await _cartRepository.clearCart();

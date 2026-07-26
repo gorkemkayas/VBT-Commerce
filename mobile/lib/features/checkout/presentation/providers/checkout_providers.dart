@@ -16,6 +16,7 @@ import '../../data/repositories/checkout_repository_impl.dart';
 import '../../domain/entities/guest_billing_info.dart';
 import '../../domain/entities/guest_checkout_info.dart';
 import '../../domain/entities/order.dart';
+import '../../domain/entities/payment_card_info.dart';
 import '../../domain/entities/price_calculation.dart';
 import '../../domain/entities/shipping_company.dart';
 import '../../domain/repositories/checkout_repository.dart';
@@ -379,7 +380,10 @@ class CheckoutController extends Notifier<CheckoutState> {
     );
   }
 
-  Future<void> completeOrder(List<CartItem> items) async {
+  Future<void> completeOrder(
+    List<CartItem> items, {
+    required PaymentCardInfo cardInfo,
+  }) async {
     // Web'deki aynı kontrol: "aynı adres" kapalıyken bir fatura adresi
     // seçilmemişse sipariş denemeden önce durdurulur.
     if (!state.sameBillingAddress && state.billingAddressId == null) {
@@ -397,6 +401,7 @@ class CheckoutController extends Notifier<CheckoutState> {
       shippingCompanyId: state.selectedShippingCompanyId,
       items: items,
       couponCodes: state.couponCodes,
+      cardInfo: cardInfo,
     );
     state = switch (result) {
       Success<Order>(:final value) => state.copyWith(
@@ -429,7 +434,10 @@ class CheckoutController extends Notifier<CheckoutState> {
     };
   }
 
-  Future<void> completeGuestOrder(List<CartItem> items) async {
+  Future<void> completeGuestOrder(
+    List<CartItem> items, {
+    required PaymentCardInfo cardInfo,
+  }) async {
     final guestCustomerId = state.guestCustomerId;
     final guestInfo = state.guestInfo;
     if (guestCustomerId == null || guestInfo == null) {
@@ -460,6 +468,7 @@ class CheckoutController extends Notifier<CheckoutState> {
       billingInfo: state.sameBillingAddress ? null : state.guestBillingInfo,
       items: items,
       couponCodes: state.couponCodes,
+      cardInfo: cardInfo,
     );
     state = switch (result) {
       Success<Order>(:final value) => state.copyWith(

@@ -7,6 +7,7 @@ import '../../../cart/domain/entities/cart_item.dart';
 import '../../domain/entities/guest_billing_info.dart';
 import '../../domain/entities/guest_checkout_info.dart';
 import '../../domain/entities/order.dart';
+import '../../domain/entities/payment_card_info.dart';
 import '../../domain/entities/price_calculation.dart';
 import '../../domain/entities/shipping_company.dart';
 import '../../domain/repositories/checkout_repository.dart';
@@ -38,6 +39,7 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
     required String shippingCompanyId,
     required List<CartItem> items,
     required List<String> couponCodes,
+    required PaymentCardInfo cardInfo,
   }) async {
     try {
       final orderId = await _orderDataSource.placeMyOrder(
@@ -45,6 +47,12 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
         billingAddressId: billingAddressId,
         shippingCompanyId: shippingCompanyId,
         couponCodes: couponCodes,
+        cardHolderName: cardInfo.cardHolderName,
+        cardNumber: cardInfo.cardNumber,
+        cardExpireMonth: cardInfo.cardExpireMonth,
+        cardExpireYear: cardInfo.cardExpireYear,
+        cardCvc: cardInfo.cardCvc,
+        buyerIdentityNumber: cardInfo.buyerIdentityNumber,
       );
       final total = items.fold(0.0, (total, item) => total + item.lineTotal);
       return Result.success(
@@ -163,6 +171,7 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
     GuestBillingInfo? billingInfo,
     required List<CartItem> items,
     required List<String> couponCodes,
+    required PaymentCardInfo cardInfo,
   }) async {
     try {
       final orderId = await _orderDataSource.placeGuestOrder(
@@ -185,6 +194,12 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
         billingPostalCode: billingInfo?.postalCode,
         billingAddressLine1: billingInfo?.addressLine1,
         billingAddressLine2: billingInfo?.addressLine2,
+        cardHolderName: cardInfo.cardHolderName,
+        cardNumber: cardInfo.cardNumber,
+        cardExpireMonth: cardInfo.cardExpireMonth,
+        cardExpireYear: cardInfo.cardExpireYear,
+        cardCvc: cardInfo.cardCvc,
+        buyerIdentityNumber: cardInfo.buyerIdentityNumber,
       );
       final total = items.fold(0.0, (total, item) => total + item.lineTotal);
       return Result.success(

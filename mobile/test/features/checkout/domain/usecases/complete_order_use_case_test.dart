@@ -5,6 +5,7 @@ import 'package:commerce_mobile/features/cart/domain/repositories/cart_repositor
 import 'package:commerce_mobile/features/checkout/domain/entities/guest_billing_info.dart';
 import 'package:commerce_mobile/features/checkout/domain/entities/guest_checkout_info.dart';
 import 'package:commerce_mobile/features/checkout/domain/entities/order.dart';
+import 'package:commerce_mobile/features/checkout/domain/entities/payment_card_info.dart';
 import 'package:commerce_mobile/features/checkout/domain/entities/price_calculation.dart';
 import 'package:commerce_mobile/features/checkout/domain/entities/shipping_company.dart';
 import 'package:commerce_mobile/features/checkout/domain/repositories/checkout_repository.dart';
@@ -21,6 +22,7 @@ class _FakeCheckoutRepository implements CheckoutRepository {
     required String shippingCompanyId,
     required List<CartItem> items,
     required List<String> couponCodes,
+    required PaymentCardInfo cardInfo,
   }) async {
     callCount++;
     return Result.success(
@@ -79,6 +81,7 @@ class _FakeCheckoutRepository implements CheckoutRepository {
     GuestBillingInfo? billingInfo,
     required List<CartItem> items,
     required List<String> couponCodes,
+    required PaymentCardInfo cardInfo,
   }) async => Result.success(
     Order(
       orderId: 'TEST-GUEST-1',
@@ -123,6 +126,14 @@ class _FakeCartRepository implements CartRepository {
 }
 
 void main() {
+  const cardInfo = PaymentCardInfo(
+    cardHolderName: 'Test User',
+    cardNumber: '5528790000000008',
+    cardExpireMonth: '12',
+    cardExpireYear: '2030',
+    cardCvc: '123',
+    buyerIdentityNumber: '74300864791',
+  );
   const item = CartItem(
     id: 'item-1',
     sellableItemId: 'variant-1',
@@ -144,6 +155,7 @@ void main() {
         addressId: null,
         shippingCompanyId: 'shipping-1',
         items: [item],
+        cardInfo: cardInfo,
       );
 
       expect(result, isA<ResultFailure<Order>>());
@@ -167,6 +179,7 @@ void main() {
         addressId: 'address-1',
         shippingCompanyId: null,
         items: [item],
+        cardInfo: cardInfo,
       );
 
       expect(result, isA<ResultFailure<Order>>());
@@ -187,6 +200,7 @@ void main() {
       addressId: 'address-1',
       shippingCompanyId: 'shipping-1',
       items: const [],
+      cardInfo: cardInfo,
     );
 
     expect(result, isA<ResultFailure<Order>>());
@@ -202,6 +216,7 @@ void main() {
       addressId: 'address-1',
       shippingCompanyId: 'shipping-1',
       items: [item],
+      cardInfo: cardInfo,
     );
 
     expect(result, isA<Success<Order>>());

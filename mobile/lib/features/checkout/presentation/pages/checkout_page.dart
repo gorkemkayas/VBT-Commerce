@@ -5,12 +5,14 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/route_paths.dart';
 import '../../../../core/utils/result.dart';
 import '../../../../core/widgets/async_state_views.dart';
+import '../../../cart/domain/entities/cart_item.dart';
 import '../../../cart/presentation/providers/cart_providers.dart';
 import '../../../customer/domain/entities/customer.dart';
 import '../../../customer/domain/entities/customer_address.dart';
 import '../../../customer/presentation/providers/customer_providers.dart';
 import '../../../orders/presentation/providers/order_providers.dart';
 import '../../domain/entities/guest_checkout_info.dart';
+import '../../domain/entities/payment_card_info.dart';
 import '../../domain/entities/shipping_company.dart';
 import '../providers/checkout_providers.dart';
 import '../widgets/address_selector.dart';
@@ -19,14 +21,61 @@ import '../widgets/complete_order_button.dart';
 import '../widgets/coupon_input.dart';
 import '../widgets/guest_checkout_form.dart';
 import '../widgets/order_summary_view.dart';
+import '../widgets/payment_card_form.dart';
 import '../widgets/payment_summary_view.dart';
 import '../widgets/shipping_company_selector.dart';
 
-class CheckoutPage extends ConsumerWidget {
+class CheckoutPage extends ConsumerStatefulWidget {
   const CheckoutPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CheckoutPage> createState() => _CheckoutPageState();
+}
+
+/// Kart alanları yalnızca bu state ömrü boyunca bellekte tutulur; hiçbir
+/// yerde (Riverpod state, local storage) kalıcı hale getirilmez. Sayfa
+/// kapanınca (`dispose`) silinir — web'deki gibi her sipariş denemesinde
+/// kullanıcı formu yeniden doldurur.
+class _CheckoutPageState extends ConsumerState<CheckoutPage> {
+  final _cardFormKey = GlobalKey<FormState>();
+  final _cardHolderNameController = TextEditingController();
+  final _cardNumberController = TextEditingController();
+  final _cardExpireMonthController = TextEditingController();
+  final _cardExpireYearController = TextEditingController();
+  final _cardCvcController = TextEditingController();
+  final _buyerIdentityNumberController = TextEditingController();
+
+  @override
+  void dispose() {
+    _cardHolderNameController.dispose();
+    _cardNumberController.dispose();
+    _cardExpireMonthController.dispose();
+    _cardExpireYearController.dispose();
+    _cardCvcController.dispose();
+    _buyerIdentityNumberController.dispose();
+    super.dispose();
+  }
+
+  void _submitOrder(bool loggedIn, List<CartItem> items) {
+    if (!_cardFormKey.currentState!.validate()) return;
+    final cardInfo = PaymentCardInfo(
+      cardHolderName: _cardHolderNameController.text.trim(),
+      cardNumber: _cardNumberController.text.trim(),
+      cardExpireMonth: _cardExpireMonthController.text.trim(),
+      cardExpireYear: _cardExpireYearController.text.trim(),
+      cardCvc: _cardCvcController.text.trim(),
+      buyerIdentityNumber: _buyerIdentityNumberController.text.trim(),
+    );
+    final controller = ref.read(checkoutControllerProvider.notifier);
+    if (loggedIn) {
+      controller.completeOrder(items, cardInfo: cardInfo);
+    } else {
+      controller.completeGuestOrder(items, cardInfo: cardInfo);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final cartState = ref.watch(cartControllerProvider);
     final checkoutState = ref.watch(checkoutControllerProvider);
     final controller = ref.read(checkoutControllerProvider.notifier);
@@ -127,6 +176,17 @@ class CheckoutPage extends ConsumerWidget {
                   const SizedBox(height: 16),
                   const CouponInput(),
                   const SizedBox(height: 16),
+                  PaymentCardForm(
+                    formKey: _cardFormKey,
+                    cardHolderNameController: _cardHolderNameController,
+                    cardNumberController: _cardNumberController,
+                    cardExpireMonthController: _cardExpireMonthController,
+                    cardExpireYearController: _cardExpireYearController,
+                    cardCvcController: _cardCvcController,
+                    buyerIdentityNumberController:
+                        _buyerIdentityNumberController,
+                  ),
+                  const SizedBox(height: 16),
                   const PaymentSummaryView(),
                   const SizedBox(height: 24),
                   CompleteOrderButton(
@@ -140,9 +200,8 @@ class CheckoutPage extends ConsumerWidget {
                             checkoutState.selectedShippingCompanyId != null,
                       null => false,
                     },
-                    onPressed: () => loggedIn == true
-                        ? controller.completeOrder(cartState.items)
-                        : controller.completeGuestOrder(cartState.items),
+                    onPressed: () =>
+                        _submitOrder(loggedIn == true, cartState.items),
                   ),
                 ],
               ),

@@ -6,6 +6,12 @@ abstract interface class OrderRemoteDataSource {
     String? billingAddressId,
     required String shippingCompanyId,
     required List<String> couponCodes,
+    required String cardHolderName,
+    required String cardNumber,
+    required String cardExpireMonth,
+    required String cardExpireYear,
+    required String cardCvc,
+    required String buyerIdentityNumber,
   });
   Future<String> placeGuestOrder({
     required String guestCustomerId,
@@ -27,20 +33,25 @@ abstract interface class OrderRemoteDataSource {
     String? billingPostalCode,
     String? billingAddressLine1,
     String? billingAddressLine2,
+    required String cardHolderName,
+    required String cardNumber,
+    required String cardExpireMonth,
+    required String cardExpireYear,
+    required String cardCvc,
+    required String buyerIdentityNumber,
   });
 }
 
 /// `POST /api/orders/me`. Backend, kart bilgisini ve kupon listesini zorunlu
-/// tutuyor. Ödeme formu ve kupon girişi bu görevin kapsamı dışında olduğu için
-/// bu alanlar sabit değerlerle gönderilir; ayrı bir görevde gerçek form/seçimle
-/// değiştirilecek.
+/// tutuyor. Kart alanları artık `PaymentCardForm` ile kullanıcıdan alınır
+/// (bkz. `CheckoutPage`) ve olduğu gibi buraya iletilir — burada sabit bir
+/// değer üretilmez.
 ///
 /// ÖNEMLİ: Ödeme sahte değildir — backend `IyzicoGateway` üzerinden gerçekten
 /// iyzico sandbox'a istek atar (bkz. `appsettings.Development.json` →
 /// `Iyzico.BaseUrl`). Bu yüzden kart, iyzico'nun *kendi* sandbox test
 /// kartlarından biri olmak zorundadır; `4111...` gibi genel test numaraları
-/// "Payment declined" (402) ile reddedilir. Aşağıdaki kart/kimlik numarası
-/// iyzico'nun dokümante ettiği sandbox test değerleridir.
+/// "Payment declined" (402) ile reddedilir.
 class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
   OrderRemoteDataSourceImpl(this._dio);
   final Dio _dio;
@@ -51,6 +62,12 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
     String? billingAddressId,
     required String shippingCompanyId,
     required List<String> couponCodes,
+    required String cardHolderName,
+    required String cardNumber,
+    required String cardExpireMonth,
+    required String cardExpireYear,
+    required String cardCvc,
+    required String buyerIdentityNumber,
   }) async {
     final response = await _dio.post<dynamic>(
       '/api/orders/me',
@@ -59,13 +76,12 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
         'billingAddressId': billingAddressId,
         'shippingCompanyId': shippingCompanyId,
         'couponCodes': couponCodes,
-        // iyzico sandbox test kartı (Halkbank, Master Card - Debit).
-        'cardHolderName': 'John Doe',
-        'cardNumber': '5528790000000008',
-        'cardExpireMonth': '12',
-        'cardExpireYear': '2030',
-        'cardCvc': '123',
-        'buyerIdentityNumber': '74300864791',
+        'cardHolderName': cardHolderName,
+        'cardNumber': cardNumber,
+        'cardExpireMonth': cardExpireMonth,
+        'cardExpireYear': cardExpireYear,
+        'cardCvc': cardCvc,
+        'buyerIdentityNumber': buyerIdentityNumber,
       },
     );
     final id = response.data;
@@ -77,8 +93,7 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
     return id;
   }
 
-  /// `POST /api/orders/guest`. Aynı iyzico sandbox test kartı `placeMyOrder`
-  /// ile paylaşılır — bkz. yukarıdaki ÖNEMLİ notu.
+  /// `POST /api/orders/guest`.
   @override
   Future<String> placeGuestOrder({
     required String guestCustomerId,
@@ -100,6 +115,12 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
     String? billingPostalCode,
     String? billingAddressLine1,
     String? billingAddressLine2,
+    required String cardHolderName,
+    required String cardNumber,
+    required String cardExpireMonth,
+    required String cardExpireYear,
+    required String cardCvc,
+    required String buyerIdentityNumber,
   }) async {
     final response = await _dio.post<dynamic>(
       '/api/orders/guest',
@@ -123,13 +144,12 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
         'billingPostalCode': billingPostalCode,
         'billingAddressLine1': billingAddressLine1,
         'billingAddressLine2': billingAddressLine2,
-        // iyzico sandbox test kartı (Halkbank, Master Card - Debit).
-        'cardHolderName': 'John Doe',
-        'cardNumber': '5528790000000008',
-        'cardExpireMonth': '12',
-        'cardExpireYear': '2030',
-        'cardCvc': '123',
-        'buyerIdentityNumber': '74300864791',
+        'cardHolderName': cardHolderName,
+        'cardNumber': cardNumber,
+        'cardExpireMonth': cardExpireMonth,
+        'cardExpireYear': cardExpireYear,
+        'cardCvc': cardCvc,
+        'buyerIdentityNumber': buyerIdentityNumber,
       },
     );
     final id = response.data;

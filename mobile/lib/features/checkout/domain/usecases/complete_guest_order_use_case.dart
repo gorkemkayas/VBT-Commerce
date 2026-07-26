@@ -5,6 +5,7 @@ import '../../../cart/domain/repositories/cart_repository.dart';
 import '../entities/guest_billing_info.dart';
 import '../entities/guest_checkout_info.dart';
 import '../entities/order.dart';
+import '../entities/payment_card_info.dart';
 import '../repositories/checkout_repository.dart';
 
 class CompleteGuestOrderUseCase {
@@ -20,6 +21,7 @@ class CompleteGuestOrderUseCase {
     GuestBillingInfo? billingInfo,
     required List<CartItem> items,
     List<String> couponCodes = const [],
+    required PaymentCardInfo cardInfo,
   }) async {
     if (shippingCompanyId == null || shippingCompanyId.isEmpty) {
       return const Result.failure(
@@ -37,6 +39,7 @@ class CompleteGuestOrderUseCase {
       billingInfo: billingInfo,
       items: items,
       couponCodes: couponCodes,
+      cardInfo: cardInfo,
     );
     if (result case Success<Order>()) {
       await _cartRepository.clearCart();

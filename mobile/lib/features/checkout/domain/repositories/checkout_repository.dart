@@ -3,6 +3,7 @@ import '../../../cart/domain/entities/cart_item.dart';
 import '../entities/guest_billing_info.dart';
 import '../entities/guest_checkout_info.dart';
 import '../entities/order.dart';
+import '../entities/payment_card_info.dart';
 import '../entities/price_calculation.dart';
 import '../entities/shipping_company.dart';
 
@@ -16,6 +17,7 @@ abstract interface class CheckoutRepository {
     required String shippingCompanyId,
     required List<CartItem> items,
     required List<String> couponCodes,
+    required PaymentCardInfo cardInfo,
   });
 
   /// `POST /api/pricing/calculate/me` üzerinden vergi/indirim dahil gerçek
@@ -55,5 +57,6 @@ abstract interface class CheckoutRepository {
     GuestBillingInfo? billingInfo,
     required List<CartItem> items,
     required List<String> couponCodes,
+    required PaymentCardInfo cardInfo,
   });
 }
