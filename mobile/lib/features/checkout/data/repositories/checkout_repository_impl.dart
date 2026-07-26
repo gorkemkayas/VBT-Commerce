@@ -4,6 +4,7 @@ import '../../../../core/errors/failure.dart';
 import '../../../../core/network/network_error_mapper.dart';
 import '../../../../core/utils/result.dart';
 import '../../../cart/domain/entities/cart_item.dart';
+import '../../domain/entities/guest_billing_info.dart';
 import '../../domain/entities/guest_checkout_info.dart';
 import '../../domain/entities/order.dart';
 import '../../domain/entities/price_calculation.dart';
@@ -33,6 +34,7 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
   @override
   Future<Result<Order>> completeOrder({
     required String addressId,
+    String? billingAddressId,
     required String shippingCompanyId,
     required List<CartItem> items,
     required List<String> couponCodes,
@@ -40,6 +42,7 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
     try {
       final orderId = await _orderDataSource.placeMyOrder(
         addressId: addressId,
+        billingAddressId: billingAddressId,
         shippingCompanyId: shippingCompanyId,
         couponCodes: couponCodes,
       );
@@ -157,6 +160,7 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
     required String anonymousId,
     required String shippingCompanyId,
     required GuestCheckoutInfo info,
+    GuestBillingInfo? billingInfo,
     required List<CartItem> items,
     required List<String> couponCodes,
   }) async {
@@ -174,6 +178,13 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
         postalCode: info.postalCode,
         addressLine1: info.addressLine1,
         addressLine2: info.addressLine2,
+        billingRecipientName: billingInfo?.recipientName,
+        billingCountry: billingInfo?.country,
+        billingCity: billingInfo?.city,
+        billingDistrict: billingInfo?.district,
+        billingPostalCode: billingInfo?.postalCode,
+        billingAddressLine1: billingInfo?.addressLine1,
+        billingAddressLine2: billingInfo?.addressLine2,
       );
       final total = items.fold(0.0, (total, item) => total + item.lineTotal);
       return Result.success(

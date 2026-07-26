@@ -2,6 +2,7 @@ import '../../../../core/errors/failure.dart';
 import '../../../../core/utils/result.dart';
 import '../../../cart/domain/entities/cart_item.dart';
 import '../../../cart/domain/repositories/cart_repository.dart';
+import '../entities/guest_billing_info.dart';
 import '../entities/guest_checkout_info.dart';
 import '../entities/order.dart';
 import '../repositories/checkout_repository.dart';
@@ -16,6 +17,7 @@ class CompleteGuestOrderUseCase {
     required String anonymousId,
     required String? shippingCompanyId,
     required GuestCheckoutInfo info,
+    GuestBillingInfo? billingInfo,
     required List<CartItem> items,
     List<String> couponCodes = const [],
   }) async {
@@ -32,6 +34,7 @@ class CompleteGuestOrderUseCase {
       anonymousId: anonymousId,
       shippingCompanyId: shippingCompanyId,
       info: info,
+      billingInfo: billingInfo,
       items: items,
       couponCodes: couponCodes,
     );

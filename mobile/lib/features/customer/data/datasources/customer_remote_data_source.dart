@@ -98,5 +98,7 @@ class CustomerRemoteDataSourceImpl implements CustomerRemoteDataSource {
     'addressLine1': input.addressLine1,
     'addressLine2': input.addressLine2,
     'isDefault': input.isDefault,
+    'isShippingAddress': input.isShippingAddress,
+    'isBillingAddress': input.isBillingAddress,
   };
 }

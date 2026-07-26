@@ -1,13 +1,18 @@
 import '../../../../core/utils/result.dart';
 import '../../../cart/domain/entities/cart_item.dart';
+import '../entities/guest_billing_info.dart';
 import '../entities/guest_checkout_info.dart';
 import '../entities/order.dart';
 import '../entities/price_calculation.dart';
 import '../entities/shipping_company.dart';
 
 abstract interface class CheckoutRepository {
+  /// `billingAddressId`, `null` ise fatura adresi teslimat adresiyle aynı
+  /// kabul edilir (backend bu alanı opsiyonel tutar, bkz.
+  /// `PlaceMyOrderCommand.BillingAddressId`).
   Future<Result<Order>> completeOrder({
     required String addressId,
+    String? billingAddressId,
     required String shippingCompanyId,
     required List<CartItem> items,
     required List<String> couponCodes,
@@ -40,12 +45,14 @@ abstract interface class CheckoutRepository {
     List<String> couponCodes,
   );
 
-  /// `POST /api/orders/guest`.
+  /// `POST /api/orders/guest`. `billingInfo`, `null` ise fatura adresi
+  /// teslimat adresiyle aynı kabul edilir.
   Future<Result<Order>> completeGuestOrder({
     required String guestCustomerId,
     required String anonymousId,
     required String shippingCompanyId,
     required GuestCheckoutInfo info,
+    GuestBillingInfo? billingInfo,
     required List<CartItem> items,
     required List<String> couponCodes,
   });

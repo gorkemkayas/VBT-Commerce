@@ -2,6 +2,7 @@ import 'package:commerce_mobile/core/errors/failure.dart';
 import 'package:commerce_mobile/core/utils/result.dart';
 import 'package:commerce_mobile/features/cart/domain/entities/cart_item.dart';
 import 'package:commerce_mobile/features/cart/domain/repositories/cart_repository.dart';
+import 'package:commerce_mobile/features/checkout/domain/entities/guest_billing_info.dart';
 import 'package:commerce_mobile/features/checkout/domain/entities/guest_checkout_info.dart';
 import 'package:commerce_mobile/features/checkout/domain/entities/order.dart';
 import 'package:commerce_mobile/features/checkout/domain/entities/price_calculation.dart';
@@ -16,6 +17,7 @@ class _FakeCheckoutRepository implements CheckoutRepository {
   @override
   Future<Result<Order>> completeOrder({
     required String addressId,
+    String? billingAddressId,
     required String shippingCompanyId,
     required List<CartItem> items,
     required List<String> couponCodes,
@@ -74,6 +76,7 @@ class _FakeCheckoutRepository implements CheckoutRepository {
     required String anonymousId,
     required String shippingCompanyId,
     required GuestCheckoutInfo info,
+    GuestBillingInfo? billingInfo,
     required List<CartItem> items,
     required List<String> couponCodes,
   }) async => Result.success(

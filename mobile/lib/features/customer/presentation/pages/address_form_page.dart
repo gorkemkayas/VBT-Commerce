@@ -58,6 +58,8 @@ class _AddressFormPageState extends ConsumerState<AddressFormPage> {
     text: widget.existing?.addressLine2,
   );
   late bool _isDefault = widget.existing?.isDefault ?? false;
+  late bool _isShippingAddress = widget.existing?.isShippingAddress ?? true;
+  late bool _isBillingAddress = widget.existing?.isBillingAddress ?? false;
   bool _isSubmitting = false;
 
   @override
@@ -93,6 +95,8 @@ class _AddressFormPageState extends ConsumerState<AddressFormPage> {
           ? null
           : _addressLine2Controller.text.trim(),
       isDefault: _isDefault,
+      isShippingAddress: _isShippingAddress,
+      isBillingAddress: _isBillingAddress,
     );
     final controller = ref.read(addressesControllerProvider.notifier);
     final existing = widget.existing;
@@ -211,6 +215,23 @@ class _AddressFormPageState extends ConsumerState<AddressFormPage> {
                 title: const Text('Varsayılan adres olarak ayarla'),
                 value: _isDefault,
                 onChanged: (value) => setState(() => _isDefault = value),
+              ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Teslimat adresi olarak kullan'),
+                value: _isShippingAddress,
+                onChanged: (value) =>
+                    setState(() => _isShippingAddress = value),
+              ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Fatura adresi olarak kullan'),
+                subtitle: const Text(
+                  'Checkout\'ta fatura adresi olarak seçilebilir olsun',
+                ),
+                value: _isBillingAddress,
+                onChanged: (value) =>
+                    setState(() => _isBillingAddress = value),
               ),
               const SizedBox(height: 24),
               PrimaryButton(

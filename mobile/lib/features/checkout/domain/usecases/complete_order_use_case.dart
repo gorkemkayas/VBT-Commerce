@@ -12,6 +12,7 @@ class CompleteOrderUseCase {
 
   Future<Result<Order>> call({
     required String? addressId,
+    String? billingAddressId,
     required String? shippingCompanyId,
     required List<CartItem> items,
     List<String> couponCodes = const [],
@@ -31,6 +32,7 @@ class CompleteOrderUseCase {
     }
     final result = await _checkoutRepository.completeOrder(
       addressId: addressId,
+      billingAddressId: billingAddressId,
       shippingCompanyId: shippingCompanyId,
       items: items,
       couponCodes: couponCodes,

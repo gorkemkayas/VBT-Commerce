@@ -4,16 +4,32 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/utils/currency_formatter.dart';
+import '../../../checkout/presentation/providers/checkout_providers.dart'
+    show isLoggedInProvider;
 import '../../domain/entities/order.dart';
 import '../providers/order_providers.dart';
+import 'guest_order_lookup_page.dart';
 
 final _dateFormat = DateFormat('d MMMM y, HH:mm', 'tr_TR');
 
+/// Giriş yapmamış kullanıcılar için "Siparişlerim", `/api/orders/me`'yi hiç
+/// çağırmadan (401/zorla-logout riskini önlemek için — checkout'taki aynı
+/// desen) doğrudan mevcut misafir sipariş sorgulama ekranını gösterir; bu
+/// ekranın kendi kodu/route'u hiç değişmedi, burada olduğu gibi yeniden
+/// kullanılıyor. Giriş yapmış kullanıcılar için davranış aynen korunur.
 class OrdersPage extends ConsumerWidget {
   const OrdersPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final loggedIn = ref.watch(isLoggedInProvider).value;
+    if (loggedIn == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (!loggedIn) {
+      return const GuestOrderLookupPage();
+    }
+
     final state = ref.watch(ordersControllerProvider);
     return Scaffold(
       appBar: AppBar(title: const Text('Siparişlerim')),

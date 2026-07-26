@@ -13,6 +13,7 @@ import '../../data/datasources/order_remote_data_source.dart';
 import '../../data/datasources/pricing_remote_data_source.dart';
 import '../../data/datasources/shipping_company_remote_data_source.dart';
 import '../../data/repositories/checkout_repository_impl.dart';
+import '../../domain/entities/guest_billing_info.dart';
 import '../../domain/entities/guest_checkout_info.dart';
 import '../../domain/entities/order.dart';
 import '../../domain/entities/price_calculation.dart';
@@ -162,6 +163,9 @@ class CheckoutState {
     this.isApplyingCoupon = false,
     this.couponError,
     this.isCreatingGuestCustomer = false,
+    this.sameBillingAddress = true,
+    this.billingAddressId,
+    this.guestBillingInfo,
     this.isSubmitting = false,
     this.order,
     this.failure,
@@ -199,6 +203,19 @@ class CheckoutState {
 
   /// Misafir bilgileri kaydedilirken (`POST /api/guest-customers`) `true`.
   final bool isCreatingGuestCustomer;
+
+  /// `true` (varsayılan) ise fatura adresi teslimat adresiyle aynı kabul
+  /// edilir ve `billingAddressId`/`guestBillingInfo` sipariş oluşturmaya
+  /// gönderilmez (backend bu alanları opsiyonel tutar).
+  final bool sameBillingAddress;
+
+  /// Giriş yapmış kullanıcı için seçilen fatura adresi — Customer
+  /// feature'ındaki `isBillingAddress` işaretli adreslerden biri.
+  final String? billingAddressId;
+
+  /// Misafir için ayrıca girilen fatura adresi.
+  final GuestBillingInfo? guestBillingInfo;
+
   final bool isSubmitting;
   final Order? order;
   final Failure? failure;
@@ -212,6 +229,9 @@ class CheckoutState {
     bool? isApplyingCoupon,
     Object? couponError = _unset,
     bool? isCreatingGuestCustomer,
+    bool? sameBillingAddress,
+    Object? billingAddressId = _unset,
+    Object? guestBillingInfo = _unset,
     bool? isSubmitting,
     Order? order,
     Failure? failure,
@@ -233,6 +253,13 @@ class CheckoutState {
         : couponError as String?,
     isCreatingGuestCustomer:
         isCreatingGuestCustomer ?? this.isCreatingGuestCustomer,
+    sameBillingAddress: sameBillingAddress ?? this.sameBillingAddress,
+    billingAddressId: identical(billingAddressId, _unset)
+        ? this.billingAddressId
+        : billingAddressId as String?,
+    guestBillingInfo: identical(guestBillingInfo, _unset)
+        ? this.guestBillingInfo
+        : guestBillingInfo as GuestBillingInfo?,
     isSubmitting: isSubmitting ?? this.isSubmitting,
     order: order ?? this.order,
     failure: clearFailure ? null : (failure ?? this.failure),
@@ -269,6 +296,24 @@ class CheckoutController extends Notifier<CheckoutState> {
       selectedShippingCompanyId: shippingCompanyId,
       clearFailure: true,
     );
+  }
+
+  /// "Fatura adresim teslimat adresimle aynı" seçeneği — web'deki
+  /// `sameBillingAddress` ile aynı davranış.
+  void setSameBillingAddress(bool value) {
+    state = state.copyWith(sameBillingAddress: value, clearFailure: true);
+  }
+
+  /// Giriş yapmış kullanıcı için fatura adresi seçimi (`isBillingAddress`
+  /// işaretli adreslerden biri).
+  void selectBillingAddress(String addressId) {
+    state = state.copyWith(billingAddressId: addressId, clearFailure: true);
+  }
+
+  /// Misafir için fatura adresi bilgisi. `null` verilirse (form henüz
+  /// doldurulmadıysa) sipariş oluşturma bunu ister.
+  void setGuestBillingInfo(GuestBillingInfo? info) {
+    state = state.copyWith(guestBillingInfo: info, clearFailure: true);
   }
 
   /// Bir kupon kodunu uygular. Kodu doğrudan state'e eklemek yerine önce
@@ -335,9 +380,20 @@ class CheckoutController extends Notifier<CheckoutState> {
   }
 
   Future<void> completeOrder(List<CartItem> items) async {
+    // Web'deki aynı kontrol: "aynı adres" kapalıyken bir fatura adresi
+    // seçilmemişse sipariş denemeden önce durdurulur.
+    if (!state.sameBillingAddress && state.billingAddressId == null) {
+      state = state.copyWith(
+        failure: const ValidationFailure('Lütfen bir fatura adresi seçin.'),
+      );
+      return;
+    }
     state = state.copyWith(isSubmitting: true, clearFailure: true);
     final result = await ref.read(completeOrderUseCaseProvider)(
       addressId: state.selectedAddressId,
+      billingAddressId: state.sameBillingAddress
+          ? null
+          : state.billingAddressId,
       shippingCompanyId: state.selectedShippingCompanyId,
       items: items,
       couponCodes: state.couponCodes,
@@ -384,6 +440,14 @@ class CheckoutController extends Notifier<CheckoutState> {
       );
       return;
     }
+    if (!state.sameBillingAddress && state.guestBillingInfo == null) {
+      state = state.copyWith(
+        failure: const ValidationFailure(
+          'Lütfen fatura adresi alanlarını doldurun.',
+        ),
+      );
+      return;
+    }
     state = state.copyWith(isSubmitting: true, clearFailure: true);
     final anonymousId = await ref
         .read(anonymousIdServiceProvider)
@@ -393,6 +457,7 @@ class CheckoutController extends Notifier<CheckoutState> {
       anonymousId: anonymousId,
       shippingCompanyId: state.selectedShippingCompanyId,
       info: guestInfo,
+      billingInfo: state.sameBillingAddress ? null : state.guestBillingInfo,
       items: items,
       couponCodes: state.couponCodes,
     );

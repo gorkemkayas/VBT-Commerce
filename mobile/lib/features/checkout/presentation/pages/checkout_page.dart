@@ -14,6 +14,7 @@ import '../../domain/entities/guest_checkout_info.dart';
 import '../../domain/entities/shipping_company.dart';
 import '../providers/checkout_providers.dart';
 import '../widgets/address_selector.dart';
+import '../widgets/billing_address_section.dart';
 import '../widgets/complete_order_button.dart';
 import '../widgets/coupon_input.dart';
 import '../widgets/guest_checkout_form.dart';
@@ -49,9 +50,11 @@ class CheckoutPage extends ConsumerWidget {
             builder: (dialogContext) => AlertDialog(
               title: const Text('Siparişiniz alındı'),
               content: Text(
-                'Sipariş numaranız: ${next.order!.orderId}\n\n'
+                'Sipariş numaranız: ${next.order!.orderId}\n'
+                'Müşteri numaranız: ${next.guestCustomerId}\n\n'
                 'Misafir siparişi olduğu için "Siparişlerim" listenizde '
-                'görünmeyecek, lütfen bu numarayı not edin.',
+                'görünmeyecek — daha sonra "Sipariş Sorgula" ile tekrar '
+                'görüntüleyebilmek için lütfen bu iki numarayı da not edin.',
               ),
               actions: [
                 TextButton(
@@ -100,6 +103,8 @@ class CheckoutPage extends ConsumerWidget {
                     isGuestInfoConfirmed: checkoutState.guestCustomerId != null,
                     onGuestInfoSubmitted: controller.submitGuestInfo,
                   ),
+                  const SizedBox(height: 16),
+                  BillingAddressSection(loggedIn: loggedIn),
                   const SizedBox(height: 16),
                   shippingCompaniesResult.when(
                     loading: () => const Padding(

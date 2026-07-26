@@ -11,6 +11,8 @@ class CustomerAddress {
     required this.addressLine1,
     this.addressLine2,
     required this.isDefault,
+    this.isShippingAddress = false,
+    this.isBillingAddress = false,
   });
 
   final String id;
@@ -24,6 +26,15 @@ class CustomerAddress {
   final String addressLine1;
   final String? addressLine2;
   final bool isDefault;
+
+  /// Bu adresin checkout'ta teslimat adresi olarak kullanılabilir
+  /// işaretlenip işaretlenmediği.
+  final bool isShippingAddress;
+
+  /// Bu adresin checkout'ta fatura adresi olarak seçilebilir işaretlenip
+  /// işaretlenmediği (bkz. `Customer.Domain.Entities.CustomerAddress
+  /// .IsBillingAddress`).
+  final bool isBillingAddress;
 }
 
 /// `AddCustomerAddressRequest` / `UpdateCustomerAddressRequest` gövdesine
@@ -40,6 +51,8 @@ class CustomerAddressInput {
     required this.addressLine1,
     this.addressLine2,
     required this.isDefault,
+    this.isShippingAddress = true,
+    this.isBillingAddress = false,
   });
 
   final String label;
@@ -52,4 +65,6 @@ class CustomerAddressInput {
   final String addressLine1;
   final String? addressLine2;
   final bool isDefault;
+  final bool isShippingAddress;
+  final bool isBillingAddress;
 }

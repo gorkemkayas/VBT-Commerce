@@ -9,6 +9,12 @@ abstract interface class OrderRemoteDataSource {
   Future<OrderDetailModel> getOrderById(String orderId);
   Future<void> cancelOrder(String orderId);
   Future<ShipmentTrackingModel> getOrderShipment(String orderId);
+
+  /// `GET /api/orders/guest/{guestCustomerId}/{orderId}` — oturum gerektirmez.
+  Future<OrderDetailModel> getGuestOrderById({
+    required String guestCustomerId,
+    required String orderId,
+  });
 }
 
 /// `GET /api/orders/me`. Yanıt sayfalıdır (`PagedResult`): siparişler `items`
@@ -68,5 +74,20 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
       throw const FormatException('Sunucudan boş kargo bilgisi alındı.');
     }
     return ShipmentTrackingModel.fromJson(body);
+  }
+
+  @override
+  Future<OrderDetailModel> getGuestOrderById({
+    required String guestCustomerId,
+    required String orderId,
+  }) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      '/api/orders/guest/$guestCustomerId/$orderId',
+    );
+    final body = response.data;
+    if (body == null) {
+      throw const FormatException('Sunucudan boş sipariş detayı alındı.');
+    }
+    return OrderDetailModel.fromJson(body);
   }
 }

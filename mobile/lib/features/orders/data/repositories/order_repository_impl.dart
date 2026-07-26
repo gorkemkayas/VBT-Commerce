@@ -80,4 +80,27 @@ class OrderRepositoryImpl implements OrderRepository {
       );
     }
   }
+
+  @override
+  Future<Result<Order>> getGuestOrderById({
+    required String guestCustomerId,
+    required String orderId,
+  }) async {
+    try {
+      return Result.success(
+        await _remoteDataSource.getGuestOrderById(
+          guestCustomerId: guestCustomerId,
+          orderId: orderId,
+        ),
+      );
+    } on DioException catch (error) {
+      return Result.failure(mapDioException(error));
+    } on FormatException catch (error) {
+      return Result.failure(ServerFailure(error.message));
+    } catch (_) {
+      return const Result.failure(
+        UnknownFailure('Sipariş bulunurken beklenmeyen bir hata oluştu.'),
+      );
+    }
+  }
 }

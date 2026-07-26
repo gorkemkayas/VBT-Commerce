@@ -65,7 +65,10 @@ class AccountPage extends ConsumerWidget {
           icon: Icons.receipt_long_outlined,
           title: 'Siparişlerim',
           subtitle: 'Geçmiş ve devam eden siparişleriniz',
-          onTap: () => _openIfLoggedIn(context, ref, RoutePaths.orders),
+          // Diğer kartların aksine giriş kontrolüyle gizlenmiyor: giriş
+          // yapılmamışsa `OrdersPage`'in kendisi misafir sipariş sorgulama
+          // formunu gösteriyor.
+          onTap: () => context.push(RoutePaths.orders),
         ),
         const SizedBox(height: 12),
         _AccountSectionCard(

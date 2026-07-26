@@ -20,6 +20,8 @@ _CustomerAddressModel _$CustomerAddressModelFromJson(
   addressLine1: json['addressLine1'] as String,
   addressLine2: json['addressLine2'] as String?,
   isDefault: json['isDefault'] as bool,
+  isShippingAddress: json['isShippingAddress'] as bool? ?? false,
+  isBillingAddress: json['isBillingAddress'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$CustomerAddressModelToJson(
@@ -36,4 +38,6 @@ Map<String, dynamic> _$CustomerAddressModelToJson(
   'addressLine1': instance.addressLine1,
   'addressLine2': instance.addressLine2,
   'isDefault': instance.isDefault,
+  'isShippingAddress': instance.isShippingAddress,
+  'isBillingAddress': instance.isBillingAddress,
 };

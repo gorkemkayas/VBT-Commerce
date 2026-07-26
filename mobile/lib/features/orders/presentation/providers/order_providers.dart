@@ -9,6 +9,7 @@ import '../../domain/entities/order.dart';
 import '../../domain/entities/shipment_tracking.dart';
 import '../../domain/repositories/order_repository.dart';
 import '../../domain/usecases/cancel_order_use_case.dart';
+import '../../domain/usecases/get_guest_order_by_id_use_case.dart';
 import '../../domain/usecases/get_my_orders_use_case.dart';
 import '../../domain/usecases/get_order_by_id_use_case.dart';
 import '../../domain/usecases/get_order_shipment_use_case.dart';
@@ -31,6 +32,9 @@ final cancelOrderUseCaseProvider = Provider<CancelOrderUseCase>(
 final getOrderShipmentUseCaseProvider = Provider<GetOrderShipmentUseCase>(
   (ref) => GetOrderShipmentUseCase(ref.watch(orderRepositoryProvider)),
 );
+final getGuestOrderByIdUseCaseProvider = Provider<GetGuestOrderByIdUseCase>(
+  (ref) => GetGuestOrderByIdUseCase(ref.watch(orderRepositoryProvider)),
+);
 
 /// Sipariş detay ekranı bunu izler; `productDetailProvider` ile aynı desen
 /// (autoDispose family).
@@ -45,6 +49,19 @@ final orderDetailProvider = FutureProvider.autoDispose
 final orderShipmentProvider = FutureProvider.autoDispose
     .family<Result<ShipmentTracking?>, String>((ref, orderId) {
       return ref.watch(getOrderShipmentUseCaseProvider)(orderId);
+    });
+
+/// Misafir sipariş sorgulama ekranı bunu izler — sipariş no + müşteri no
+/// ikilisiyle parametrelenir (Dart record'ları yapısal eşitlik sağladığı
+/// için family key olarak doğrudan kullanılabilir, bkz. `ReviewTarget`).
+typedef GuestOrderLookupKey = ({String guestCustomerId, String orderId});
+
+final guestOrderDetailProvider = FutureProvider.autoDispose
+    .family<Result<Order>, GuestOrderLookupKey>((ref, key) {
+      return ref.watch(getGuestOrderByIdUseCaseProvider)(
+        guestCustomerId: key.guestCustomerId,
+        orderId: key.orderId,
+      );
     });
 
 class OrdersState {

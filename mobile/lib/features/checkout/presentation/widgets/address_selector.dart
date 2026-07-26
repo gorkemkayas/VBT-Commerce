@@ -11,11 +11,17 @@ class AddressSelector extends StatelessWidget {
     required this.addresses,
     required this.selectedAddressId,
     required this.onSelected,
+    this.title = 'Teslimat Adresi',
   });
 
   final List<CustomerAddress> addresses;
   final String? selectedAddressId;
   final ValueChanged<String> onSelected;
+
+  /// Varsayılan, mevcut teslimat adresi seçimindeki metinle birebir aynı —
+  /// bu widget fatura adresi seçiminde de (farklı bir `title` ile) yeniden
+  /// kullanılır.
+  final String title;
 
   @override
   Widget build(BuildContext context) => Card(
@@ -26,10 +32,7 @@ class AddressSelector extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-            child: Text(
-              'Teslimat Adresi',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            child: Text(title, style: Theme.of(context).textTheme.titleMedium),
           ),
           RadioGroup<String>(
             groupValue: selectedAddressId,

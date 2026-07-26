@@ -22,6 +22,8 @@ abstract class CustomerAddressModel extends CustomerAddress
     required super.addressLine1,
     super.addressLine2,
     required super.isDefault,
+    required super.isShippingAddress,
+    required super.isBillingAddress,
   });
 
   const factory CustomerAddressModel({
@@ -36,6 +38,8 @@ abstract class CustomerAddressModel extends CustomerAddress
     required String addressLine1,
     String? addressLine2,
     required bool isDefault,
+    @Default(false) bool isShippingAddress,
+    @Default(false) bool isBillingAddress,
   }) = _CustomerAddressModel;
 
   factory CustomerAddressModel.fromJson(Map<String, dynamic> json) =>

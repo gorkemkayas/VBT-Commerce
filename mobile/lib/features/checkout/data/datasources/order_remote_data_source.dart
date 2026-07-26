@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 abstract interface class OrderRemoteDataSource {
   Future<String> placeMyOrder({
     required String addressId,
+    String? billingAddressId,
     required String shippingCompanyId,
     required List<String> couponCodes,
   });
@@ -19,6 +20,13 @@ abstract interface class OrderRemoteDataSource {
     required String postalCode,
     required String addressLine1,
     String? addressLine2,
+    String? billingRecipientName,
+    String? billingCountry,
+    String? billingCity,
+    String? billingDistrict,
+    String? billingPostalCode,
+    String? billingAddressLine1,
+    String? billingAddressLine2,
   });
 }
 
@@ -40,6 +48,7 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
   @override
   Future<String> placeMyOrder({
     required String addressId,
+    String? billingAddressId,
     required String shippingCompanyId,
     required List<String> couponCodes,
   }) async {
@@ -47,6 +56,7 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
       '/api/orders/me',
       data: {
         'addressId': addressId,
+        'billingAddressId': billingAddressId,
         'shippingCompanyId': shippingCompanyId,
         'couponCodes': couponCodes,
         // iyzico sandbox test kartı (Halkbank, Master Card - Debit).
@@ -83,6 +93,13 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
     required String postalCode,
     required String addressLine1,
     String? addressLine2,
+    String? billingRecipientName,
+    String? billingCountry,
+    String? billingCity,
+    String? billingDistrict,
+    String? billingPostalCode,
+    String? billingAddressLine1,
+    String? billingAddressLine2,
   }) async {
     final response = await _dio.post<dynamic>(
       '/api/orders/guest',
@@ -99,6 +116,13 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
         'postalCode': postalCode,
         'addressLine1': addressLine1,
         'addressLine2': addressLine2,
+        'billingRecipientName': billingRecipientName,
+        'billingCountry': billingCountry,
+        'billingCity': billingCity,
+        'billingDistrict': billingDistrict,
+        'billingPostalCode': billingPostalCode,
+        'billingAddressLine1': billingAddressLine1,
+        'billingAddressLine2': billingAddressLine2,
         // iyzico sandbox test kartı (Halkbank, Master Card - Debit).
         'cardHolderName': 'John Doe',
         'cardNumber': '5528790000000008',
