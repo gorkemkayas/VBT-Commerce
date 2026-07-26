@@ -221,7 +221,7 @@ class _ProductDetailState extends ConsumerState<_ProductDetail> {
           sellableItemId: hasVariants ? _selectedVariantId! : widget.product.id,
           isVariant: hasVariants,
           title: widget.product.title,
-          imageUrl: widget.product.imageUrl,
+          imageUrl: _galleryImageUrls.first,
         );
     if (!mounted) return;
     setState(() => _isAddingToCart = false);

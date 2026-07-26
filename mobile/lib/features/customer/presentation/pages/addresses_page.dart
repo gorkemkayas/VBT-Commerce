@@ -99,7 +99,6 @@ class _AddressCard extends ConsumerWidget {
     final isDefault = address.isDefault;
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      color: isDefault ? theme.colorScheme.primaryContainer : null,
       shape: isDefault
           ? RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
