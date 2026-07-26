@@ -9,6 +9,7 @@ abstract final class RoutePaths {
   static const cart = '/cart';
   static const search = '/search';
   static const checkout = '/checkout';
+  static const orderConfirmation = '/checkout/confirmation';
   static const profile = '/profile';
   static const addresses = '/addresses';
   static const orders = '/orders';

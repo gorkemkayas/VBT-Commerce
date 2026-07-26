@@ -19,12 +19,28 @@ class OrderSummaryView extends StatelessWidget {
             (item) => Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
-                    child: Text(
-                      '${item.title} x${item.quantity}',
-                      overflow: TextOverflow.ellipsis,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${item.title} x${item.quantity}',
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (item.variantLabel != null)
+                          Text(
+                            item.variantLabel!,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                          ),
+                      ],
                     ),
                   ),
                   Text('\$${item.lineTotal.toStringAsFixed(2)}'),

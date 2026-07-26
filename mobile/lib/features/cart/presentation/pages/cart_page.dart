@@ -87,6 +87,15 @@ class _CartItemTile extends ConsumerWidget {
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
+                  if (item.variantLabel != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      item.variantLabel!,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 6),
                   Text(
                     item.unitPrice > 0

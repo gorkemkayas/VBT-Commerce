@@ -7,6 +7,7 @@ import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/pages/reset_password_page.dart';
 import '../../features/cart/presentation/pages/cart_page.dart';
 import '../../features/checkout/presentation/pages/checkout_page.dart';
+import '../../features/checkout/presentation/pages/order_confirmation_page.dart';
 import '../../features/customer/presentation/pages/addresses_page.dart';
 import '../../features/customer/presentation/pages/profile_page.dart';
 import '../../features/orders/presentation/pages/guest_order_lookup_page.dart';
@@ -61,6 +62,17 @@ final appRouterProvider = Provider<GoRouter>(
       GoRoute(
         path: RoutePaths.checkout,
         builder: (context, state) => const CheckoutPage(),
+      ),
+      GoRoute(
+        path: RoutePaths.orderConfirmation,
+        builder: (context, state) {
+          final args = state.extra;
+          return OrderConfirmationPage(
+            args: args is OrderConfirmationArgs
+                ? args
+                : const OrderConfirmationArgs(orderId: '', total: 0),
+          );
+        },
       ),
       GoRoute(
         path: RoutePaths.profile,

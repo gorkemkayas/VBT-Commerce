@@ -12,6 +12,7 @@ class AddToCartUseCase {
     required bool isVariant,
     required String title,
     required String imageUrl,
+    String? variantLabel,
     int quantity = 1,
   }) {
     if (sellableItemId.isEmpty || quantity <= 0) {
@@ -24,6 +25,7 @@ class AddToCartUseCase {
       isVariant: isVariant,
       title: title,
       imageUrl: imageUrl,
+      variantLabel: variantLabel,
       quantity: quantity,
     );
   }

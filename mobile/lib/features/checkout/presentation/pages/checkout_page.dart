@@ -21,6 +21,7 @@ import '../widgets/complete_order_button.dart';
 import '../widgets/coupon_input.dart';
 import '../widgets/guest_checkout_form.dart';
 import '../widgets/order_summary_view.dart';
+import 'order_confirmation_page.dart';
 import '../widgets/payment_card_form.dart';
 import '../widgets/payment_summary_view.dart';
 import '../widgets/shipping_company_selector.dart';
@@ -88,44 +89,23 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
 
     ref.listen(checkoutControllerProvider, (previous, next) {
       if (next.order != null && previous?.order == null) {
-        if (next.guestCustomerId != null) {
-          // Misafir siparişi "Siparişlerim" listesine girmez (o liste
-          // `/api/orders/me`'dir); bu yüzden sipariş no'su ayrı bir
-          // diyalogda gösterilir. `ordersControllerProvider` de bilerek
-          // invalidate edilmez — bu da `/api/orders/me`'yi tetikleyip aynı
-          // 401/zorla-logout riskini doğururdu.
-          showDialog<void>(
-            context: context,
-            builder: (dialogContext) => AlertDialog(
-              title: const Text('Siparişiniz alındı'),
-              content: Text(
-                'Sipariş numaranız: ${next.order!.orderId}\n'
-                'Müşteri numaranız: ${next.guestCustomerId}\n\n'
-                'Misafir siparişi olduğu için "Siparişlerim" listenizde '
-                'görünmeyecek — daha sonra "Sipariş Sorgula" ile tekrar '
-                'görüntüleyebilmek için lütfen bu iki numarayı da not edin.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text('Tamam'),
-                ),
-              ],
-            ),
-          ).then((_) {
-            if (context.mounted) context.go(RoutePaths.home);
-          });
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Siparişiniz alındı: ${next.order!.orderId}'),
-            ),
-          );
+        if (next.guestCustomerId == null) {
           // "Siparişlerim" listesi kalıcı bir provider; yeni sipariş anında
           // görünsün diye sonraki açılışta yeniden yüklenmeye zorlanır.
           ref.invalidate(ordersControllerProvider);
-          context.go(RoutePaths.home);
         }
+        // Misafir siparişi "Siparişlerim" listesine girmez (o liste
+        // `/api/orders/me`'dir) — bu yüzden misafir dalında
+        // `ordersControllerProvider` bilerek invalidate edilmez; bu da
+        // `/api/orders/me`'yi tetikleyip 401/zorla-logout riskini doğururdu.
+        context.go(
+          RoutePaths.orderConfirmation,
+          extra: OrderConfirmationArgs(
+            orderId: next.order!.orderId,
+            total: next.order!.total,
+            guestCustomerId: next.guestCustomerId,
+          ),
+        );
       } else if (next.failure != null && next.failure != previous?.failure) {
         ScaffoldMessenger.of(
           context,

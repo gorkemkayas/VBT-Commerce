@@ -159,6 +159,20 @@ class _ProductDetailState extends ConsumerState<_ProductDetail> {
     return _defaultVariantId;
   }
 
+  /// Sepete eklenirken kullanılan renk/beden etiketi (ör. "Siyah, 42") —
+  /// web'in sepette gösterdiği `variantLabel` ile aynı mantık: yalnızca
+  /// seçili olan (renk/beden) parçalar, sırasıyla ve virgülle ayrılarak
+  /// birleştirilir. Hiçbiri yoksa `null` — bu durumda cart/checkout hiçbir
+  /// varyant bilgisi göstermez.
+  String? get _selectedVariantLabel {
+    if (!_hasVariants) return null;
+    final parts = [
+      if (_hasColorVariants && _selectedColor != null) _selectedColor!,
+      if (_hasSizeVariants && _selectedSize != null) _selectedSize!,
+    ];
+    return parts.isEmpty ? null : parts.join(', ');
+  }
+
   void _selectColor(String color) {
     setState(() {
       _selectedColor = color;
@@ -222,6 +236,7 @@ class _ProductDetailState extends ConsumerState<_ProductDetail> {
           isVariant: hasVariants,
           title: widget.product.title,
           imageUrl: _galleryImageUrls.first,
+          variantLabel: _selectedVariantLabel,
         );
     if (!mounted) return;
     setState(() => _isAddingToCart = false);

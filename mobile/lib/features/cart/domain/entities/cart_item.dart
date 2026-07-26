@@ -7,6 +7,7 @@ class CartItem {
     required this.title,
     required this.imageUrl,
     required this.unitPrice,
+    this.variantLabel,
   });
 
   /// Backend'in sepet kalemi kimliği — miktar güncelleme/silme bu id ile yapılır.
@@ -27,6 +28,11 @@ class CartItem {
   /// Fiyat entegrasyonu ayrı bir görevde yapılacak; şimdilik her zaman `0`
   /// ("bilinmiyor" anlamında) — ekranlarda "Fiyat yakında" gösterilir.
   final double unitPrice;
+
+  /// Seçilen varyantın renk/beden bilgisi (ör. "Siyah, 42") — title/imageUrl
+  /// gibi "Sepete Ekle" anında alınan bir anlık görüntüdür. Varyantsız
+  /// ürünlerde veya renk/beden taşımayan varyantlarda `null`.
+  final String? variantLabel;
 
   double get lineTotal => unitPrice * quantity;
 }

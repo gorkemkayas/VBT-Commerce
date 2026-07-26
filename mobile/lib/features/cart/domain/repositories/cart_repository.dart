@@ -9,6 +9,7 @@ abstract interface class CartRepository {
     required bool isVariant,
     required String title,
     required String imageUrl,
+    String? variantLabel,
     int quantity = 1,
   });
 

@@ -41,6 +41,7 @@ class CartRepositoryImpl implements CartRepository {
     required bool isVariant,
     required String title,
     required String imageUrl,
+    String? variantLabel,
     int quantity = 1,
   }) async {
     try {
@@ -61,6 +62,7 @@ class CartRepositoryImpl implements CartRepository {
           title: title,
           imageUrl: imageUrl,
           unitPrice: unitPrice,
+          variantLabel: variantLabel,
         ),
       );
       return Result.success(await _buildCartItems());
@@ -181,6 +183,7 @@ class CartRepositoryImpl implements CartRepository {
             title: snapshots[item.id]?.title ?? 'Ürün',
             imageUrl: snapshots[item.id]?.imageUrl ?? '',
             unitPrice: snapshots[item.id]?.unitPrice ?? 0,
+            variantLabel: snapshots[item.id]?.variantLabel,
           ),
         )
         .toList(growable: false);

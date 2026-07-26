@@ -80,6 +80,7 @@ class CartController extends Notifier<CartState> {
     required bool isVariant,
     required String title,
     required String imageUrl,
+    String? variantLabel,
     int quantity = 1,
   }) => _apply(
     ref.read(addToCartUseCaseProvider)(
@@ -87,6 +88,7 @@ class CartController extends Notifier<CartState> {
       isVariant: isVariant,
       title: title,
       imageUrl: imageUrl,
+      variantLabel: variantLabel,
       quantity: quantity,
     ),
   );

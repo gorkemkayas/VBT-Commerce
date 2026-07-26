@@ -101,6 +101,7 @@ class _FakeCartRepository implements CartRepository {
     required bool isVariant,
     required String title,
     required String imageUrl,
+    String? variantLabel,
     int quantity = 1,
   }) async => const Result.success([]);
 
