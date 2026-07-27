@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { FormMessage } from "@/components/ui/form-message"
 import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/table"
 import { isColorAttributeName, toHexColorOrDefault } from "@/lib/variant-utils"
-import { X } from "lucide-react"
+import { Pencil, X } from "lucide-react"
 
 export function AttributesSection({ product, onSaved }: { product: Product; onSaved: () => void }) {
   const [name, setName] = useState("")
@@ -154,6 +154,12 @@ export function VariantsSection({ product, onSaved }: { product: Product; onSave
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editSku, setEditSku] = useState("")
+  const [editValues, setEditValues] = useState<Record<string, string>>({})
+  const [editSubmitting, setEditSubmitting] = useState(false)
+  const [editError, setEditError] = useState<string | null>(null)
+
   if (product.productType !== "Variant") return null
 
   const canAdd = product.variantAttributes.length > 0
@@ -185,6 +191,32 @@ export function VariantsSection({ product, onSaved }: { product: Product; onSave
     onSaved()
   }
 
+  function startEdit(v: Product["variants"][number]) {
+    setEditingId(v.id)
+    setEditSku(v.sku)
+    setEditValues(Object.fromEntries(v.optionValues.map((o) => [o.productVariantAttributeId, o.value])))
+    setEditError(null)
+  }
+
+  function cancelEdit() {
+    setEditingId(null)
+    setEditError(null)
+  }
+
+  async function handleSaveEdit(v: Product["variants"][number]) {
+    setEditError(null)
+    setEditSubmitting(true)
+    try {
+      await catalogApi.updateProductVariant(product.id, v.id, { sku: editSku, optionValues: editValues, isActive: v.isActive })
+      setEditingId(null)
+      onSaved()
+    } catch (err) {
+      setEditError(err instanceof ApiError ? err.message : "Varyant güncellenemedi.")
+    } finally {
+      setEditSubmitting(false)
+    }
+  }
+
   return (
     <AdminSection title="Varyantlar">
       {!canAdd ? (
@@ -204,6 +236,71 @@ export function VariantsSection({ product, onSaved }: { product: Product; onSave
               <TBody>
                 {product.variants.map((v) => {
                   const values = Object.fromEntries(v.optionValues.map((o) => [o.productVariantAttributeId, o.value]))
+
+                  if (editingId === v.id) {
+                    return (
+                      <TR key={v.id}>
+                        <TD>
+                          <Input value={editSku} onChange={(e) => setEditSku(e.target.value)} className="h-8 w-28 font-mono text-xs" />
+                        </TD>
+                        <TD colSpan={2}>
+                          <div className="flex flex-wrap items-center gap-3">
+                            {product.variantAttributes.map((va) => {
+                              const isColor = isColorAttributeName(va.name)
+                              return (
+                                <div key={va.id} className="flex items-center gap-1.5">
+                                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{va.name}</span>
+                                  {isColor ? (
+                                    <span className="flex items-center gap-1.5">
+                                      <input
+                                        type="color"
+                                        value={toHexColorOrDefault(editValues[va.id] ?? "")}
+                                        onChange={(e) => setEditValues((prev) => ({ ...prev, [va.id]: e.target.value }))}
+                                        className="h-8 w-10 shrink-0 cursor-pointer border border-border bg-background p-0.5"
+                                      />
+                                      <Input
+                                        value={editValues[va.id] ?? ""}
+                                        onChange={(e) => setEditValues((prev) => ({ ...prev, [va.id]: e.target.value }))}
+                                        placeholder="#000000"
+                                        className="h-8 w-24 font-mono text-xs"
+                                      />
+                                    </span>
+                                  ) : (
+                                    <Input
+                                      value={editValues[va.id] ?? ""}
+                                      onChange={(e) => setEditValues((prev) => ({ ...prev, [va.id]: e.target.value }))}
+                                      className="h-8 w-20 text-xs"
+                                    />
+                                  )}
+                                </div>
+                              )
+                            })}
+                          </div>
+                          {editError && (
+                            <div className="mt-2">
+                              <FormMessage tone="error">{editError}</FormMessage>
+                            </div>
+                          )}
+                        </TD>
+                        <TD className="text-right">
+                          <div className="flex justify-end gap-3">
+                            <button
+                              type="button"
+                              onClick={() => handleSaveEdit(v)}
+                              disabled={editSubmitting}
+                              className="text-xs font-medium uppercase tracking-wider text-emerald-600 disabled:opacity-50"
+                            >
+                              Kaydet
+                            </button>
+                            <button type="button" onClick={cancelEdit} className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                              Vazgeç
+                            </button>
+                          </div>
+                        </TD>
+                      </TR>
+                    )
+                  }
+
                   return (
                     <TR key={v.id}>
                       <TD className="font-mono text-xs">{v.sku}</TD>
@@ -233,9 +330,14 @@ export function VariantsSection({ product, onSaved }: { product: Product; onSave
                         </button>
                       </TD>
                       <TD className="text-right">
-                        <button type="button" onClick={() => handleRemove(v.id)} aria-label="Kaldır" className="text-muted-foreground hover:text-foreground">
-                          <X className="h-4 w-4" strokeWidth={1.5} />
-                        </button>
+                        <div className="flex justify-end gap-3">
+                          <button type="button" onClick={() => startEdit(v)} aria-label="Düzenle" className="text-muted-foreground hover:text-foreground">
+                            <Pencil className="h-4 w-4" strokeWidth={1.5} />
+                          </button>
+                          <button type="button" onClick={() => handleRemove(v.id)} aria-label="Kaldır" className="text-muted-foreground hover:text-foreground">
+                            <X className="h-4 w-4" strokeWidth={1.5} />
+                          </button>
+                        </div>
                       </TD>
                     </TR>
                   )

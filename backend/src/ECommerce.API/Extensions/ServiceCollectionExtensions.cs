@@ -71,6 +71,8 @@ public static class ServiceCollectionExtensions
             });
         });
 
+        services.AddRateLimitingPolicies();
+
         return services;
     }
 

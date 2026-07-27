@@ -14,6 +14,8 @@ public static class WebApplicationExtensions
 
         app.UseSerilogRequestLogging();
 
+        app.UseRateLimiter();
+
         app.UseExceptionHandler();
 
         // Configure the HTTP request pipeline.

@@ -97,7 +97,10 @@ public class CartOperations(
         if (anonymousCart is null || anonymousCart.Items.Count == 0)
         {
             if (anonymousCart is not null)
+            {
                 dbContext.Carts.Remove(anonymousCart);
+                await dbContext.SaveChangesAsync(cancellationToken);
+            }
 
             return;
         }
