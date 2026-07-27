@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_motion.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/result.dart';
 import '../../../../core/widgets/app_network_image.dart';
@@ -543,32 +545,40 @@ class _SizeBox extends StatelessWidget {
     return InkWell(
       onTap: disabled ? null : onTap,
       borderRadius: BorderRadius.circular(4),
-      child: Container(
+      // Kategori çipleriyle aynı süre ve aynı "seçili yüzey" rengi: seçim
+      // animasyonu uygulamanın her yerinde tek bir dile sahip olsun diye.
+      child: AnimatedContainer(
+        duration: AppMotion.selection,
+        curve: Curves.easeOut,
         width: 48,
         height: 48,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected ? theme.colorScheme.primaryContainer : null,
+          color: selected ? AppColors.selectedSurface : null,
           border: Border.all(
             color: disabled
                 ? theme.colorScheme.outline.withValues(alpha: .3)
                 : selected
-                ? theme.colorScheme.primary
+                ? AppColors.selectedSurface
                 : theme.colorScheme.outline,
             width: selected ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(4),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
+        // Metin de kutuyla aynı hızda ters çevrilir; anlık değişirse geçiş
+        // sırasında beyaz yazı bir kare açık zeminde kalıyor.
+        child: AnimatedDefaultTextStyle(
+          duration: AppMotion.selection,
+          curve: Curves.easeOut,
+          style: (theme.textTheme.bodyMedium ?? const TextStyle()).copyWith(
             fontWeight: selected ? FontWeight.bold : FontWeight.normal,
             color: disabled
                 ? theme.colorScheme.onSurface.withValues(alpha: .3)
                 : selected
-                ? theme.colorScheme.primary
+                ? AppColors.onSelectedSurface
                 : theme.colorScheme.onSurface,
           ),
+          child: Text(label),
         ),
       ),
     );
@@ -597,14 +607,18 @@ class _ColorOption extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(4),
-      child: Container(
+      child: AnimatedContainer(
+        duration: AppMotion.selection,
+        curve: Curves.easeOut,
         width: 32,
         height: 32,
         decoration: BoxDecoration(
           color: _resolveColor(value),
           borderRadius: BorderRadius.circular(4),
           border: Border.all(
-            color: selected ? theme.colorScheme.primary : theme.colorScheme.outline,
+            color: selected
+                ? AppColors.selectedSurface
+                : theme.colorScheme.outline,
             width: selected ? 2 : 1,
           ),
         ),

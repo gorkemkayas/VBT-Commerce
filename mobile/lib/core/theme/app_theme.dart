@@ -89,12 +89,21 @@ abstract final class AppTheme {
 
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.surfaceContainerHighest,
-        selectedColor: AppColors.primaryContainer,
+        selectedColor: AppColors.selectedSurface,
         side: BorderSide.none,
         shape: const StadiumBorder(),
-        labelStyle: AppTypography.textTheme.labelMedium,
+        // Etiket rengi duruma göre çözülür: arka plan koyulaşırken metin de
+        // beyaza döner. `secondaryLabelStyle` yalnızca ChoiceChip'te devreye
+        // girdiği için FilterChip'lerde tek başına yeterli değil.
+        labelStyle: AppTypography.textTheme.labelMedium?.copyWith(
+          color: WidgetStateColor.resolveWith(
+            (states) => states.contains(WidgetState.selected)
+                ? AppColors.onSelectedSurface
+                : AppColors.onSurface,
+          ),
+        ),
         secondaryLabelStyle: AppTypography.textTheme.labelMedium?.copyWith(
-          color: AppColors.onPrimary,
+          color: AppColors.onSelectedSurface,
         ),
         showCheckmark: false,
       ),
@@ -121,7 +130,16 @@ abstract final class AppTheme {
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
-        indicatorColor: AppColors.onPrimaryContainer,
+        // Seçim göstergesi de çiplerle aynı "seçili yüzey" tonunu kullanır —
+        // uygulamadaki her seçim animasyonu tek bir renkte buluşuyor.
+        indicatorColor: AppColors.selectedSurface,
+        iconTheme: WidgetStateProperty.resolveWith(
+          (states) => IconThemeData(
+            color: states.contains(WidgetState.selected)
+                ? AppColors.onSelectedSurface
+                : AppColors.onSurfaceVariant,
+          ),
+        ),
         elevation: 0,
         labelTextStyle: WidgetStateProperty.resolveWith(
           (states) => states.contains(WidgetState.selected)

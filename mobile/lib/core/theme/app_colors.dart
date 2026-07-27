@@ -60,6 +60,16 @@ abstract final class AppColors {
   static const actionSurface = onSurface;
   static const onActionSurface = Color(0xFFFFFFFF);
 
+  /// Seçili durumun yüzeyi: kategori çipleri, beden kutuları, alt menü
+  /// göstergesi — "renk ters çevirme" animasyonu yapan her bileşen bunu
+  /// kullanır, böylece uygulamadaki tüm seçim animasyonları aynı renkte olur.
+  ///
+  /// Bilerek `primaryContainer`dan (#3A3938) daha açık: yan yana duran
+  /// kategori kutuları o tonda seçildiğinde blok halinde fazla ağır duruyordu.
+  /// Beyaz metinle kontrastı hâlâ ~6.9:1 (WCAG AA).
+  static const selectedSurface = Color(0xFF5A5958);
+  static const onSelectedSurface = Color(0xFFFFFFFF);
+
   static const ColorScheme lightScheme = ColorScheme(
     brightness: Brightness.light,
     primary: primary,
