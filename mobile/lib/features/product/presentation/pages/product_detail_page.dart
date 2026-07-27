@@ -272,21 +272,13 @@ class _ProductDetailState extends ConsumerState<_ProductDetail> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (product.category.isNotEmpty)
-                  Text(
-                    product.category.toUpperCase(),
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                const SizedBox(height: 8),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
                       child: Text(
                         product.title,
-                        style: theme.textTheme.headlineMedium,
+                        style: theme.textTheme.headlineLarge,
                       ),
                     ),
                     FavoriteButton(
