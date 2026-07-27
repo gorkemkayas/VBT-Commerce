@@ -11,14 +11,17 @@ using Identity.Application.Common;
 using Identity.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 using ECommerce.API.Controllers.Auth.Requests;
 using ECommerce.API.Controllers.Auth.Responses;
+using ECommerce.API.Extensions;
 
 namespace ECommerce.API.Controllers.Auth;
 
 [ApiController]
 [Route("api/auth")]
+[EnableRateLimiting(RateLimitingExtensions.AuthPolicy)]
 public class AuthController(ISender sender, ILogger<AuthController> logger) : ControllerBase
 {
     private const string RefreshTokenCookieName = "refreshToken";
