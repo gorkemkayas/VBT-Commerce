@@ -4,7 +4,6 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import * as catalogApi from "@/lib/api/catalog"
 import * as pricingApi from "@/lib/api/pricing"
-import { getPriceOrNull } from "@/lib/store-catalog"
 import { ApiError } from "@/lib/api/client"
 import type { CategoryTree, Product } from "@/lib/api/types"
 import { AdminSection } from "@/components/admin/page-header"
@@ -161,9 +160,13 @@ function PriceRow({ sellableItemId, sellableItemType, label }: { sellableItemId:
   async function load() {
     setLoading(true)
     try {
-      const value = await getPriceOrNull(sellableItemType, sellableItemId)
-      setAmount(value !== null ? String(value) : "")
-      setEditing(value === null)
+      const price = await pricingApi.getPrice(sellableItemType, sellableItemId).catch((err) => {
+        if (err instanceof ApiError && err.status === 404) return null
+        throw err
+      })
+      setPriceId(price?.id ?? null)
+      setAmount(price ? String(price.amount) : "")
+      setEditing(price === null)
     } finally {
       setLoading(false)
     }
