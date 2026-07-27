@@ -36,3 +36,29 @@ class CategoryModel extends Category {
     return result;
   }
 }
+
+/// `GET /api/categories/{categoryId}` yanıtındaki `CategoryDto` şekline
+/// karşılık gelir. Ağaç yanıtından (`CategoryTreeDto`) farklı olarak
+/// `parentCategoryId` ve `isActive` alanlarını da içerir.
+class CategoryDetailModel extends CategoryDetail {
+  const CategoryDetailModel({
+    required super.id,
+    required super.name,
+    required super.slug,
+    super.description,
+    super.imageUrl,
+    super.parentCategoryId,
+    super.isActive,
+  });
+
+  factory CategoryDetailModel.fromJson(Map<String, dynamic> json) =>
+      CategoryDetailModel(
+        id: json['id'] as String,
+        name: json['name'] as String,
+        slug: json['slug'] as String? ?? '',
+        description: json['description'] as String?,
+        imageUrl: json['imageUrl'] as String?,
+        parentCategoryId: json['parentCategoryId'] as String?,
+        isActive: json['isActive'] as bool? ?? true,
+      );
+}

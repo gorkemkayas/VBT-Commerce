@@ -4,13 +4,16 @@ import '../../../../core/errors/failure.dart';
 import '../../../../core/network/network_error_mapper.dart';
 import '../../../../core/utils/result.dart';
 import '../../../cart/domain/entities/cart_item.dart';
+import '../../domain/entities/coupon.dart';
 import '../../domain/entities/guest_billing_info.dart';
+import '../../domain/entities/guest_contact.dart';
 import '../../domain/entities/guest_checkout_info.dart';
 import '../../domain/entities/order.dart';
 import '../../domain/entities/payment_card_info.dart';
 import '../../domain/entities/price_calculation.dart';
 import '../../domain/entities/shipping_company.dart';
 import '../../domain/repositories/checkout_repository.dart';
+import '../datasources/coupon_remote_data_source.dart';
 import '../datasources/guest_customer_remote_data_source.dart';
 import '../datasources/order_remote_data_source.dart';
 import '../datasources/pricing_remote_data_source.dart';
@@ -26,11 +29,13 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
     this._shippingDataSource,
     this._pricingDataSource,
     this._guestCustomerDataSource,
+    this._couponDataSource,
   );
   final OrderRemoteDataSource _orderDataSource;
   final ShippingCompanyRemoteDataSource _shippingDataSource;
   final PricingRemoteDataSource _pricingDataSource;
   final GuestCustomerRemoteDataSource _guestCustomerDataSource;
+  final CouponRemoteDataSource _couponDataSource;
 
   @override
   Future<Result<Order>> completeOrder({
@@ -105,6 +110,40 @@ class CheckoutRepositoryImpl implements CheckoutRepository {
     } catch (_) {
       return const Result.failure(
         UnknownFailure('Kargo firmaları alınırken beklenmeyen bir hata oluştu.'),
+      );
+    }
+  }
+
+  @override
+  Future<Result<List<Coupon>>> getActiveCoupons() async {
+    try {
+      final coupons = await _couponDataSource.getActive();
+      return Result.success(coupons);
+    } on DioException catch (error) {
+      return Result.failure(mapDioException(error));
+    } on FormatException catch (error) {
+      return Result.failure(ServerFailure(error.message));
+    } catch (_) {
+      return const Result.failure(
+        UnknownFailure('Kuponlar alınırken beklenmeyen bir hata oluştu.'),
+      );
+    }
+  }
+
+  @override
+  Future<Result<GuestContact>> getGuestCustomer(String guestCustomerId) async {
+    try {
+      final contact = await _guestCustomerDataSource.getById(guestCustomerId);
+      return Result.success(contact);
+    } on DioException catch (error) {
+      return Result.failure(mapDioException(error));
+    } on FormatException catch (error) {
+      return Result.failure(ServerFailure(error.message));
+    } catch (_) {
+      return const Result.failure(
+        UnknownFailure(
+          'Misafir bilgileri alınırken beklenmeyen bir hata oluştu.',
+        ),
       );
     }
   }

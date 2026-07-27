@@ -16,6 +16,7 @@ import '../../domain/usecases/login_use_case.dart';
 import '../../domain/usecases/logout_use_case.dart';
 import '../../domain/usecases/register_use_case.dart';
 import '../../domain/usecases/reset_password_use_case.dart';
+import 'session_reset.dart';
 
 final authRemoteDataSourceProvider = Provider<AuthRemoteDataSource>(
   (ref) => AuthRemoteDataSourceImpl(
@@ -62,6 +63,26 @@ final resetPasswordUseCaseProvider = Provider<ResetPasswordUseCase>(
   (ref) => ResetPasswordUseCase(ref.watch(authRepositoryProvider)),
 );
 
+/// Çıkış akışının tek sahibi: token'ları siler (use case) ve ardından
+/// kullanıcıya bağlı tüm durumu sıfırlar. UI yalnızca bunu çağırır — böylece
+/// sıfırlama `Ref`'in arkasında kalır ve `WidgetRef`'ten erişilmesi gerekmez.
+class SessionController extends Notifier<void> {
+  @override
+  void build() {}
+
+  Future<Result<bool>> logout() async {
+    final result = await ref.read(logoutUseCaseProvider)();
+    if (result case Success<bool>()) {
+      await resetUserScopedState(ref);
+    }
+    return result;
+  }
+}
+
+final sessionControllerProvider = NotifierProvider<SessionController, void>(
+  SessionController.new,
+);
+
 class LoginState {
   const LoginState({this.isLoading = false, this.failure, this.user});
   final bool isLoading;
@@ -79,6 +100,11 @@ class LoginController extends Notifier<LoginState> {
       email: email,
       password: password,
     );
+    // Token kaydedildikten sonra: önceki hesabın sepeti/favorileri/profili
+    // ekranda kalmasın diye kullanıcıya bağlı her şey sıfırlanır.
+    if (result case Success<User>()) {
+      await resetUserScopedState(ref);
+    }
     state = switch (result) {
       Success<User>(:final value) => LoginState(user: value),
       ResultFailure<User>(:final failure) => LoginState(failure: failure),
@@ -114,6 +140,9 @@ class RegisterController extends Notifier<RegisterState> {
       firstName: firstName,
       lastName: lastName,
     );
+    if (result case Success<User>()) {
+      await resetUserScopedState(ref);
+    }
     state = switch (result) {
       Success<User>(:final value) => RegisterState(user: value),
       ResultFailure<User>(:final failure) => RegisterState(failure: failure),

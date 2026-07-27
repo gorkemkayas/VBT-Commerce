@@ -2,8 +2,10 @@ import 'package:commerce_mobile/core/errors/failure.dart';
 import 'package:commerce_mobile/core/utils/result.dart';
 import 'package:commerce_mobile/features/cart/domain/entities/cart_item.dart';
 import 'package:commerce_mobile/features/cart/domain/repositories/cart_repository.dart';
+import 'package:commerce_mobile/features/checkout/domain/entities/coupon.dart';
 import 'package:commerce_mobile/features/checkout/domain/entities/guest_billing_info.dart';
 import 'package:commerce_mobile/features/checkout/domain/entities/guest_checkout_info.dart';
+import 'package:commerce_mobile/features/checkout/domain/entities/guest_contact.dart';
 import 'package:commerce_mobile/features/checkout/domain/entities/order.dart';
 import 'package:commerce_mobile/features/checkout/domain/entities/payment_card_info.dart';
 import 'package:commerce_mobile/features/checkout/domain/entities/price_calculation.dart';
@@ -62,6 +64,22 @@ class _FakeCheckoutRepository implements CheckoutRepository {
     required String email,
     required String phoneNumber,
   }) async => const Result.success('guest-customer-1');
+
+  @override
+  Future<Result<List<Coupon>>> getActiveCoupons() async =>
+      const Result.success([]);
+
+  @override
+  Future<Result<GuestContact>> getGuestCustomer(String guestCustomerId) async =>
+      const Result.success(
+        GuestContact(
+          id: 'guest-customer-1',
+          firstName: 'Test',
+          lastName: 'User',
+          email: 'test@example.com',
+          phoneNumber: '5550000000',
+        ),
+      );
 
   @override
   Future<Result<PriceCalculation>> calculatePriceGuest(

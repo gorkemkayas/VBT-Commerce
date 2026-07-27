@@ -8,13 +8,17 @@ import '../../../../core/services/secure_storage_service.dart';
 import '../../../../core/utils/result.dart';
 import '../../../cart/domain/entities/cart_item.dart';
 import '../../../cart/presentation/providers/cart_providers.dart';
+import '../../../../core/services/storage_service.dart';
+import '../../data/datasources/coupon_remote_data_source.dart';
 import '../../data/datasources/guest_customer_remote_data_source.dart';
 import '../../data/datasources/order_remote_data_source.dart';
 import '../../data/datasources/pricing_remote_data_source.dart';
 import '../../data/datasources/shipping_company_remote_data_source.dart';
 import '../../data/repositories/checkout_repository_impl.dart';
+import '../../domain/entities/coupon.dart';
 import '../../domain/entities/guest_billing_info.dart';
 import '../../domain/entities/guest_checkout_info.dart';
+import '../../domain/entities/guest_contact.dart';
 import '../../domain/entities/order.dart';
 import '../../domain/entities/payment_card_info.dart';
 import '../../domain/entities/price_calculation.dart';
@@ -25,6 +29,8 @@ import '../../domain/usecases/calculate_price_use_case.dart';
 import '../../domain/usecases/complete_guest_order_use_case.dart';
 import '../../domain/usecases/complete_order_use_case.dart';
 import '../../domain/usecases/create_guest_customer_use_case.dart';
+import '../../domain/usecases/get_active_coupons_use_case.dart';
+import '../../domain/usecases/get_guest_customer_use_case.dart';
 import '../../domain/usecases/get_shipping_companies_use_case.dart';
 
 const _unset = Object();
@@ -43,12 +49,16 @@ final guestCustomerRemoteDataSourceProvider =
     Provider<GuestCustomerRemoteDataSource>(
       (ref) => GuestCustomerRemoteDataSourceImpl(ref.watch(dioProvider)),
     );
+final couponRemoteDataSourceProvider = Provider<CouponRemoteDataSource>(
+  (ref) => CouponRemoteDataSourceImpl(ref.watch(dioProvider)),
+);
 final checkoutRepositoryProvider = Provider<CheckoutRepository>(
   (ref) => CheckoutRepositoryImpl(
     ref.watch(orderRemoteDataSourceProvider),
     ref.watch(shippingCompanyRemoteDataSourceProvider),
     ref.watch(pricingRemoteDataSourceProvider),
     ref.watch(guestCustomerRemoteDataSourceProvider),
+    ref.watch(couponRemoteDataSourceProvider),
   ),
 );
 final completeOrderUseCaseProvider = Provider<CompleteOrderUseCase>(
@@ -68,6 +78,12 @@ final createGuestCustomerUseCaseProvider =
     Provider<CreateGuestCustomerUseCase>(
       (ref) => CreateGuestCustomerUseCase(ref.watch(checkoutRepositoryProvider)),
     );
+final getGuestCustomerUseCaseProvider = Provider<GetGuestCustomerUseCase>(
+  (ref) => GetGuestCustomerUseCase(ref.watch(checkoutRepositoryProvider)),
+);
+final getActiveCouponsUseCaseProvider = Provider<GetActiveCouponsUseCase>(
+  (ref) => GetActiveCouponsUseCase(ref.watch(checkoutRepositoryProvider)),
+);
 final calculatePriceGuestUseCaseProvider =
     Provider<CalculatePriceGuestUseCase>(
       (ref) => CalculatePriceGuestUseCase(ref.watch(checkoutRepositoryProvider)),
@@ -132,6 +148,38 @@ final shippingCompaniesProvider =
     FutureProvider.autoDispose<Result<List<ShippingCompany>>>((ref) {
       return ref.watch(getShippingCompaniesUseCaseProvider)();
     });
+
+/// Vitrine açık aktif kuponlar (`GET /api/coupons/active`) — kupon alanı
+/// bunları "uygulanabilir kuponlar" olarak listeler. Hata durumunda boş liste
+/// döner: kupon önerileri yardımcı bir özellik, checkout'u bloklamamalı.
+final activeCouponsProvider = FutureProvider.autoDispose<List<Coupon>>((
+  ref,
+) async {
+  final result = await ref.watch(getActiveCouponsUseCaseProvider)();
+  return switch (result) {
+    Success<List<Coupon>>(:final value) => value,
+    ResultFailure<List<Coupon>>() => const <Coupon>[],
+  };
+});
+
+/// Cihazda saklanan misafir müşteri id'si varsa (`StorageKeys.guestCustomerId`,
+/// önceki bir misafir checkout'undan) o kaydın iletişim bilgilerini
+/// `GET /api/guest-customers/{id}` ile çeker; misafir formu bunlarla önceden
+/// doldurulur. Kayıt yoksa ya da sunucuda bulunamıyorsa (silinmiş id) `null`
+/// döner ve form boş açılır.
+final savedGuestContactProvider = FutureProvider.autoDispose<GuestContact?>((
+  ref,
+) async {
+  final storedId = ref
+      .watch(storageServiceProvider)
+      .getString(StorageKeys.guestCustomerId);
+  if (storedId == null || storedId.isEmpty) return null;
+  final result = await ref.watch(getGuestCustomerUseCaseProvider)(storedId);
+  return switch (result) {
+    Success<GuestContact>(:final value) => value,
+    ResultFailure<GuestContact>() => null,
+  };
+});
 
 /// Seçili kargo firmasının ücreti — `selectedShippingCompanyId` ya da liste
 /// her değiştiğinde otomatik yeniden hesaplanır (bkz. `PaymentSummaryView`).
@@ -417,10 +465,18 @@ class CheckoutController extends Notifier<CheckoutState> {
 
   /// Misafir checkout'un ilk adımı: `GuestCheckoutForm` onaylandığında
   /// çağrılır, `POST /api/guest-customers` ile misafir müşteri kaydı açar.
-  /// Dönen id, fiyat önizlemesi ve sipariş oluşturma için state'te tutulur.
+  /// Dönen id, fiyat önizlemesi ve sipariş oluşturma için state'te tutulur;
+  /// ayrıca cihazda saklanır — aynı cihazdaki bir sonraki misafir
+  /// checkout'unda form bu kayıttan doldurulur (bkz.
+  /// `savedGuestContactProvider`).
   Future<void> submitGuestInfo(GuestCheckoutInfo info) async {
     state = state.copyWith(isCreatingGuestCustomer: true, clearFailure: true);
     final result = await ref.read(createGuestCustomerUseCaseProvider)(info);
+    if (result case Success<String>(:final value)) {
+      await ref
+          .read(storageServiceProvider)
+          .setString(StorageKeys.guestCustomerId, value);
+    }
     state = switch (result) {
       Success<String>(:final value) => state.copyWith(
         isCreatingGuestCustomer: false,

@@ -40,13 +40,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         automaticallyImplyLeading: false,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.arrow_forward),
-            tooltip: 'Misafir olarak devam et',
-            onPressed: () => context.go(RoutePaths.home),
-          ),
-        ],
       ),
       body: SafeArea(
         child: Center(
@@ -109,6 +102,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     TextButton(
                       onPressed: () => context.push(RoutePaths.register),
                       child: const Text('Hesabın yok mu? Kayıt ol'),
+                    ),
+                    const SizedBox(height: 8),
+                    // Eskiden app bar'daki ileri okuydu; ne yaptığı
+                    // anlaşılmadığı için açık etiketli bir butona alındı.
+                    OutlinedButton(
+                      onPressed: () => context.go(RoutePaths.home),
+                      child: const Text('Misafir olarak devam et'),
                     ),
                   ],
                 ),

@@ -49,6 +49,22 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
+  Future<Result<Product>> getProductDetailBySlug(String slug) async {
+    try {
+      final detail = await _remoteDataSource.getProductDetailBySlug(slug);
+      return Result.success(await _withPrice(detail));
+    } on DioException catch (error) {
+      return Result.failure(mapDioException(error));
+    } on FormatException catch (error) {
+      return Result.failure(ServerFailure(error.message));
+    } catch (_) {
+      return const Result.failure(
+        UnknownFailure('Ürün detayı alınırken beklenmeyen bir hata oluştu.'),
+      );
+    }
+  }
+
+  @override
   Future<Result<double?>> getVariantPrice(String variantId) async {
     return Result.success(
       await _resolvePrice(sellableItemId: variantId, sellableItemType: 'Variant'),
@@ -67,6 +83,22 @@ class ProductRepositoryImpl implements ProductRepository {
     } catch (_) {
       return const Result.failure(
         UnknownFailure('Kategoriler alınırken beklenmeyen bir hata oluştu.'),
+      );
+    }
+  }
+
+  @override
+  Future<Result<CategoryDetail>> getCategoryDetail(String id) async {
+    try {
+      final category = await _remoteDataSource.getCategory(id);
+      return Result.success(category);
+    } on DioException catch (error) {
+      return Result.failure(mapDioException(error));
+    } on FormatException catch (error) {
+      return Result.failure(ServerFailure(error.message));
+    } catch (_) {
+      return const Result.failure(
+        UnknownFailure('Kategori alınırken beklenmeyen bir hata oluştu.'),
       );
     }
   }

@@ -46,13 +46,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         automaticallyImplyLeading: false,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.arrow_forward),
-            tooltip: 'Misafir olarak devam et',
-            onPressed: () => context.go(RoutePaths.home),
-          ),
-        ],
       ),
       body: SafeArea(
         child: Center(
@@ -141,6 +134,13 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     TextButton(
                       onPressed: () => context.pop(),
                       child: const Text('Zaten hesabın var mı? Giriş yap'),
+                    ),
+                    const SizedBox(height: 8),
+                    // Login ekranıyla aynı: eski app bar okunun yerine
+                    // ne yaptığı yazan bir buton.
+                    OutlinedButton(
+                      onPressed: () => context.go(RoutePaths.home),
+                      child: const Text('Misafir olarak devam et'),
                     ),
                   ],
                 ),

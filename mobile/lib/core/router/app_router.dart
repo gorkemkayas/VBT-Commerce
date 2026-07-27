@@ -5,6 +5,7 @@ import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/pages/reset_password_page.dart';
+import '../../features/account/presentation/pages/account_page.dart';
 import '../../features/cart/presentation/pages/cart_page.dart';
 import '../../features/checkout/presentation/pages/checkout_page.dart';
 import '../../features/checkout/presentation/pages/order_confirmation_page.dart';
@@ -60,6 +61,10 @@ final appRouterProvider = Provider<GoRouter>(
         builder: (context, state) => const CartPage(),
       ),
       GoRoute(
+        path: RoutePaths.account,
+        builder: (context, state) => const AccountPage(),
+      ),
+      GoRoute(
         path: RoutePaths.checkout,
         builder: (context, state) => const CheckoutPage(),
       ),
@@ -106,6 +111,15 @@ final appRouterProvider = Provider<GoRouter>(
             return const OrderDetailPage(orderId: '');
           }
           return OrderDetailPage(orderId: id);
+        },
+      ),
+      // Slug rotası, `/product/:id`den önce tanımlanır: go_router ilk eşleşen
+      // rotayı seçtiğinden `/product/slug/x` yanlışlıkla id rotasına düşmez.
+      GoRoute(
+        path: RoutePaths.productDetailBySlug,
+        builder: (context, state) {
+          final slug = state.pathParameters['slug'];
+          return ProductDetailPage.bySlug(slug: slug ?? '');
         },
       ),
       GoRoute(

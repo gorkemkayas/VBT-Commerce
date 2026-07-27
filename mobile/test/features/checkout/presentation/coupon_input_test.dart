@@ -1,4 +1,5 @@
 import 'package:commerce_mobile/core/utils/result.dart';
+import 'package:commerce_mobile/features/checkout/domain/entities/coupon.dart';
 import 'package:commerce_mobile/features/checkout/domain/entities/shipping_company.dart';
 import 'package:commerce_mobile/features/checkout/presentation/providers/checkout_providers.dart';
 import 'package:commerce_mobile/features/checkout/presentation/widgets/coupon_input.dart';
@@ -21,6 +22,8 @@ void main() {
           shippingCompaniesProvider.overrideWith(
             (ref) async => const Result<List<ShippingCompany>>.success([]),
           ),
+          // Kupon önerileri de dio'ya çıkar (`GET /api/coupons/active`).
+          activeCouponsProvider.overrideWith((ref) async => const <Coupon>[]),
         ],
         child: const MaterialApp(
           home: Scaffold(
@@ -33,7 +36,47 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text('Uygula'), findsOneWidget);
+    // Aktif kupon yokken öneri bölümü hiç görünmemeli.
+    expect(find.text('Uygulanabilir kuponlar'), findsNothing);
 
     semantics.dispose();
+  });
+
+  testWidgets('aktif kuponlar öneri çipi olarak listelenir', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          shippingCompaniesProvider.overrideWith(
+            (ref) async => const Result<List<ShippingCompany>>.success([]),
+          ),
+          activeCouponsProvider.overrideWith(
+            (ref) async => const [
+              Coupon(
+                id: 'coupon-1',
+                code: 'BAHAR10',
+                discountType: CouponDiscountType.percentage,
+                discountValue: 10,
+              ),
+              Coupon(
+                id: 'coupon-2',
+                code: 'KARGO50',
+                discountType: CouponDiscountType.fixedAmount,
+                discountValue: 50,
+              ),
+            ],
+          ),
+        ],
+        child: const MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(child: CouponInput()),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Uygulanabilir kuponlar'), findsOneWidget);
+    expect(find.text('BAHAR10 · %10'), findsOneWidget);
+    expect(find.text('KARGO50 · 50,00 ₺'), findsOneWidget);
   });
 }

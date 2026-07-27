@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/currency_formatter.dart';
+import '../../domain/entities/coupon.dart';
 import '../providers/checkout_providers.dart';
 
 /// Kupon kodu girişi: kullanıcı bir kod yazıp "Uygula"ya basar. Kod backend'de
@@ -103,9 +105,91 @@ class _CouponInputState extends ConsumerState<CouponInput> {
                 ],
               ),
             ],
+            _AvailableCoupons(
+              appliedCodes: couponCodes,
+              isApplying: isApplying,
+              onSelected: (code) => ref
+                  .read(checkoutControllerProvider.notifier)
+                  .applyCoupon(code),
+            ),
           ],
         ),
       ),
     );
   }
+}
+
+/// `GET /api/coupons/active` ile gelen, herkese açık kuponları öneri olarak
+/// listeler — kullanıcının kodu ezbere bilmesi gerekmesin diye. Dokunulan
+/// kupon doğrudan uygulanır; geçerlilik kontrolünü (min. sepet tutarı,
+/// kullanım limiti vb.) yine backend yapar ve hata mesajı alanın altında
+/// görünür (bkz. `CheckoutController.applyCoupon`).
+///
+/// Zaten uygulanmış kodlar listeden çıkarılır. Aktif kupon yoksa ya da uç
+/// hata verirse bölüm hiç görünmez.
+class _AvailableCoupons extends ConsumerWidget {
+  const _AvailableCoupons({
+    required this.appliedCodes,
+    required this.isApplying,
+    required this.onSelected,
+  });
+
+  final List<String> appliedCodes;
+  final bool isApplying;
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final coupons = ref.watch(activeCouponsProvider).value ?? const <Coupon>[];
+    final suggestions = coupons
+        .where(
+          (coupon) => !appliedCodes.any(
+            (applied) => applied.toLowerCase() == coupon.code.toLowerCase(),
+          ),
+        )
+        .toList(growable: false);
+    if (suggestions.isEmpty) return const SizedBox.shrink();
+
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 16),
+        Text(
+          'Uygulanabilir kuponlar',
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 4,
+          children: [
+            for (final coupon in suggestions)
+              ActionChip(
+                label: Text(_chipLabel(coupon)),
+                onPressed: isApplying ? null : () => onSelected(coupon.code),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// "KOD · %10" / "KOD · 50,00 ₺". İndirim tipi tanınmıyorsa yalnızca kod
+  /// gösterilir — yanlış bir indirim vaadi vermektense sessiz kalmak yeğdir.
+  String _chipLabel(Coupon coupon) => switch (coupon.discountType) {
+    CouponDiscountType.percentage =>
+      '${coupon.code} · %${_trimZeros(coupon.discountValue)}',
+    CouponDiscountType.fixedAmount =>
+      '${coupon.code} · ${coupon.discountValue.toTryCurrency()}',
+    CouponDiscountType.unknown => coupon.code,
+  };
+
+  /// Yüzde değerleri tam sayıysa küsuratsız ("%10"), değilse virgüllü
+  /// ("%12,5") gösterilir — para biçimlendirmesiyle aynı ayraç.
+  static String _trimZeros(double value) => value == value.roundToDouble()
+      ? value.toStringAsFixed(0)
+      : value.toString().replaceAll('.', ',');
 }

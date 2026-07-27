@@ -12,6 +12,8 @@ import '../../domain/entities/category.dart';
 import '../../domain/entities/product.dart';
 import '../../domain/entities/product_filter.dart';
 import '../../domain/repositories/product_repository.dart';
+import '../../domain/usecases/get_category_detail_use_case.dart';
+import '../../domain/usecases/get_product_detail_by_slug_use_case.dart';
 import '../../domain/usecases/get_product_detail_use_case.dart';
 import '../../domain/usecases/get_products_use_case.dart';
 import '../../domain/usecases/filter_products_use_case.dart';
@@ -41,6 +43,14 @@ final getProductsUseCaseProvider = Provider<GetProductsUseCase>(
 );
 final getProductDetailUseCaseProvider = Provider<GetProductDetailUseCase>(
   (ref) => GetProductDetailUseCase(ref.watch(productRepositoryProvider)),
+);
+final getProductDetailBySlugUseCaseProvider =
+    Provider<GetProductDetailBySlugUseCase>(
+      (ref) =>
+          GetProductDetailBySlugUseCase(ref.watch(productRepositoryProvider)),
+    );
+final getCategoryDetailUseCaseProvider = Provider<GetCategoryDetailUseCase>(
+  (ref) => GetCategoryDetailUseCase(ref.watch(productRepositoryProvider)),
 );
 final searchProductsUseCaseProvider = Provider<SearchProductsUseCase>(
   (ref) => SearchProductsUseCase(ref.watch(productRepositoryProvider)),
@@ -127,6 +137,22 @@ final productListControllerProvider =
 final productDetailProvider = FutureProvider.autoDispose
     .family<Result<Product>, String>((ref, id) {
       return ref.watch(getProductDetailUseCaseProvider)(id);
+    });
+
+/// `productDetailProvider`'ın slug ile çalışan eşi — `/product/slug/:slug`
+/// derin bağlantısı bunu izler. Aynı `Result<Product>` tipini döndürdüğü için
+/// `ProductDetailPage` iki provider'ı birbirinin yerine kullanabilir.
+final productDetailBySlugProvider = FutureProvider.autoDispose
+    .family<Result<Product>, String>((ref, slug) {
+      return ref.watch(getProductDetailBySlugUseCaseProvider)(slug);
+    });
+
+/// Ürünün kategorisini id'siyle çözer (ürün detayındaki kategori rozeti).
+/// Kategori bulunamazsa rozet hiç gösterilmez, bu yüzden hata durumu
+/// çağıran tarafta sessizce yutulur.
+final categoryDetailProvider = FutureProvider.autoDispose
+    .family<Result<CategoryDetail>, String>((ref, id) {
+      return ref.watch(getCategoryDetailUseCaseProvider)(id);
     });
 
 /// Kullanıcı, `Product.price`'ın temsil ettiği varsayılan (ilk) varyanttan

@@ -222,10 +222,17 @@ class _AddressOrGuestSection extends ConsumerWidget {
       );
     }
     if (loggedIn == false) {
+      // Cihazda önceki bir misafir kaydı varsa iletişim bilgileri onunla
+      // doldurulur. Veri form kurulduktan sonra gelebileceği için `key`
+      // olarak kaydın id'si verilir: id değişince form state'i yeniden
+      // oluşur ve alanlar yeniden tohumlanır.
+      final savedContact = ref.watch(savedGuestContactProvider).value;
       return GuestCheckoutForm(
+        key: ValueKey(savedContact?.id ?? 'guest-form'),
         isSubmitting: isSubmittingGuestInfo,
         isConfirmed: isGuestInfoConfirmed,
         onSubmit: onGuestInfoSubmitted,
+        initialContact: savedContact,
       );
     }
     final customerResult = ref.watch(currentCustomerProvider);

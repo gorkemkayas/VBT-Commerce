@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_motion.dart';
 import '../../../../core/utils/currency_formatter.dart';
@@ -15,33 +17,57 @@ import '../../../review/domain/entities/review_item_type.dart';
 import '../../../review/domain/entities/review_summary.dart';
 import '../../../review/presentation/providers/review_providers.dart';
 import '../../../review/presentation/widgets/review_section.dart';
+import '../../domain/entities/category.dart';
 import '../../domain/entities/product.dart';
 import '../../domain/entities/product_variant.dart';
 import '../providers/product_providers.dart';
 
 class ProductDetailPage extends ConsumerWidget {
-  const ProductDetailPage({super.key, required this.productId});
+  const ProductDetailPage({super.key, required this.productId}) : slug = null;
+
+  /// Ürünü id yerine SEO slug'ıyla açar (`/product/slug/:slug` derin
+  /// bağlantısı). Ekranın geri kalanı değişmez; yalnızca ürünü getiren
+  /// provider farklıdır.
+  const ProductDetailPage.bySlug({super.key, required String this.slug})
+    : productId = '';
+
   final String productId;
+  final String? slug;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final product = ref.watch(productDetailProvider(productId));
+    final slug = this.slug;
+    final detailProvider = slug == null
+        ? productDetailProvider(productId)
+        : productDetailBySlugProvider(slug);
+    final product = ref.watch(detailProvider);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Ürün detayı'),
-        actions: const [CartIconButton()],
+        actions: [
+          // Sepet ikonunun solunda Hesabım kısayolu — sekme çubuğu bu
+          // sayfada görünmediği için. Giriş kontrolü gerekmez: `AccountPage`
+          // misafirken kendi (giriş/kayıt + sipariş sorgulama) görünümünü
+          // gösteriyor.
+          IconButton(
+            icon: const Icon(Icons.person_outline),
+            tooltip: 'Hesabım',
+            onPressed: () => context.push(RoutePaths.account),
+          ),
+          const CartIconButton(),
+        ],
       ),
       body: product.when(
         loading: () => const LoadingView(message: 'Ürün detayı yükleniyor...'),
         error: (_, _) => ErrorView(
           message: 'Ürün detayı yüklenemedi.',
-          onRetry: () => ref.invalidate(productDetailProvider(productId)),
+          onRetry: () => ref.invalidate(detailProvider),
         ),
         data: (result) => switch (result) {
           Success<Product>(:final value) => _ProductDetail(product: value),
           ResultFailure<Product>(:final failure) => ErrorView(
             message: failure.message,
-            onRetry: () => ref.invalidate(productDetailProvider(productId)),
+            onRetry: () => ref.invalidate(detailProvider),
           ),
         },
       ),
@@ -274,6 +300,7 @@ class _ProductDetailState extends ConsumerState<_ProductDetail> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                _CategoryBadge(categoryId: product.category),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -383,6 +410,66 @@ class _ProductDetailState extends ConsumerState<_ProductDetail> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Ürün başlığının üstünde, ürünün kategorisini gösteren küçük etiket.
+/// Adı `GET /api/categories/{categoryId}` ile çözer: ürün DTO'su yalnızca
+/// `categoryId` taşır ve kategori ağacı (`categoriesProvider`) pasif
+/// kategorileri hiç içermez, bu uç ise her zaman doğru adı verir.
+///
+/// Dokunulduğunda koleksiyon ekranı o kategoriyle filtrelenmiş açılır.
+/// Kategori çözülemezse (silinmiş kategori, ağ hatası) hiçbir şey
+/// gösterilmez — ürün detayının kendisi bundan etkilenmemeli.
+class _CategoryBadge extends ConsumerWidget {
+  const _CategoryBadge({required this.categoryId});
+  final String categoryId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (categoryId.isEmpty) return const SizedBox.shrink();
+    final result = ref.watch(categoryDetailProvider(categoryId)).value;
+    final category = switch (result) {
+      Success<CategoryDetail>(:final value) => value,
+      ResultFailure<CategoryDetail>() => null,
+      null => null,
+    };
+    if (category == null) return const SizedBox.shrink();
+
+    final theme = Theme.of(context);
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: InkWell(
+        onTap: () {
+          ref
+              .read(productListControllerProvider.notifier)
+              .selectCategory(categoryId);
+          context.push(RoutePaths.products);
+        },
+        borderRadius: BorderRadius.circular(4),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                category.name.toUpperCase(),
+                style: theme.textTheme.labelSmall?.copyWith(
+                  letterSpacing: 1.2,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+              const SizedBox(width: 2),
+              Icon(
+                Icons.chevron_right,
+                size: 14,
+                color: theme.colorScheme.primary,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

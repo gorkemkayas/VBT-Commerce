@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 
+import '../models/guest_contact_model.dart';
+
 abstract interface class GuestCustomerRemoteDataSource {
   Future<String> create({
     required String firstName,
@@ -7,6 +9,10 @@ abstract interface class GuestCustomerRemoteDataSource {
     required String email,
     required String phoneNumber,
   });
+
+  /// `GET /api/guest-customers/{guestCustomerId}` — daha önce oluşturulmuş
+  /// misafir kaydını okur.
+  Future<GuestContactModel> getById(String guestCustomerId);
 }
 
 /// `POST /api/guest-customers` (bkz. `GuestCustomersController`). Misafir
@@ -40,5 +46,17 @@ class GuestCustomerRemoteDataSourceImpl implements GuestCustomerRemoteDataSource
       );
     }
     return id;
+  }
+
+  @override
+  Future<GuestContactModel> getById(String guestCustomerId) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      '/api/guest-customers/$guestCustomerId',
+    );
+    final body = response.data;
+    if (body == null) {
+      throw const FormatException('Sunucudan boş misafir bilgisi alındı.');
+    }
+    return GuestContactModel.fromJson(body);
   }
 }

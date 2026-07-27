@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../domain/entities/guest_checkout_info.dart';
+import '../../domain/entities/guest_contact.dart';
 
 /// Misafir checkout formu: iletişim bilgileri (`POST /api/guest-customers`
 /// için) ve teslimat adresi (sipariş oluşturma için) tek formda toplanır.
@@ -12,6 +13,7 @@ class GuestCheckoutForm extends StatefulWidget {
     required this.isSubmitting,
     required this.isConfirmed,
     required this.onSubmit,
+    this.initialContact,
   });
 
   final bool isSubmitting;
@@ -20,6 +22,13 @@ class GuestCheckoutForm extends StatefulWidget {
   /// alanları yerine kısa bir onay mesajı gösterilir.
   final bool isConfirmed;
   final ValueChanged<GuestCheckoutInfo> onSubmit;
+
+  /// Aynı cihazdaki önceki misafir checkout'undan çözülen iletişim bilgileri
+  /// (`GET /api/guest-customers/{id}`); verilirse ad/soyad/e-posta/telefon
+  /// alanları bunlarla açılır. Adres alanları bu kayıtta olmadığından boş
+  /// kalır. Veri form kurulduktan sonra geldiğinde alanların yeniden
+  /// tohumlanması için üst widget `key` verir (bkz. `_AddressOrGuestSection`).
+  final GuestContact? initialContact;
 
   @override
   State<GuestCheckoutForm> createState() => _GuestCheckoutFormState();
@@ -38,6 +47,21 @@ class _GuestCheckoutFormState extends State<GuestCheckoutForm> {
   final _postalCodeController = TextEditingController();
   final _addressLine1Controller = TextEditingController();
   final _addressLine2Controller = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    final contact = widget.initialContact;
+    if (contact == null) return;
+    _firstNameController.text = contact.firstName;
+    _lastNameController.text = contact.lastName;
+    _emailController.text = contact.email;
+    _phoneNumberController.text = contact.phoneNumber;
+    // Alıcı adı varsayılan olarak misafirin kendi adıdır; kullanıcı farklı
+    // bir alıcı girmek isterse alanı değiştirebilir.
+    _recipientNameController.text = '${contact.firstName} ${contact.lastName}'
+        .trim();
+  }
 
   @override
   void dispose() {
@@ -96,6 +120,16 @@ class _GuestCheckoutFormState extends State<GuestCheckoutForm> {
             if (widget.isConfirmed)
               const Text('Bilgileriniz kaydedildi.')
             else ...[
+              if (widget.initialContact != null) ...[
+                Text(
+                  'Önceki siparişinizdeki bilgiler dolduruldu, '
+                  'gerekirse değiştirebilirsiniz.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
               TextFormField(
                 controller: _firstNameController,
                 decoration: const InputDecoration(labelText: 'Ad'),

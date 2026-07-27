@@ -6,7 +6,16 @@ abstract final class RoutePaths {
   static const home = '/';
   static const products = '/products';
   static const productDetail = '/product/:id';
+
+  /// Ürünü SEO slug'ıyla açan derin bağlantı (`GET /api/products/by-slug/...`).
+  /// `productDetail` tek segmentli olduğu için iki yol çakışmaz.
+  static const productDetailBySlug = '/product/slug/:slug';
   static const cart = '/cart';
+
+  /// Hesabım ekranı. Alt sekmede de var; `/cart` gibi ayrıca push edilebilir
+  /// olması, sekme çubuğunun görünmediği sayfalardan (ör. ürün detayı)
+  /// kısayolla gelinebilmesi içindir.
+  static const account = '/account';
   static const search = '/search';
   static const checkout = '/checkout';
   static const orderConfirmation = '/checkout/confirmation';

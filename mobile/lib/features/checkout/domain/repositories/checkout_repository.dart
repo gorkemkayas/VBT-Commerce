@@ -1,6 +1,8 @@
 import '../../../../core/utils/result.dart';
 import '../../../cart/domain/entities/cart_item.dart';
+import '../entities/coupon.dart';
 import '../entities/guest_billing_info.dart';
+import '../entities/guest_contact.dart';
 import '../entities/guest_checkout_info.dart';
 import '../entities/order.dart';
 import '../entities/payment_card_info.dart';
@@ -31,6 +33,9 @@ abstract interface class CheckoutRepository {
   /// `GET /api/shipping-companies` — aktif kargo firmalarının tamamını döner.
   Future<Result<List<ShippingCompany>>> getShippingCompanies();
 
+  /// `GET /api/coupons/active` — checkout'ta önerilen aktif kuponlar.
+  Future<Result<List<Coupon>>> getActiveCoupons();
+
   /// `POST /api/guest-customers` — misafir checkout'un ilk adımı; dönen id
   /// diğer misafir çağrılarında kullanılır.
   Future<Result<String>> createGuestCustomer({
@@ -39,6 +44,11 @@ abstract interface class CheckoutRepository {
     required String email,
     required String phoneNumber,
   });
+
+  /// `GET /api/guest-customers/{guestCustomerId}` — daha önce oluşturulmuş
+  /// misafir kaydının iletişim bilgileri; misafir formunu önceden doldurmak
+  /// için kullanılır (bkz. `savedGuestContactProvider`).
+  Future<Result<GuestContact>> getGuestCustomer(String guestCustomerId);
 
   /// `POST /api/pricing/calculate/guest`.
   Future<Result<PriceCalculation>> calculatePriceGuest(

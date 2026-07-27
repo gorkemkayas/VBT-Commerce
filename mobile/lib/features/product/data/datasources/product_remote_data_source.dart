@@ -8,7 +8,18 @@ import '../models/product_list_item_model.dart';
 abstract interface class ProductRemoteDataSource {
   Future<List<ProductListItemModel>> getProducts();
   Future<ProductDetailModel> getProductDetail(String id);
+
+  /// `GET /api/products/by-slug/{slug}` — id yerine SEO slug'ıyla aynı
+  /// `ProductDto`'yu döner; derin bağlantılar (`/product/slug/...`) bunu
+  /// kullanır.
+  Future<ProductDetailModel> getProductDetailBySlug(String slug);
   Future<List<CategoryModel>> getCategories();
+
+  /// `GET /api/categories/{categoryId}` — tek bir kategorinin tam kaydı.
+  /// `getCategories`'in düzleştirdiği ağaçta yalnızca aktif kategoriler
+  /// bulunduğundan, bir ürünün kategorisi orada olmayabilir; bu uç her
+  /// durumda doğru adı verir.
+  Future<CategoryDetailModel> getCategory(String id);
 }
 
 class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
@@ -72,6 +83,19 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
   }
 
   @override
+  Future<ProductDetailModel> getProductDetailBySlug(String slug) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      '${AppConstants.productApiBaseUrl}/api/products/by-slug/'
+      '${Uri.encodeComponent(slug)}',
+    );
+    final body = response.data;
+    if (body == null) {
+      throw const FormatException('Sunucudan boş ürün detayı alındı.');
+    }
+    return ProductDetailModel.fromJson(body);
+  }
+
+  @override
   Future<List<CategoryModel>> getCategories() async {
     final response = await _dio.get<List<dynamic>>(
       '${AppConstants.productApiBaseUrl}/api/categories/tree',
@@ -81,5 +105,17 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
       throw const FormatException('Sunucudan boş kategori listesi alındı.');
     }
     return CategoryModel.flattenTree(body);
+  }
+
+  @override
+  Future<CategoryDetailModel> getCategory(String id) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      '${AppConstants.productApiBaseUrl}/api/categories/$id',
+    );
+    final body = response.data;
+    if (body == null) {
+      throw const FormatException('Sunucudan boş kategori bilgisi alındı.');
+    }
+    return CategoryDetailModel.fromJson(body);
   }
 }
