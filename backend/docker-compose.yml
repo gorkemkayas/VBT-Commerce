@@ -53,6 +53,20 @@ services:
       - "5242:8080"
     restart: unless-stopped
 
+  frontend:
+    build:
+      context: ../frontend
+      args:
+        NEXT_PUBLIC_API_URL: https://intern-api.kayas.dev
+    container_name: vbtcommerce-frontend
+    depends_on:
+      - api
+    ports:
+      # nginx on the server proxies trendora.kayas.dev -> localhost:3000, so the container's
+      # host port must stay 3000 — changing it would require editing the nginx config too.
+      - "3000:3000"
+    restart: unless-stopped
+
 volumes:
   mssql-data:
   seq-data:
