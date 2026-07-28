@@ -29,7 +29,7 @@ public static class RateLimitingExtensions
             // resolves RemoteIpAddress to the real client IP rather than the proxy's.
             options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
             {
-                var remoteIp = httpContext.Connection.RemoteIpAddress;
+                var remoteIp = NormalizeIp(httpContext.Connection.RemoteIpAddress);
                 if (remoteIp != null && DockerNetwork.Contains(remoteIp))
                     return RateLimitPartition.GetNoLimiter(GetClientKey(httpContext));
 
@@ -77,4 +77,11 @@ public static class RateLimitingExtensions
 
     private static string GetClientKey(HttpContext httpContext)
         => httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+    // Kestrel's dual-stack socket transport sometimes reports RemoteIpAddress as an IPv4-mapped
+    // IPv6 address (::ffff:172.22.0.5) and sometimes as plain IPv4, seemingly at random per
+    // connection. IPNetwork.Contains does a strict address-family match, so the docker-network
+    // exemption above would only apply on some requests without this normalization.
+    private static IPAddress? NormalizeIp(IPAddress? ip)
+        => ip != null && ip.IsIPv4MappedToIPv6 ? ip.MapToIPv4() : ip;
 }
