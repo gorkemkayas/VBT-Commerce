@@ -4,6 +4,7 @@ using Pricing.Application.Commands.Prices.CreatePrice;
 using Pricing.Application.Commands.Prices.UpdatePrice;
 using Pricing.Application.Common;
 using Pricing.Application.Queries.Prices.GetPrice;
+using Pricing.Application.Queries.Prices.GetPrices;
 using Pricing.Domain.Enums;
 
 using ECommerce.API.Controllers.Pricing.Requests;
@@ -34,6 +35,14 @@ public class PricesController(ISender sender) : ControllerBase
     public async Task<ActionResult<PriceDto>> GetPrice(PriceItemType sellableItemType, Guid sellableItemId, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetPriceQuery(sellableItemId, sellableItemType), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPost("api/prices/batch")]
+    public async Task<ActionResult<IReadOnlyCollection<PriceDto>>> GetPrices(GetPricesRequest request, CancellationToken cancellationToken)
+    {
+        var items = request.Items.Select(i => new PriceLookupItem(i.SellableItemId, i.SellableItemType)).ToList();
+        var result = await sender.Send(new GetPricesQuery(items), cancellationToken);
         return Ok(result);
     }
 }

@@ -5,3 +5,7 @@ namespace ECommerce.API.Controllers.Pricing.Requests;
 public record CreatePriceRequest(Guid SellableItemId, PriceItemType SellableItemType, decimal Amount);
 
 public record UpdatePriceRequest(decimal Amount);
+
+public record PriceLookupItemRequest(Guid SellableItemId, PriceItemType SellableItemType);
+
+public record GetPricesRequest(IReadOnlyCollection<PriceLookupItemRequest> Items);

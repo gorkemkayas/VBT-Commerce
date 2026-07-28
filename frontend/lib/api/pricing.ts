@@ -21,6 +21,11 @@ export function getPrice(sellableItemType: SellableItemType, sellableItemId: str
   return apiFetch<Price>(`/api/prices/${sellableItemType}/${sellableItemId}`, { auth: false })
 }
 
+export function getPrices(items: { sellableItemId: string; sellableItemType: SellableItemType }[]) {
+  if (items.length === 0) return Promise.resolve<Price[]>([])
+  return apiFetch<Price[]>("/api/prices/batch", { auth: false, method: "POST", body: { items } })
+}
+
 export function createPrice(input: { sellableItemId: string; sellableItemType: SellableItemType; amount: number }) {
   return apiFetch<string>("/api/admin/prices", { method: "POST", body: input })
 }
