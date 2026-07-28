@@ -1,6 +1,8 @@
-// Access token'ı bellekte tutan, sayfa yenilemede localStorage'dan geri yükleyen ve
-// abone olanlara değişiklikleri bildiren küçük bir store. Refresh token web'de HttpOnly
-// çerezde tutulduğu için burada hiç görünmez; JS'in tek görevi access token'ı taşımak.
+// Access token'ı yalnızca bellekte tutan ve abone olanlara değişiklikleri bildiren küçük bir
+// store. Sayfa yenilemede token, AuthProvider'ın mount'ta çağırdığı tryRestoreSession() ile
+// (httpOnly refresh çerezi üzerinden) yeniden alınır — localStorage'a hiç yazılmaz, aksi halde
+// kısa ömürlü de olsa access token XSS'e karşı gereksiz yere açıkta kalır. Refresh token zaten
+// HttpOnly çerezde tutulduğu için burada hiç görünmez; JS'in tek görevi access token'ı taşımak.
 
 export type DecodedUser = { userId: string; email: string; firstName: string; lastName: string; role: "Customer" | "Admin" }
 
@@ -10,10 +12,19 @@ type Snapshot = {
   user: DecodedUser | null
 }
 
-const STORAGE_KEY = "vbt-access-token"
-
 let snapshot: Snapshot = { accessToken: null, accessTokenExpiresAt: null, user: null }
 const listeners = new Set<() => void>()
+
+// One-time cleanup: earlier versions persisted the access token to localStorage under this key.
+// Nothing reads it anymore, but browsers that still have it stored would otherwise keep an old
+// (eventually stale, but needlessly XSS-exposed) token sitting around indefinitely.
+if (typeof window !== "undefined") {
+  try {
+    window.localStorage.removeItem("vbt-access-token")
+  } catch {
+    // yoksay
+  }
+}
 
 function decodeJwt(token: string): DecodedUser | null {
   try {
@@ -31,47 +42,13 @@ function decodeJwt(token: string): DecodedUser | null {
   }
 }
 
-function persist() {
-  if (typeof window === "undefined") return
-  try {
-    if (snapshot.accessToken) {
-      window.localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({ accessToken: snapshot.accessToken, accessTokenExpiresAt: snapshot.accessTokenExpiresAt }),
-      )
-    } else {
-      window.localStorage.removeItem(STORAGE_KEY)
-    }
-  } catch {
-    // yoksay
-  }
-}
-
-export function loadPersistedToken() {
-  if (typeof window === "undefined") return
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (!raw) return
-    const parsed = JSON.parse(raw) as { accessToken: string; accessTokenExpiresAt: number }
-    if (parsed.accessTokenExpiresAt > Date.now()) {
-      setToken(parsed.accessToken, parsed.accessTokenExpiresAt)
-    } else {
-      window.localStorage.removeItem(STORAGE_KEY)
-    }
-  } catch {
-    // yoksay
-  }
-}
-
 export function setToken(accessToken: string, accessTokenExpiresAt: number) {
   snapshot = { accessToken, accessTokenExpiresAt, user: decodeJwt(accessToken) }
-  persist()
   listeners.forEach((l) => l())
 }
 
 export function clearToken() {
   snapshot = { accessToken: null, accessTokenExpiresAt: null, user: null }
-  persist()
   listeners.forEach((l) => l())
 }
 
