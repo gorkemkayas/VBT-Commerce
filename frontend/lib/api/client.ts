@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "./config"
+import { API_BASE_URL, SERVER_API_BASE_URL } from "./config"
 import { clearToken, getSnapshot, isTokenNearExpiry, setToken } from "./token-store"
 import type { ApiProblem } from "./types"
 
@@ -23,7 +23,8 @@ type RequestOptions = {
 }
 
 function buildUrl(path: string, query?: RequestOptions["query"]) {
-  const url = new URL(path.startsWith("http") ? path : `${API_BASE_URL}${path}`)
+  const base = typeof window === "undefined" ? SERVER_API_BASE_URL : API_BASE_URL
+  const url = new URL(path.startsWith("http") ? path : `${base}${path}`)
   if (query) {
     for (const [key, value] of Object.entries(query)) {
       if (value === null || value === undefined || value === "") continue

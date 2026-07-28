@@ -61,6 +61,11 @@ services:
     container_name: vbtcommerce-frontend
     depends_on:
       - api
+    environment:
+      # Read at runtime by the Next.js server (unlike NEXT_PUBLIC_API_URL, which gets baked
+      # into the client bundle at build time) — routes SSR calls over the compose network
+      # instead of round-tripping through the public domain.
+      INTERNAL_API_URL: http://api:8080
     ports:
       # nginx on the server proxies trendora.kayas.dev -> localhost:3000, so the container's
       # host port must stay 3000 — changing it would require editing the nginx config too.
