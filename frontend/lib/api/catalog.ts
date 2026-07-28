@@ -58,6 +58,13 @@ export function getProductById(productId: string) {
   return apiFetch<Product>(`/api/products/${productId}`, { auth: false })
 }
 
+export function getProductsByIds(productIds: string[]) {
+  if (productIds.length === 0) return Promise.resolve<Product[]>([])
+  const params = new URLSearchParams()
+  for (const id of productIds) params.append("ids", id)
+  return apiFetch<Product[]>(`/api/products/by-ids?${params.toString()}`, { auth: false })
+}
+
 export function getProductBySlug(slug: string) {
   return apiFetch<Product>(`/api/products/by-slug/${slug}`, { auth: false })
 }

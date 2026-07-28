@@ -16,6 +16,7 @@ using Catalog.Application.Commands.Products.UpdateProductVariant;
 using Catalog.Application.Common;
 using Catalog.Application.Queries.Products.GetProductById;
 using Catalog.Application.Queries.Products.GetProductBySlug;
+using Catalog.Application.Queries.Products.GetProductsByIds;
 using Catalog.Application.Queries.Products.GetProductsList;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -49,6 +50,13 @@ public class ProductsController(ISender sender) : ControllerBase
     public async Task<ActionResult<ProductDto>> GetById(Guid productId, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetProductByIdQuery(productId), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpGet("by-ids")]
+    public async Task<ActionResult<IReadOnlyCollection<ProductDto>>> GetByIds([FromQuery] List<Guid> ids, CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new GetProductsByIdsQuery(ids), cancellationToken);
         return Ok(result);
     }
 

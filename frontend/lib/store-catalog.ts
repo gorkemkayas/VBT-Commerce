@@ -1,4 +1,4 @@
-import { getProductById } from "@/lib/api/catalog"
+import { getProductsByIds } from "@/lib/api/catalog"
 import { getPrice, getPrices } from "@/lib/api/pricing"
 import { ApiError } from "@/lib/api/client"
 import type { CategoryTree, Product, ProductListItem, SellableItemType } from "@/lib/api/types"
@@ -16,25 +16,20 @@ export async function getPriceOrNull(sellableItemType: SellableItemType, sellabl
 // Variant tipi ürünlerin fiyatı ürünün kendisinde değil, varyantlarında tutulur — ürün seviyesinde
 // fiyat bulunamazsa (yaygın durum), listelemede göstermek için ilk aktif varyantın fiyatına düşer.
 //
-// Fiyatlar liste boyutundan bağımsız olarak sabit sayıda toplu (batch) istekle çözülür: önce tüm
-// ürünlerin ürün-seviyesi fiyatları tek çağrıda sorgulanır, sonra fiyatı bulunamayan Variant tipi
-// ürünlerin aktif varyantları belirlenip o varyantların fiyatları yine tek bir toplu çağrıyla çekilir.
-// `fullProductsById` verilmişse (withListPricesAndImages zaten görseller için tüm ürün detaylarını
-// çekiyor) aktif varyantı bulmak için ekstra istek atılmaz, elden geçen veri yeniden kullanılır.
-async function resolveListPricesBatch(products: ProductListItem[], fullProductsById?: Map<string, Product | null>) {
+// Fiyatlar VE varyant/görsel keşfi, liste boyutundan bağımsız olarak sabit sayıda toplu (batch)
+// istekle çözülür: ürün-seviyesi fiyatlar tek çağrıda, fiyatı bulunamayan Variant tipi ürünlerin tam
+// detayları (aktif varyantı bulmak için) tek çağrıda, o varyantların fiyatları yine tek bir toplu
+// çağrıyla gelir. `fullProductsById` verilmişse (withListPricesAndImages görseller için zaten tüm
+// ürün detaylarını çekmiş oluyor) o veri yeniden kullanılır, ekstra istek atılmaz.
+async function resolveListPricesBatch(products: ProductListItem[], fullProductsById?: Map<string, Product>) {
   const productPrices = await getPrices(products.map((p) => ({ sellableItemId: p.id, sellableItemType: "Product" as const })))
   const priceByProductId = new Map(productPrices.map((p) => [p.sellableItemId, p.amount]))
 
   const needsVariant = products.filter((p) => !priceByProductId.has(p.id) && p.productType === "Variant")
 
+  const fullByProductId = fullProductsById ?? new Map((await getProductsByIds(needsVariant.map((p) => p.id))).map((p) => [p.id, p]))
+
   const activeVariantByProductId = new Map<string, string>()
-  const fullByProductId =
-    fullProductsById ??
-    new Map(
-      await Promise.all(
-        needsVariant.map(async (p) => [p.id, await getProductById(p.id).catch(() => null)] as const),
-      ),
-    )
   for (const p of needsVariant) {
     const activeVariant = fullByProductId.get(p.id)?.variants.find((v) => v.isActive)
     if (activeVariant) activeVariantByProductId.set(p.id, activeVariant.id)
@@ -61,13 +56,12 @@ export async function withListPrices(products: ProductListItem[]) {
 // Kart üzerinde hover ile diğer görselleri gezdirebilmek için ürünün (varyanttan bağımsız) tüm
 // görsellerini de getirir — withListPrices'ın üstüne, sadece bu görseli isteyen yerler için.
 export async function withListPricesAndImages(products: ProductListItem[]) {
-  const fullProducts = await Promise.all(products.map((p) => getProductById(p.id).catch(() => null)))
-  const fullProductsById = new Map(products.map((p, i) => [p.id, fullProducts[i]]))
+  const fullProductsById = new Map((await getProductsByIds(products.map((p) => p.id))).map((p) => [p.id, p]))
 
   const priceById = await resolveListPricesBatch(products, fullProductsById)
 
-  return products.map((p, i) => {
-    const full = fullProducts[i]
+  return products.map((p) => {
+    const full = fullProductsById.get(p.id)
 
     // Prefer images not tied to a specific variant; some products (e.g. every image attached to
     // a particular color/size) have none, so fall back to all of the product's images regardless
