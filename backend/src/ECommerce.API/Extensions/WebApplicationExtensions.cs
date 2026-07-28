@@ -12,7 +12,12 @@ public static class WebApplicationExtensions
 
         app.UseForwardedHeaders();
 
-        app.UseSerilogRequestLogging();
+        app.UseSerilogRequestLogging(options =>
+        {
+            options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+                diagnosticContext.Set("RemoteIp", httpContext.Connection.RemoteIpAddress?.ToString());
+            options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms from {RemoteIp}";
+        });
 
         app.UseRateLimiter();
 
