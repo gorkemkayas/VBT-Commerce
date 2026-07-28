@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { LayoutDashboard, LogOut, Menu, Search, ShoppingBag, User, X } from "lucide-react"
+import { LogOut, Menu, Search, ShoppingBag, User, UserCog, X } from "lucide-react"
 import { useCart } from "@/components/cart-provider"
 import { useAuth } from "@/lib/auth-context"
 
@@ -41,18 +41,6 @@ export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
     >
       <div className="flex h-14 items-center justify-between px-4 md:px-10">
         <div className="flex items-center gap-5">
-          {isAdmin && (
-            <Link
-              href="/admin"
-              aria-label="Admin Paneli"
-              title="Admin Paneli"
-              className={`flex h-8 w-8 items-center justify-center rounded-full border transition-colors ${
-                solid ? "border-border text-foreground/70 hover:border-foreground hover:text-foreground" : "border-white/40 text-white/80 hover:border-white hover:text-white"
-              }`}
-            >
-              <LayoutDashboard className="h-3.5 w-3.5" strokeWidth={1.5} />
-            </Link>
-          )}
           <button
             type="button"
             aria-label="Menüyü aç"
@@ -82,14 +70,14 @@ export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
           <Link href="/shop" aria-label="Ara" className="transition-opacity hover:opacity-60">
             <Search className="h-5 w-5" strokeWidth={1.5} />
           </Link>
+          {isAdmin && (
+            <Link href="/admin" aria-label="Admin Paneli" title="Admin Paneli" className="transition-opacity hover:opacity-60">
+              <UserCog className="h-5 w-5" strokeWidth={1.5} />
+            </Link>
+          )}
           <Link href={isAuthenticated ? "/account" : "/login"} aria-label="Hesabım" className="transition-opacity hover:opacity-60">
             <User className="h-5 w-5" strokeWidth={1.5} />
           </Link>
-          {isAuthenticated && (
-            <button type="button" aria-label="Çıkış yap" onClick={() => logout()} className="hidden transition-opacity hover:opacity-60 md:block">
-              <LogOut className="h-5 w-5" strokeWidth={1.5} />
-            </button>
-          )}
           <button
             type="button"
             aria-label="Sepeti aç"
@@ -99,6 +87,11 @@ export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
             <ShoppingBag className="h-5 w-5" strokeWidth={1.5} />
             <span className={`text-xs font-medium tabular-nums ${fgMuted}`}>({count})</span>
           </button>
+          {isAuthenticated && (
+            <button type="button" aria-label="Çıkış yap" onClick={() => logout()} className="hidden transition-opacity hover:opacity-60 md:block">
+              <LogOut className="h-5 w-5" strokeWidth={1.5} />
+            </button>
+          )}
         </div>
       </div>
 

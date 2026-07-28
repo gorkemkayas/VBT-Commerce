@@ -12,7 +12,9 @@ export default async function ShopPage({
   searchParams: Promise<{ categoryId?: string }>
 }) {
   const { categoryId } = await searchParams
-  const categories = await getCategoryTree()
+  // Falls back to an empty list (just the "Tümü" chip) instead of crashing the whole page — a
+  // transient failure here (rate limit, network blip) shouldn't take down product browsing.
+  const categories = await getCategoryTree().catch(() => [])
 
   return (
     <main className="min-h-screen bg-background text-foreground">

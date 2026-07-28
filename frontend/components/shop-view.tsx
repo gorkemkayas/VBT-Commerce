@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { ProductCard } from "@/components/product-card"
 import type { CategoryTree, ProductListItem } from "@/lib/api/types"
 import { Spinner } from "@/components/ui/spinner"
@@ -19,6 +19,53 @@ export function ShopView({ categories, initialCategoryId }: { categories: Catego
   const [sort, setSort] = useState<string>("featured")
   const [products, setProducts] = useState<ProductWithPrice[]>([])
   const [loading, setLoading] = useState(true)
+  // Bumped on every fresh result set so the grid remounts (not just re-renders) and its entrance
+  // animation replays even when the new set shares product ids with the previous one.
+  const [resultVersion, setResultVersion] = useState(0)
+
+  // "Tümü" vs a narrow category can differ by dozens of products, so the container's natural
+  // height can jump a lot between result sets — without this, that jump snaps instantly (CSS grid
+  // has no built-in way to animate auto height), which reads as "no animation" even though the
+  // opacity/entrance animations below are running fine. This animates the height too.
+  const heightWrapperRef = useRef<HTMLDivElement>(null)
+  const prevHeightRef = useRef<number | null>(null)
+  useLayoutEffect(() => {
+    const el = heightWrapperRef.current
+    if (!el) return
+
+    const newHeight = el.scrollHeight
+    if (prevHeightRef.current !== null && prevHeightRef.current !== newHeight) {
+      el.style.height = `${prevHeightRef.current}px`
+      el.offsetHeight // force reflow so the browser registers the start height before animating
+      el.style.height = `${newHeight}px`
+      prevHeightRef.current = newHeight
+      const timeout = setTimeout(() => {
+        el.style.height = "auto"
+      }, 500)
+      return () => clearTimeout(timeout)
+    }
+
+    prevHeightRef.current = newHeight
+  }, [resultVersion])
+
+  // Drives the staggered reveal below via plain CSS transitions (not the animate-in/@keyframes
+  // utilities) so timing is fully explicit and predictable: cards render hidden first, then this
+  // flips true a frame later so the browser has something to transition *from*.
+  const [revealed, setRevealed] = useState(false)
+  useLayoutEffect(() => {
+    // Synchronous (pre-paint) so the browser never paints a frame where new cards are already
+    // fully visible before we've had a chance to hide them — that flash was reading as "products
+    // just appear all at once."
+    setRevealed(false)
+    let raf2 = 0
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => setRevealed(true))
+    })
+    return () => {
+      cancelAnimationFrame(raf1)
+      cancelAnimationFrame(raf2)
+    }
+  }, [resultVersion])
 
   useEffect(() => {
     let cancelled = false
@@ -29,8 +76,15 @@ export function ShopView({ categories, initialCategoryId }: { categories: Catego
         if (categoryId) query.set("categoryId", categoryId)
         if (searchTerm) query.set("searchTerm", searchTerm)
         const res = await fetch(`/api/shop-products?${query.toString()}`)
+        if (!res.ok) throw new Error(`shop-products request failed (${res.status})`)
         const { items } = (await res.json()) as { items: ProductWithPrice[] }
-        if (!cancelled) setProducts(items)
+        if (!cancelled) {
+          setProducts(items)
+          setResultVersion((v) => v + 1)
+        }
+      } catch {
+        // Transient failure (rate limit, network blip) — leave the previously loaded products on
+        // screen rather than clearing them or crashing the view.
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -121,27 +175,42 @@ export function ShopView({ categories, initialCategoryId }: { categories: Catego
         {sorted.length} ürün
       </p>
 
-      {!loading && sorted.length === 0 ? (
-        <div className="flex min-h-64 items-center justify-center border border-border">
-          <p className="text-sm text-muted-foreground">Bu filtrelere uygun ürün bulunamadı.</p>
+      <div ref={heightWrapperRef} className="overflow-hidden transition-[height] duration-500 ease-out">
+        <div
+          className={`transition-opacity duration-500 ease-out ${loading ? "pointer-events-none opacity-40" : "opacity-100"}`}
+        >
+          {!loading && sorted.length === 0 ? (
+            <div className="flex min-h-64 items-center justify-center border border-border">
+              <p className="text-sm text-muted-foreground">Bu filtrelere uygun ürün bulunamadı.</p>
+            </div>
+          ) : (
+            <div key={resultVersion} className="grid grid-cols-2 gap-x-6 gap-y-10 pb-16 lg:grid-cols-4 lg:gap-x-8">
+              {sorted.map((product, index) => (
+                // Plain opacity/transform transition instead of the animate-in keyframe utility —
+                // starts hidden, then `revealed` flips a frame after mount so each card has an
+                // actual state to transition from. transitionDelay staggers them into a visible
+                // sequence; capped past ~16 items so a big "Tümü" result doesn't take forever.
+                <div
+                  key={product.id}
+                  className={`transition-all ease-out ${revealed ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"}`}
+                  style={{ transitionDuration: "700ms", transitionDelay: `${Math.min(index, 16) * 90}ms` }}
+                >
+                  <ProductCard
+                    product={{
+                      id: product.id,
+                      slug: product.slug,
+                      name: product.name,
+                      image: product.primaryImageUrl,
+                      price: product.price,
+                      categoryName: categoryNameById.get(product.categoryId),
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-x-6 gap-y-10 pb-16 lg:grid-cols-4 lg:gap-x-8">
-          {sorted.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={{
-                id: product.id,
-                slug: product.slug,
-                name: product.name,
-                image: product.primaryImageUrl,
-                price: product.price,
-                categoryName: categoryNameById.get(product.categoryId),
-              }}
-            />
-          ))}
-        </div>
-      )}
+      </div>
     </div>
   )
 }
