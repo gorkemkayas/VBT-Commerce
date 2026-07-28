@@ -2,8 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { ProductCard } from "@/components/product-card"
-import { getProducts } from "@/lib/api/catalog"
-import { withListPrices } from "@/lib/store-catalog"
 import type { CategoryTree, ProductListItem } from "@/lib/api/types"
 import { Spinner } from "@/components/ui/spinner"
 
@@ -27,15 +25,12 @@ export function ShopView({ categories, initialCategoryId }: { categories: Catego
     setLoading(true)
     const timeout = setTimeout(async () => {
       try {
-        const { items } = await getProducts({
-          pageNumber: 1,
-          pageSize: 48,
-          isActive: true,
-          categoryId: categoryId || undefined,
-          searchTerm: searchTerm || undefined,
-        })
-        const withPrices = await withListPrices(items)
-        if (!cancelled) setProducts(withPrices)
+        const query = new URLSearchParams()
+        if (categoryId) query.set("categoryId", categoryId)
+        if (searchTerm) query.set("searchTerm", searchTerm)
+        const res = await fetch(`/api/shop-products?${query.toString()}`)
+        const { items } = (await res.json()) as { items: ProductWithPrice[] }
+        if (!cancelled) setProducts(items)
       } finally {
         if (!cancelled) setLoading(false)
       }
