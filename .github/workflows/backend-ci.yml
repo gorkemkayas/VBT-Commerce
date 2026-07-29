@@ -1,0 +1,41 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "backend/**"
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore
+        run: dotnet restore ECommerce.slnx
+        working-directory: backend
+
+      - name: Build
+        run: dotnet build ECommerce.slnx --no-restore --configuration Release
+        working-directory: backend
+
+      - name: Test
+        run: |
+          set -e
+          for proj in $(find tests -name "*.Tests.csproj"); do
+            echo "Running tests: $proj"
+            dotnet test "$proj" --configuration Release
+          done
+        working-directory: backend
