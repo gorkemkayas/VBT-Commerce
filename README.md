@@ -87,6 +87,12 @@ flutter run --dart-define=API_BASE_URL=https://intern-api.kayas.dev
 
 Migration'lar API açılışında otomatik uygulanır; Development ortamında örnek Admin/Customer hesabı seed edilir ve `/scalar` üzerinden interaktif API dokümantasyonu açılır.
 
+Seed hesaplarımız işe şu şekilde:
+
+         Admin Kullanıcısı(mail/password) : admin@vbt-commerce.com/Admin123!
+         
+         Müşteri Kullanıcısı(mail/password) : customer@vbt*commerce.com/Customer123!
+
 ## Test & CI
 
 - **Backend**: 11 modülün tamamı için ayrı test projesi — **781 unit test / 210 dosya** (handler + validator seviyesinde).
